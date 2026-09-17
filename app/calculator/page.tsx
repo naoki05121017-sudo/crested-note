@@ -1,0 +1,47 @@
+import { PairingWorkbench } from "@/app/components/pairing-workbench";
+import { PageHeader } from "@/app/components/ui";
+import { listAnimals, listProjects } from "@/lib/db/queries";
+
+export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "遺伝計算",
+};
+
+export default async function CalculatorPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const initialA = typeof params.a === "string" ? params.a : "";
+  const initialB = typeof params.b === "string" ? params.b : "";
+  const animals = (await listAnimals()).map((animal) => ({
+    id: animal.id,
+    name: animal.name,
+    code: animal.code,
+    sex: animal.sex,
+    genotype: animal.genotype,
+    traits: animal.traits,
+  }));
+  const projects = (await listProjects()).map((project) => ({
+    id: project.id,
+    name: project.name,
+  }));
+
+  return (
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        kicker="GENETICS"
+        title="遺伝計算"
+        description="親♂と親♀を選び、必要な遺伝形質を追加してから計算します。ピンストライプなどの見た目タグは確率に含めません。"
+      />
+      <PairingWorkbench
+        animals={animals}
+        projects={projects}
+        initialA={initialA}
+        initialB={initialB}
+      />
+    </div>
+  );
+}
