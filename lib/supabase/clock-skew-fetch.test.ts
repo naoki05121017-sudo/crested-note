@@ -63,7 +63,7 @@ describe("fetchWithJwtClockSkewRetry", () => {
     const pending = fetchWithJwtClockSkewRetry("https://example.test/rest/v1/breedings", {
       headers: { Authorization: "Bearer sb_secret_example", apikey: "sb_secret_example" },
     });
-    await vi.advanceTimersByTimeAsync(300);
+    await vi.advanceTimersByTimeAsync(250);
     const response = await pending;
 
     expect(response.ok).toBe(true);
@@ -89,7 +89,7 @@ describe("retryOnJwtIssuedAtFuture", () => {
       .mockResolvedValueOnce({ error: null, data: [{ id: "1" }] });
 
     const pending = retryOnJwtIssuedAtFuture(run);
-    await vi.advanceTimersByTimeAsync(300);
+    await vi.advanceTimersByTimeAsync(250);
     const result = await pending;
     expect(result.error).toBeNull();
     expect(run).toHaveBeenCalledTimes(2);
