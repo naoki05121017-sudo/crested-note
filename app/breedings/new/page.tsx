@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createBreeding } from "@/app/breedings/actions";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, EmptyState, PageHeader } from "@/app/components/ui";
 import { listAnimals, listProjects } from "@/lib/db/queries";
 import { animalTitle } from "@/lib/db/labels";
@@ -37,7 +39,7 @@ export default async function NewBreedingPage() {
           }
         />
       ) : (
-        <form action={createBreeding} className="flex max-w-lg flex-col gap-4">
+        <MutationForm action={createBreeding} className="flex max-w-lg flex-col gap-4">
           <Card className="flex flex-col gap-4">
           <label className="grid gap-1 text-sm">
             <span className="font-medium">オス</span>
@@ -87,11 +89,11 @@ export default async function NewBreedingPage() {
             <span className="font-medium">メモ</span>
             <textarea name="notes" rows={3} className="nc-input" />
           </label>
-          <button type="submit" className="nc-btn w-full sm:w-fit">
+          <PendingSubmitButton pendingLabel="作成しています…" className="nc-btn w-full sm:w-fit">
             作成する
-          </button>
+          </PendingSubmitButton>
           </Card>
-        </form>
+        </MutationForm>
       )}
     </div>
   );

@@ -6,7 +6,7 @@ import { animalTitle } from "@/lib/db/labels";
 import { compareAnimal } from "@/lib/stats/compare";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "全国比較" };
+export const metadata = { title: "全国個体比較" };
 
 export default async function ComparePage({
   searchParams,
@@ -35,13 +35,13 @@ export default async function ComparePage({
       <PageHeader
         kicker="COMPARE"
         title="全国個体比較"
-        description="順位は出しません。モルフ・性別・月齢が近い個体の平均と比べます。"
+        description="日本国内の、条件が近い個体の平均体重と比べます。海外データは含めません。順位・パーセンタイル・上位○%は出しません。全国の飼育者データがまだ少ないときは、クレスノートに登録された個体だけの参考値です。"
       />
 
       {animals.length === 0 ? (
         <EmptyState
           title="先に個体を登録してください"
-          body="体重を記録した個体があると、同条件平均と比較できます。"
+          body="体重を記録した個体があると、日本国内の近い条件の平均と比べられます。ランキングではありません。"
         />
       ) : (
         <form className="flex max-w-xl flex-col gap-2 sm:flex-row sm:items-end" action="/compare">
@@ -92,8 +92,8 @@ export default async function ComparePage({
             />
           </div>
           <p className="text-sm text-muted">
-            条件：{comparison.morph} / 月齢 {comparison.ageMonths ?? "不明"}ヶ月前後
-            （±3ヶ月）。サンプルが少ないときは「比較できません」と出ます。
+            条件：日本国内 / {comparison.morph} / 月齢 {comparison.ageMonths ?? "不明"}ヶ月前後
+            （±3ヶ月）。比較相手が少ないときは「比較できません」と出ます。順位は表示しません。
           </p>
           <Card>
             <div className="mb-3 flex flex-wrap gap-4 text-sm">

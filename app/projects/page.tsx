@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createProject } from "@/app/projects/actions";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { EmptyState, PageHeader, Badge } from "@/app/components/ui";
 import { listProjects } from "@/lib/db/queries";
 import { PROJECT_STATUS_LABEL } from "@/lib/db/labels";
@@ -16,7 +18,7 @@ export default async function ProjectsPage() {
         title="ブリード目標・プロジェクト"
         description="今季の狙いモルフや使いたい個体をまとめます。"
       />
-      <form action={createProject} className="grid gap-3 rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)] md:grid-cols-2">
+      <MutationForm action={createProject} className="grid gap-3 rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)] md:grid-cols-2">
         <label className="grid gap-1 text-sm">
           <span>名前</span>
           <input required name="name" className="nc-input" placeholder="例: 2026 ファントム計画" />
@@ -29,10 +31,10 @@ export default async function ProjectsPage() {
           <span>メモ</span>
           <textarea name="notes" rows={2} className="nc-input" />
         </label>
-        <button type="submit" className="nc-btn w-full sm:w-fit">
+        <PendingSubmitButton pendingLabel="作成しています…" className="nc-btn w-full sm:w-fit">
           作成する
-        </button>
-      </form>
+        </PendingSubmitButton>
+      </MutationForm>
       {projects.length === 0 ? (
         <EmptyState title="プロジェクトはまだありません" body="目標を書いて、候補個体を紐付けできます。" />
       ) : (

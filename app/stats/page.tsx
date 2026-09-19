@@ -3,7 +3,7 @@ import { listAnimals, weightsByAnimal } from "@/lib/db/queries";
 import { japanStats } from "@/lib/stats/japan";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "日本の統計" };
+export const metadata = { title: "日本のクレス統計" };
 
 export default async function StatsPage() {
   const stats = japanStats(await listAnimals(), await weightsByAnimal());
@@ -12,7 +12,7 @@ export default async function StatsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         kicker="JAPAN"
-        title="日本のクレステッドゲッコー統計"
+        title="日本のクレス統計"
         description={stats.sampleNote}
       />
 

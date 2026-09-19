@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { hatchEgg } from "@/app/breedings/actions";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import {
   calculatePairing,
   formatProbability,
@@ -28,7 +30,7 @@ export function HatchForm({
   const action = hatchEgg.bind(null, eggId);
 
   return (
-    <form action={action} className="mt-3 flex flex-col gap-3 rounded-2xl bg-sand p-4">
+    <MutationForm action={action} className="mt-3 flex flex-col gap-3 rounded-2xl bg-sand p-4">
       <input
         type="hidden"
         name="copiesJson"
@@ -97,12 +99,9 @@ export function HatchForm({
           </label>
         ))}
       </fieldset>
-      <button
-        type="submit"
-        className="nc-btn w-full sm:w-fit"
-      >
+      <PendingSubmitButton pendingLabel="登録しています…" className="nc-btn w-full sm:w-fit">
         孵化個体として登録
-      </button>
-    </form>
+      </PendingSubmitButton>
+    </MutationForm>
   );
 }

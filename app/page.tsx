@@ -60,20 +60,20 @@ export default async function Home() {
         {[
           {
             href: "/simulate",
-            title: "ブリードシミュ",
+            title: "シミュレーション",
             body: "仮想ペアで子の出方を試して保存します。",
             tone: "bg-accent",
           },
           {
             href: "/compare",
-            title: "全国比較",
-            body: "同条件の平均と比べて、重め・軽めを柔らかく見ます。",
+            title: "全国個体比較",
+            body: "自分の1個体を、日本国内の近い条件の平均と比べます。",
             tone: "bg-mist",
           },
           {
             href: "/stats",
-            title: "日本の統計",
-            body: "登録データを匿名集計した成長・体重の様子です。",
+            title: "日本のクレス統計",
+            body: "クレスノートに蓄積された日本国内データの傾向です。全頭数ではありません。",
             tone: "bg-blush",
           },
         ].map((item) => (

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addWeight, deleteAnimal, deleteWeight } from "@/app/animals/actions";
 import { CrestLinkPanel } from "@/app/animals/crest-link-panel";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, PageHeader, Badge, SectionTitle, Stat } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
 import {
@@ -83,7 +85,7 @@ export default async function AnimalDetailPage({
               この個体で計算
             </Link>
             <Link href={`/compare?animalId=${animal.id}`} className="nc-btn-ghost">
-              全国比較
+              全国個体比較
             </Link>
             <Link href={`/animals/${animal.id}/edit`} className="nc-btn">
               編集
@@ -220,7 +222,7 @@ export default async function AnimalDetailPage({
       <Card>
         <SectionTitle>体重・成長</SectionTitle>
         <GrowthChart mine={comparison.mineCurve} average={comparison.averageCurve} />
-        <form action={addWeightAction} className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
+        <MutationForm action={addWeightAction} className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
           <input
             type="date"
             name="weighedOn"
@@ -236,10 +238,10 @@ export default async function AnimalDetailPage({
             placeholder="g"
             className="nc-input sm:max-w-28"
           />
-          <button type="submit" className="nc-btn w-full sm:w-auto">
+          <PendingSubmitButton pendingLabel="記録しています…" className="nc-btn w-full sm:w-auto">
             記録する
-          </button>
-        </form>
+          </PendingSubmitButton>
+        </MutationForm>
         {weights.length > 0 ? (
           <ul className="mt-4 divide-y divide-line text-sm">
             {[...weights].reverse().map((row) => {
@@ -249,11 +251,14 @@ export default async function AnimalDetailPage({
                   <span>
                     {row.weighedOn} / {row.weightG.toFixed(1)}g
                   </span>
-                  <form action={remove}>
-                    <button type="submit" className="nc-btn-danger">
+                  <MutationForm action={remove}>
+                    <PendingSubmitButton
+                      pendingLabel="削除中…"
+                      className="nc-btn-danger"
+                    >
                       削除
-                    </button>
-                  </form>
+                    </PendingSubmitButton>
+                  </MutationForm>
                 </li>
               );
             })}
@@ -283,11 +288,14 @@ export default async function AnimalDetailPage({
         </Card>
       ) : null}
 
-      <form action={deleteAction}>
-        <button type="submit" className="nc-btn-danger">
+      <MutationForm action={deleteAction}>
+        <PendingSubmitButton
+          pendingLabel="削除しています…"
+          className="nc-btn-danger"
+        >
           この個体を削除
-        </button>
-      </form>
+        </PendingSubmitButton>
+      </MutationForm>
     </div>
   );
 }

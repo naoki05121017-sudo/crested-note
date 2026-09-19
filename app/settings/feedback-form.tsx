@@ -1,10 +1,12 @@
 import { submitFeedback } from "@/app/settings/actions";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { FEEDBACK_CATEGORY_LABEL } from "@/lib/db/labels";
 import { FEEDBACK_USER_CATEGORIES } from "@/lib/db/types";
 
 export function FeedbackForm() {
   return (
-    <form action={submitFeedback} className="flex max-w-xl flex-col gap-4">
+    <MutationForm action={submitFeedback} className="flex max-w-xl flex-col gap-4">
       <p className="text-sm leading-6 text-muted">
         わかりにくいところ、追加してほしいモルフ、計算の気になる点、不具合など、運営へのご意見をお送りください。他の人には表示されません。
       </p>
@@ -37,9 +39,9 @@ export function FeedbackForm() {
           autoComplete="name"
         />
       </label>
-      <button type="submit" className="nc-btn w-full sm:w-fit">
+      <PendingSubmitButton pendingLabel="送信しています…" className="nc-btn w-full sm:w-fit">
         送信する
-      </button>
-    </form>
+      </PendingSubmitButton>
+    </MutationForm>
   );
 }

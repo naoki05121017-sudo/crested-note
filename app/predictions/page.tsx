@@ -22,7 +22,7 @@ export default async function PredictionsPage() {
       {rows.length === 0 ? (
         <EmptyState
           title="保存された予想はまだありません"
-          body="遺伝計算またはシミュで「計算する」のあと、結果を保存してください。繁殖ペアを作ると自動でも保存されます。"
+          body="遺伝計算またはシミュレーションで「計算する」のあと、結果を保存してください。ブリードのペアを作ると自動でも保存されます。"
         />
       ) : (
         <ul className="grid gap-3">

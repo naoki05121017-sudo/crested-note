@@ -12,6 +12,8 @@ import {
 import type { LocusDefinition } from "@/lib/genetics/types";
 import { animalTitle } from "@/lib/db/labels";
 import { PairingResults } from "@/app/components/pairing-results";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { savePrediction } from "@/app/predictions/actions";
 import type { CalculatorAnimal } from "@/app/calculator/types";
 import { Hint } from "@/app/components/ui";
@@ -46,6 +48,22 @@ function defaultStatus(): GeneStatus {
   return "het";
 }
 
+function ParentHeading({ sex }: { sex: "male" | "female" }) {
+  const symbol = sex === "male" ? "♂" : "♀";
+  const color = sex === "male" ? "text-[#4d6fa8]" : "text-[#c45c78]";
+  return (
+    <span className="inline-flex items-baseline gap-1.5">
+      <span className="text-ink">親</span>
+      <span
+        className={`${color} text-[1.45rem] font-extrabold leading-none sm:text-[1.7rem]`}
+        aria-label={sex === "male" ? "オス" : "メス"}
+      >
+        {symbol}
+      </span>
+    </span>
+  );
+}
+
 function ParentEditor({
   title,
   stepLabel,
@@ -59,7 +77,7 @@ function ParentEditor({
   selectedId,
   onSelectAnimal,
 }: {
-  title: string;
+  title: React.ReactNode;
   stepLabel: string;
   genotype: Genotype;
   onChange: (next: Genotype) => void;
@@ -390,6 +408,7 @@ export function PairingWorkbench({
     ),
   );
   const [result, setResult] = useState<PairingResult | null>(null);
+  const [calcBusy, setCalcBusy] = useState(false);
   const [name, setName] = useState("");
   const [projectId, setProjectId] = useState("");
 
@@ -421,7 +440,7 @@ export function PairingWorkbench({
     <div className="flex flex-col gap-8">
       <div className="grid gap-4 lg:grid-cols-2">
         <ParentEditor
-          title="親 ♂"
+          title={<ParentHeading sex="male" />}
           stepLabel="1. オスを選ぶ"
           genotype={parentA}
           onChange={(next) => {
@@ -440,7 +459,7 @@ export function PairingWorkbench({
           onSelectAnimal={pickA}
         />
         <ParentEditor
-          title="親 ♀"
+          title={<ParentHeading sex="female" />}
           stepLabel="2. メスを選ぶ"
           genotype={parentB}
           onChange={(next) => {
@@ -467,9 +486,14 @@ export function PairingWorkbench({
         <button
           type="button"
           className="nc-btn w-full sm:w-auto"
-          onClick={() => setResult(calculatePairing(parentA, parentB))}
+          aria-busy={calcBusy}
+          onPointerDown={() => setCalcBusy(true)}
+          onClick={() => {
+            setResult(calculatePairing(parentA, parentB));
+            setCalcBusy(false);
+          }}
         >
-          遺伝を計算する
+          {calcBusy ? "計算しています…" : "遺伝を計算する"}
         </button>
       </div>
 
@@ -481,7 +505,7 @@ export function PairingWorkbench({
             </p>
             <PairingResults result={result} />
           </div>
-          <form
+          <MutationForm
             action={savePrediction}
             className="flex flex-col gap-3 rounded-[1.5rem] border border-line bg-surface p-5 sm:p-6"
           >
@@ -520,10 +544,10 @@ export function PairingWorkbench({
             ) : (
               <input type="hidden" name="projectId" value="" />
             )}
-            <button type="submit" className="nc-btn w-full sm:w-fit">
+            <PendingSubmitButton pendingLabel="保存しています…" className="nc-btn w-full sm:w-fit">
               {saveLabel}
-            </button>
-          </form>
+            </PendingSubmitButton>
+          </MutationForm>
         </>
       ) : (
         <p className="rounded-[1.5rem] border border-line bg-sand px-4 py-5 text-sm leading-6 text-muted">

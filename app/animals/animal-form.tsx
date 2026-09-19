@@ -5,6 +5,8 @@ import {
 import { ANIMAL_STATUSES, SEXES, type Animal } from "@/lib/db/types";
 import { ANIMAL_STATUS_LABEL, PREFECTURES, SEX_LABEL, animalTitle } from "@/lib/db/labels";
 import { createAnimal, updateAnimal } from "@/app/animals/actions";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { GenotypeFields } from "@/app/components/genotype-fields";
 import { Card, Hint, SectionTitle } from "@/app/components/ui";
 import type { VisualTraitCategory } from "@/lib/genetics/visual-traits";
@@ -22,7 +24,7 @@ export function AnimalForm({
   const parentOptions = parents.filter((row) => row.id !== animal?.id);
 
   return (
-    <form action={action} className="flex max-w-3xl flex-col gap-6">
+    <MutationForm action={action} className="flex max-w-3xl flex-col gap-6">
       <Card className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-sm sm:col-span-2">
           <span className="font-medium">名前</span>
@@ -174,9 +176,12 @@ export function AnimalForm({
         <GenotypeFields genotype={animal?.genotype} />
       </Card>
 
-      <button type="submit" className="nc-btn w-full sm:w-fit">
+      <PendingSubmitButton
+        pendingLabel={animal ? "保存しています…" : "登録しています…"}
+        className="nc-btn w-full sm:w-fit"
+      >
         {animal ? "保存する" : "登録する"}
-      </button>
-    </form>
+      </PendingSubmitButton>
+    </MutationForm>
   );
 }

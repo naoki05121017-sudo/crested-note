@@ -1,6 +1,15 @@
+import { PREFECTURES } from "@/lib/db/labels";
 import { combinePhenotype, LOCI } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 import { ageInMonths, mean, todayIso, weightTone } from "./math";
+
+export function isJapanDomesticAnimal(animal: {
+  prefecture?: string;
+}): boolean {
+  const prefecture = animal.prefecture?.trim() ?? "";
+  if (!prefecture) return true;
+  return (PREFECTURES as readonly string[]).includes(prefecture);
+}
 
 export function visualMorphKey(animal: Animal): string {
   const labeled = animal.morphLabel.trim().toLowerCase();
@@ -79,6 +88,7 @@ export function compareAnimal(options: {
 
   const cohort = options.others.filter(({ animal, logs }) => {
     if (animal.id === options.animal.id) return false;
+    if (!isJapanDomesticAnimal(animal)) return false;
     if (animal.sex !== options.animal.sex) return false;
     if (visualMorphKey(animal) !== morph) return false;
     const otherLatest = latestWeight(logs);

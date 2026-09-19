@@ -1,5 +1,7 @@
 import { saveSettings } from "@/app/settings/actions";
 import { FeedbackForm } from "@/app/settings/feedback-form";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, Notice, PageHeader } from "@/app/components/ui";
 import { getSettings } from "@/lib/db/queries";
 import { PREFECTURES } from "@/lib/db/labels";
@@ -24,7 +26,7 @@ export default async function SettingsPage({
         description="コレクション名と、新規個体の公開初期値など。"
       />
       <Card>
-      <form action={saveSettings} className="flex max-w-xl flex-col gap-4">
+      <MutationForm action={saveSettings} className="flex max-w-xl flex-col gap-4">
         <label className="grid gap-1 text-sm">
           <span>表示名</span>
           <input name="displayName" defaultValue={settings.displayName} className="nc-input" />
@@ -57,10 +59,10 @@ export default async function SettingsPage({
           />
           新規個体を最初から公開する
         </label>
-        <button type="submit" className="nc-btn w-full sm:w-fit">
+        <PendingSubmitButton pendingLabel="保存しています…" className="nc-btn w-full sm:w-fit">
           保存する
-        </button>
-      </form>
+        </PendingSubmitButton>
+      </MutationForm>
       </Card>
 
       <Card>

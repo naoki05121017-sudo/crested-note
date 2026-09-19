@@ -4,7 +4,7 @@ import { listBreedings, getAnimal } from "@/lib/db/queries";
 import { BREEDING_STATUS_LABEL, animalTitle } from "@/lib/db/labels";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "繁殖" };
+export const metadata = { title: "ブリード" };
 
 export default async function BreedingsPage() {
   const breedings = await listBreedings();
@@ -13,7 +13,7 @@ export default async function BreedingsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader
         kicker="BREEDING"
-        title="繁殖"
+        title="ブリード"
         description="ペア、クラッチ、卵、孵化まで。"
         actions={
           <Link href="/breedings/new" className="nc-btn">

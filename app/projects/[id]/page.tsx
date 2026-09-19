@@ -7,6 +7,8 @@ import {
   updateProject,
 } from "@/app/projects/actions";
 import { Card, PageHeader, SectionTitle } from "@/app/components/ui";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import {
   getProject,
   listAnimals,
@@ -43,7 +45,7 @@ export default async function ProjectDetailPage({
       <PageHeader kicker="PROJECT" title={project.name} description={project.goal} />
 
       <Card>
-        <form action={update} className="grid gap-3 md:grid-cols-2">
+        <MutationForm action={update} className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span>名前</span>
             <input name="name" defaultValue={project.name} className="nc-input" />
@@ -66,15 +68,15 @@ export default async function ProjectDetailPage({
             <span>メモ</span>
             <textarea name="notes" rows={3} defaultValue={project.notes} className="nc-input" />
           </label>
-          <button type="submit" className="nc-btn w-full sm:w-fit">
+          <PendingSubmitButton pendingLabel="保存しています…" className="nc-btn w-full sm:w-fit">
             保存
-          </button>
-        </form>
+          </PendingSubmitButton>
+        </MutationForm>
       </Card>
 
       <Card>
         <SectionTitle>個体</SectionTitle>
-        <form action={addMember} className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <MutationForm action={addMember} className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <select name="animalId" className="nc-input sm:max-w-xs">
             {animals.map((animal) => (
               <option key={animal.id} value={animal.id}>
@@ -89,10 +91,10 @@ export default async function ProjectDetailPage({
               </option>
             ))}
           </select>
-          <button type="submit" className="nc-btn w-full sm:w-auto">
+          <PendingSubmitButton pendingLabel="追加しています…" className="nc-btn w-full sm:w-auto">
             追加
-          </button>
-        </form>
+          </PendingSubmitButton>
+        </MutationForm>
         {members.length === 0 ? (
           <p className="text-sm text-muted">まだ個体がありません。</p>
         ) : (
@@ -104,11 +106,11 @@ export default async function ProjectDetailPage({
                 <Link href={`/animals/${member.animal.id}`} className="hover:underline">
                   {animalTitle(member.animal)} / {PROJECT_ROLE_LABEL[member.role]}
                 </Link>
-                <form action={remove}>
-                  <button type="submit" className="nc-btn-ghost px-3 text-sm">
+                <MutationForm action={remove}>
+                  <PendingSubmitButton pendingLabel="外しています…" className="nc-btn-ghost px-3 text-sm">
                     外す
-                  </button>
-                </form>
+                  </PendingSubmitButton>
+                </MutationForm>
               </li>
             );
           })}
@@ -120,7 +122,7 @@ export default async function ProjectDetailPage({
         <SectionTitle>保存した計算</SectionTitle>
         {predictions.length === 0 ? (
           <p className="text-sm leading-6 text-muted">
-            シミュや遺伝計算から、このプロジェクトを選んで保存できます。
+            シミュレーションや遺伝計算から、このプロジェクトを選んで保存できます。
           </p>
         ) : (
           <ul className="text-sm">
@@ -135,11 +137,11 @@ export default async function ProjectDetailPage({
         )}
       </Card>
 
-      <form action={removeProject}>
-        <button type="submit" className="nc-btn-danger">
+      <MutationForm action={removeProject}>
+        <PendingSubmitButton pendingLabel="削除しています…" className="nc-btn-danger">
           プロジェクトを削除
-        </button>
-      </form>
+        </PendingSubmitButton>
+      </MutationForm>
     </div>
   );
 }

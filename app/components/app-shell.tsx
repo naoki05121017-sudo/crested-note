@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrandMark,
   IconChart,
@@ -25,8 +25,8 @@ const groups = [
     label: "ブリード",
     items: [
       { href: "/calculator", label: "遺伝計算", icon: IconDna },
-      { href: "/simulate", label: "シミュ", icon: IconDna },
-      { href: "/breedings", label: "繁殖", icon: IconEgg },
+      { href: "/simulate", label: "シミュレーション", icon: IconDna },
+      { href: "/breedings", label: "ブリード", icon: IconEgg },
       { href: "/projects", label: "プロジェクト", icon: IconChart },
       { href: "/predictions", label: "予想と実績", icon: IconChart },
     ],
@@ -34,15 +34,37 @@ const groups = [
   {
     label: "データ",
     items: [
-      { href: "/compare", label: "全国比較", icon: IconChart },
-      { href: "/stats", label: "日本の統計", icon: IconChart },
+      { href: "/compare", label: "全国個体比較", icon: IconChart },
+      { href: "/stats", label: "日本のクレス統計", icon: IconChart },
       { href: "/settings", label: "設定", icon: IconGear },
     ],
   },
 ] as const;
 
-function NavLinks({ onClick }: { onClick?: () => void }) {
+function isActivePath(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavItemLabel({
+  label,
+  Icon,
+}: {
+  label: string;
+  Icon: () => React.ReactNode;
+}) {
+  const { pending } = useLinkStatus();
+  return (
+    <>
+      <Icon />
+      {pending ? "移動中…" : label}
+    </>
+  );
+}
+
+function NavLinks() {
   const pathname = usePathname();
+
   return (
     <div className="flex flex-col gap-6">
       {groups.map((group) => (
@@ -52,24 +74,18 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
           </p>
           <div className="mt-2 flex flex-col gap-1">
             {group.items.map((item) => {
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              const Icon = item.icon;
+              const active = isActivePath(pathname, item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={onClick}
-                  className={`flex min-h-11 items-center gap-2 rounded-2xl px-3 text-sm ${
+                  className={`flex min-h-12 items-center gap-2 rounded-2xl px-3 text-sm ${
                     active
                       ? "bg-accent text-ink"
                       : "text-muted hover:bg-white hover:text-ink"
                   }`}
                 >
-                  <Icon />
-                  {item.label}
+                  <NavItemLabel label={item.label} Icon={item.icon} />
                 </Link>
               );
             })}
@@ -84,6 +100,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const publicView = pathname.startsWith("/p/");
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   if (publicView) {
     return (
@@ -108,7 +128,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-full bg-background text-ink">
       <div className="mx-auto flex min-h-full max-w-7xl">
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-line bg-surface/80 px-4 py-6 lg:block">
-          <Link href="/" className="flex items-center gap-3 px-2">
+          <Link href="/" className="flex min-h-12 items-center gap-3 px-2">
             <BrandMark />
             <span>
               <span className="block text-lg font-semibold tracking-tight">
@@ -125,7 +145,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
-            <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <Link href="/" className="flex min-h-12 items-center gap-2 font-semibold tracking-tight">
               <BrandMark size={28} />
               <span>
                 <span className="block">クレスノート</span>
@@ -137,6 +157,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               className="nc-btn-ghost px-4"
+              aria-expanded={open}
               onClick={() => setOpen((value) => !value)}
             >
               {open ? "閉じる" : "メニュー"}
@@ -144,10 +165,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </header>
           {open ? (
             <div className="border-b border-line bg-surface px-4 py-4 lg:hidden">
-              <NavLinks onClick={() => setOpen(false)} />
+              <NavLinks />
             </div>
           ) : null}
-          <main className="flex-1 px-4 py-8 sm:px-8">{children}</main>
+          <main className="flex-1 px-4 py-8 sm:px-8">
+            {children}
+          </main>
           <footer className="px-4 pb-10 text-center text-xs leading-5 text-muted sm:px-8">
             クレスノート
             <br />

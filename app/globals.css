@@ -32,6 +32,17 @@
   --font-mono: var(--font-geist-mono);
 }
 
+a,
+button,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(111, 157, 136, 0.18);
+}
+
+a:active {
+  opacity: 0.82;
+}
+
 html,
 body {
   background:
@@ -83,6 +94,20 @@ body {
 
 .nc-btn:hover {
   background: #2a2623;
+}
+
+.nc-btn:active,
+.nc-btn-ghost:active,
+.nc-btn-danger:active {
+  transform: scale(0.98);
+  opacity: 0.88;
+}
+
+.nc-btn:disabled,
+.nc-btn-ghost:disabled,
+.nc-btn-danger:disabled {
+  pointer-events: none;
+  opacity: 0.55;
 }
 
 .nc-btn-ghost {

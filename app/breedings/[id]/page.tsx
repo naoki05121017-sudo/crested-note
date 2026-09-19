@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addClutch, closeBreeding, updateEgg } from "@/app/breedings/actions";
 import { HatchForm } from "@/app/breedings/hatch-form";
+import { MutationForm } from "@/app/components/mutation-form";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { PairingResults } from "@/app/components/pairing-results";
 import { Card, PageHeader, Badge, SectionTitle } from "@/app/components/ui";
 import { getAnimal, getBreeding, predictionForBreeding } from "@/lib/db/queries";
@@ -53,11 +55,11 @@ export default async function BreedingDetailPage({
               </Link>
             ) : null}
             {breeding.status === "active" ? (
-              <form action={closeAction}>
-                <button type="submit" className="nc-btn-ghost">
+              <MutationForm action={closeAction}>
+                <PendingSubmitButton pendingLabel="終了しています…" className="nc-btn-ghost">
                   ペアを終了
-                </button>
-              </form>
+                </PendingSubmitButton>
+              </MutationForm>
             ) : null}
           </>
         }
@@ -74,7 +76,7 @@ export default async function BreedingDetailPage({
 
       <Card>
         <SectionTitle>クラッチを追加</SectionTitle>
-        <form action={addClutchAction} className="grid gap-3 sm:flex sm:flex-wrap sm:items-end">
+        <MutationForm action={addClutchAction} className="grid gap-3 sm:flex sm:flex-wrap sm:items-end">
           <label className="grid gap-1 text-sm">
             <span>産卵日</span>
             <input
@@ -99,10 +101,10 @@ export default async function BreedingDetailPage({
             <span>孵化予定</span>
             <input type="date" name="expectedHatchOn" className="nc-input" />
           </label>
-          <button type="submit" className="nc-btn w-full sm:w-auto">
+          <PendingSubmitButton pendingLabel="追加しています…" className="nc-btn w-full sm:w-auto">
             追加
-          </button>
-        </form>
+          </PendingSubmitButton>
+        </MutationForm>
       </Card>
 
       {breeding.clutches.map((clutch) => (
@@ -142,7 +144,7 @@ export default async function BreedingDetailPage({
                     </Link>
                   ) : (
                     <>
-                      <form action={updateAction} className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                      <MutationForm action={updateAction} className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
                         <select
                           name="result"
                           defaultValue={egg.result}
@@ -168,13 +170,14 @@ export default async function BreedingDetailPage({
                           placeholder="メモ"
                           className="nc-input min-w-40 flex-1"
                         />
-                        <button
+                        <PendingSubmitButton
                           type="submit"
+                          pendingLabel="更新しています…"
                           className="nc-btn-ghost w-full sm:w-auto"
                         >
                           更新
-                        </button>
-                      </form>
+                        </PendingSubmitButton>
+                      </MutationForm>
                       {egg.result !== "infertile" && egg.result !== "failed" ? (
                         <HatchForm
                           eggId={egg.id}
