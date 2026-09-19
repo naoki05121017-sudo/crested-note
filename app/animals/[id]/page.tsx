@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addWeight, deleteAnimal, deleteWeight } from "@/app/animals/actions";
+import { addWeight, deleteWeight } from "@/app/animals/actions";
 import { CrestLinkPanel } from "@/app/animals/crest-link-panel";
+import { DeleteAnimalForm } from "@/app/animals/delete-animal-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, PageHeader, Badge, SectionTitle, Stat } from "@/app/components/ui";
@@ -69,7 +70,6 @@ export default async function AnimalDetailPage({
   const genes = listLoci().filter(
     (locus) => (animal.genotype[locus.id] ?? "wild") !== "wild",
   );
-  const deleteAction = deleteAnimal.bind(null, animal.id);
   const addWeightAction = addWeight.bind(null, animal.id);
   const latest = weights.at(-1);
 
@@ -288,14 +288,7 @@ export default async function AnimalDetailPage({
         </Card>
       ) : null}
 
-      <MutationForm action={deleteAction}>
-        <PendingSubmitButton
-          pendingLabel="削除しています…"
-          className="nc-btn-danger"
-        >
-          この個体を削除
-        </PendingSubmitButton>
-      </MutationForm>
+      <DeleteAnimalForm animalId={animal.id} />
     </div>
   );
 }

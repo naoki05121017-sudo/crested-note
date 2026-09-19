@@ -133,28 +133,54 @@ export async function updateAnimal(id: string, formData: FormData) {
   redirect(`/animals/${id}`);
 }
 
-export async function deleteAnimal(id: string) {
-  await mutateDb((db) => {
-    const usedAsParent = db.animals.some(
-      (animal) => animal.sireId === id || animal.damId === id,
-    );
-    const usedInBreeding = db.breedings.some(
-      (breeding) => breeding.maleId === id || breeding.femaleId === id,
-    );
-    if (usedAsParent || usedInBreeding) {
-      throw new Error(
-        "血統または繁殖ペアで参照されているため削除できません。先に紐付けを外してください。",
-      );
+function publicDeleteMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    if (
+      message &&
+      !message.includes("Minified React error") &&
+      !message.includes("An error occurred in the Server Components")
+    ) {
+      return message;
     }
-    retireCrestLinkForAnimal(db, id);
-    db.animals = db.animals.filter((animal) => animal.id !== id);
-    db.genes = db.genes.filter((gene) => gene.animalId !== id);
-    db.weights = db.weights.filter((row) => row.animalId !== id);
-    db.projectMembers = db.projectMembers.filter((row) => row.animalId !== id);
-  });
+  }
+  return "削除できませんでした。";
+}
+
+export async function deleteAnimal(id: string): Promise<{ error: string | null }> {
+  if (!id) return { error: "削除できませんでした。" };
+  try {
+    await mutateDb((db) => {
+      const usedAsParent = db.animals.some(
+        (animal) => animal.sireId === id || animal.damId === id,
+      );
+      const usedInBreeding = db.breedings.some(
+        (breeding) => breeding.maleId === id || breeding.femaleId === id,
+      );
+      if (usedAsParent || usedInBreeding) {
+        throw new Error(
+          "血統または繁殖ペアで参照されているため削除できません。先に紐付けを外してください。",
+        );
+      }
+      retireCrestLinkForAnimal(db, id);
+      db.animals = db.animals.filter((animal) => animal.id !== id);
+      db.genes = db.genes.filter((gene) => gene.animalId !== id);
+      db.weights = db.weights.filter((row) => row.animalId !== id);
+      db.projectMembers = db.projectMembers.filter((row) => row.animalId !== id);
+    });
+  } catch (error) {
+    return { error: publicDeleteMessage(error) };
+  }
 
   revalidatePath("/", "layout");
   redirect("/animals");
+}
+
+export async function deleteAnimalForm(
+  _prev: { error: string | null },
+  formData: FormData,
+): Promise<{ error: string | null }> {
+  return deleteAnimal(textField(formData, "animalId"));
 }
 
 export async function addWeight(animalId: string, formData: FormData) {

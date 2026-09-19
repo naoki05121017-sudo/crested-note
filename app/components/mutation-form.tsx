@@ -1,17 +1,8 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-
-function isNextNavigationError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const digest = "digest" in error ? String(error.digest ?? "") : "";
-  return (
-    digest.startsWith("NEXT_REDIRECT") ||
-    digest.startsWith("NEXT_NOT_FOUND") ||
-    digest === "NEXT_HTTP_ERROR_FALLBACK;404"
-  );
-}
 
 export function MutationForm({
   action,
@@ -38,12 +29,14 @@ export function MutationForm({
           router.refresh();
           running.current = false;
         } catch (caught) {
-          if (isNextNavigationError(caught)) {
-            throw caught;
-          }
+          unstable_rethrow(caught);
           running.current = false;
+          const message =
+            caught instanceof Error ? caught.message.trim() : "";
           setError(
-            caught instanceof Error ? caught.message : "保存できませんでした。",
+            message && !message.includes("Minified React error")
+              ? message
+              : "保存できませんでした。",
           );
         }
       }}
