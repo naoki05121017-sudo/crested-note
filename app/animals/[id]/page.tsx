@@ -11,10 +11,8 @@ import {
   breedingsForAnimal,
   getAnimal,
   getCrestLinkView,
-  listAnimals,
   listWeights,
   pedigreeOf,
-  weightsByAnimal,
 } from "@/lib/db/queries";
 import {
   ANIMAL_STATUS_LABEL,
@@ -23,7 +21,7 @@ import {
   animalTitle,
 } from "@/lib/db/labels";
 import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
-import { compareAnimal } from "@/lib/stats/compare";
+import { growthPoints } from "@/lib/stats/compare";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
@@ -54,16 +52,6 @@ export default async function AnimalDetailPage({
   const tree = await pedigreeOf(animal.id);
   const weights = await listWeights(animal.id);
   const breedings = await breedingsForAnimal(animal.id);
-  const all = await listAnimals();
-  const byWeights = await weightsByAnimal();
-  const comparison = compareAnimal({
-    animal,
-    logs: weights,
-    others: all.map((row) => ({
-      animal: row,
-      logs: byWeights.get(row.id) ?? [],
-    })),
-  });
   const traitLabels = animal.traits.map((tid) =>
     visualTraitName(tid, animal.traitLevels?.[tid]),
   );
@@ -109,13 +97,10 @@ export default async function AnimalDetailPage({
           value={latest ? `${latest.weightG.toFixed(1)}g` : "—"}
         />
         <Stat
-          label="同条件平均との差"
-          value={
-            comparison.diff === null
-              ? "—"
-              : `${comparison.diff > 0 ? "+" : ""}${comparison.diff.toFixed(1)}g`
-          }
-          hint={comparison.tone}
+          label="全国個体比較"
+          value="見る"
+          hint="日本国内の近い条件の平均"
+          href={`/compare?animalId=${animal.id}`}
         />
         <div className="rounded-[1.5rem] border border-line bg-accent p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)]">
           <p className="text-sm text-muted">公開</p>
@@ -221,7 +206,7 @@ export default async function AnimalDetailPage({
 
       <Card>
         <SectionTitle>体重・成長</SectionTitle>
-        <GrowthChart mine={comparison.mineCurve} average={comparison.averageCurve} />
+        <GrowthChart mine={growthPoints(animal, weights)} average={[]} />
         <MutationForm action={addWeightAction} className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
           <input
             type="date"

@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import { calculatePairing, type Genotype } from "@/lib/genetics";
 import { nowIso, textField } from "@/lib/db/form";
 import { getAnimal } from "@/lib/db/queries";
@@ -29,21 +28,25 @@ export async function savePrediction(formData: FormData) {
     `${male?.name ?? "親A"} × ${female?.name ?? "親B"}`;
 
   const id = newId();
-  await mutateDb((db) => {
-    db.predictions.push({
-      id,
-      name,
-      maleId,
-      femaleId,
-      parentA,
-      parentB,
-      pairing,
-      breedingId: textField(formData, "breedingId"),
-      projectId: textField(formData, "projectId"),
-      createdAt: nowIso(),
+  try {
+    await mutateDb((db) => {
+      db.predictions.push({
+        id,
+        name,
+        maleId,
+        femaleId,
+        parentA,
+        parentB,
+        pairing,
+        breedingId: textField(formData, "breedingId"),
+        projectId: textField(formData, "projectId"),
+        createdAt: nowIso(),
+      });
     });
-  });
+  } catch (error) {
+    return actionError(error, "保存できませんでした。");
+  }
 
-  revalidatePath("/", "layout");
-  redirect(`/predictions/${id}`);
+  revalidateApp("/predictions", `/predictions/${id}`);
+  return actionOk(`/predictions/${id}`);
 }

@@ -3,6 +3,7 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { deleteAnimalForm } from "@/app/animals/actions";
+import { navigateAfterMutation } from "@/app/components/navigate-after-mutation";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 
 export function DeleteAnimalForm({ animalId }: { animalId: string }) {
@@ -16,13 +17,7 @@ export function DeleteAnimalForm({ animalId }: { animalId: string }) {
 
   useEffect(() => {
     if (!leaving) return;
-    router.replace("/animals");
-    router.refresh();
-    const fallback = window.setTimeout(() => {
-      if (window.location.pathname.startsWith("/animals/") && window.location.pathname !== "/animals") {
-        window.location.assign("/animals");
-      }
-    }, 800);
+    const fallback = navigateAfterMutation(router, "/animals");
     return () => window.clearTimeout(fallback);
   }, [leaving, router]);
 

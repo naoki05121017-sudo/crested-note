@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { useEffect, useState } from "react";
+import { useMutationBusy } from "@/app/components/mutation-busy";
 
 export function PendingSubmitButton({
   children,
@@ -14,8 +15,9 @@ export function PendingSubmitButton({
   pendingLabel?: string;
 }) {
   const { pending } = useFormStatus();
+  const leaving = useMutationBusy();
   const [pressed, setPressed] = useState(false);
-  const busy = pending || Boolean(props.disabled);
+  const busy = pending || leaving || Boolean(props.disabled);
   const showPending = busy || pressed;
 
   useEffect(() => {

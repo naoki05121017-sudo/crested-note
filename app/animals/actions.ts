@@ -1,7 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import {
   parseAnimalStatus,
   parseGenotype,
@@ -50,101 +49,95 @@ function parseAnimalFields(formData: FormData, existing?: AnimalRecord) {
 export async function createAnimal(formData: FormData) {
   const parsed = parseAnimalFields(formData);
   if (parsed.error) {
-    throw new Error(parsed.error);
+    return actionError(parsed.error);
   }
 
   const id = newId();
   const stamp = nowIso();
 
-  await mutateDb((db) => {
-    const record: AnimalRecord = {
-      id,
-      crestLinkId: "",
-      code: parsed.data.code,
-      name: parsed.data.name,
-      sex: parsed.data.sex,
-      hatchDate: parsed.data.hatchDate,
-      status: parsed.data.status,
-      sireId: parsed.data.sireId,
-      damId: parsed.data.damId,
-      morphLabel: parsed.data.morphLabel,
-      traits: parsed.data.traits,
-      traitLevels: parsed.data.traitLevels,
-      notes: parsed.data.notes,
-      photoUrl: parsed.data.photoUrl,
-      prefecture: parsed.data.prefecture || db.settings.prefecture,
-      isPublic: parsed.data.isPublic,
-      shareSlug: parsed.data.isPublic
-        ? parsed.data.shareSlug || newSlug()
-        : parsed.data.shareSlug,
-      createdAt: stamp,
-      updatedAt: stamp,
-    };
-    db.animals.push(record);
-    issueCrestLinkForAnimal(db, id);
-    db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
-  });
+  try {
+    await mutateDb((db) => {
+      const record: AnimalRecord = {
+        id,
+        crestLinkId: "",
+        code: parsed.data.code,
+        name: parsed.data.name,
+        sex: parsed.data.sex,
+        hatchDate: parsed.data.hatchDate,
+        status: parsed.data.status,
+        sireId: parsed.data.sireId,
+        damId: parsed.data.damId,
+        morphLabel: parsed.data.morphLabel,
+        traits: parsed.data.traits,
+        traitLevels: parsed.data.traitLevels,
+        notes: parsed.data.notes,
+        photoUrl: parsed.data.photoUrl,
+        prefecture: parsed.data.prefecture || db.settings.prefecture,
+        isPublic: parsed.data.isPublic,
+        shareSlug: parsed.data.isPublic
+          ? parsed.data.shareSlug || newSlug()
+          : parsed.data.shareSlug,
+        createdAt: stamp,
+        updatedAt: stamp,
+      };
+      db.animals.push(record);
+      issueCrestLinkForAnimal(db, id);
+      db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
+    });
+  } catch (error) {
+    return actionError(error, "登録できませんでした。");
+  }
 
-  revalidatePath("/", "layout");
-  redirect(`/animals/${id}`);
+  revalidateApp("/animals", `/animals/${id}`);
+  return actionOk(`/animals/${id}`);
 }
 
 export async function updateAnimal(id: string, formData: FormData) {
   const existing = await getAnimal(id);
   if (!existing) {
-    throw new Error("個体が見つかりません。");
+    return actionError("個体が見つかりません。");
   }
 
   const parsed = parseAnimalFields(formData, existing);
   if (parsed.error) {
-    throw new Error(parsed.error);
+    return actionError(parsed.error);
   }
 
   if (parsed.data.sireId === id || parsed.data.damId === id) {
-    throw new Error("自分自身を親にはできません。");
+    return actionError("自分自身を親にはできません。");
   }
 
-  await mutateDb((db) => {
-    const record = db.animals.find((animal) => animal.id === id);
-    if (!record) return;
-    record.code = parsed.data.code;
-    record.name = parsed.data.name;
-    record.sex = parsed.data.sex;
-    record.hatchDate = parsed.data.hatchDate;
-    record.status = parsed.data.status;
-    record.sireId = parsed.data.sireId;
-    record.damId = parsed.data.damId;
-    record.morphLabel = parsed.data.morphLabel;
-    record.traits = parsed.data.traits;
-    record.traitLevels = parsed.data.traitLevels;
-    record.notes = parsed.data.notes;
-    record.photoUrl = parsed.data.photoUrl;
-    record.prefecture = parsed.data.prefecture;
-    record.isPublic = parsed.data.isPublic;
-    if (parsed.data.isPublic && !record.shareSlug) {
-      record.shareSlug = newSlug();
-    }
-    record.updatedAt = nowIso();
-    db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
-    syncCrestLinkParents(db, id);
-  });
-
-  revalidatePath("/", "layout");
-  redirect(`/animals/${id}`);
-}
-
-function publicDeleteMessage(error: unknown): string {
-  if (error instanceof Error) {
-    const message = error.message.trim();
-    if (
-      message &&
-      !message.includes("Minified React error") &&
-      !message.includes("An error occurred in the Server Components")
-    ) {
-      return message;
-    }
+  try {
+    await mutateDb((db) => {
+      const record = db.animals.find((animal) => animal.id === id);
+      if (!record) return;
+      record.code = parsed.data.code;
+      record.name = parsed.data.name;
+      record.sex = parsed.data.sex;
+      record.hatchDate = parsed.data.hatchDate;
+      record.status = parsed.data.status;
+      record.sireId = parsed.data.sireId;
+      record.damId = parsed.data.damId;
+      record.morphLabel = parsed.data.morphLabel;
+      record.traits = parsed.data.traits;
+      record.traitLevels = parsed.data.traitLevels;
+      record.notes = parsed.data.notes;
+      record.photoUrl = parsed.data.photoUrl;
+      record.prefecture = parsed.data.prefecture;
+      record.isPublic = parsed.data.isPublic;
+      if (parsed.data.isPublic && !record.shareSlug) {
+        record.shareSlug = newSlug();
+      }
+      record.updatedAt = nowIso();
+      db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
+      syncCrestLinkParents(db, id);
+    });
+  } catch (error) {
+    return actionError(error, "保存できませんでした。");
   }
-  return "削除できませんでした。";
+
+  revalidateApp("/animals", `/animals/${id}`);
+  return actionOk(`/animals/${id}`);
 }
 
 export async function deleteAnimal(
@@ -171,15 +164,10 @@ export async function deleteAnimal(
       db.projectMembers = db.projectMembers.filter((row) => row.animalId !== id);
     });
   } catch (error) {
-    return { error: publicDeleteMessage(error), deleted: false };
+    return { error: actionError(error, "削除できませんでした。").error, deleted: false };
   }
 
-  try {
-    revalidatePath("/", "layout");
-    revalidatePath("/animals");
-  } catch {
-    // Next request 外では cache store が無い。削除自体は完了している。
-  }
+  revalidateApp("/animals");
   return { error: null, deleted: true };
 }
 
@@ -193,29 +181,37 @@ export async function deleteAnimalForm(
 export async function addWeight(animalId: string, formData: FormData) {
   const weightG = Number(textField(formData, "weightG"));
   if (!Number.isFinite(weightG) || weightG <= 0) {
-    throw new Error("体重は正の数で入力してください。");
+    return actionError("体重は正の数で入力してください。");
   }
   const weighedOn =
     textField(formData, "weighedOn") || new Date().toISOString().slice(0, 10);
 
-  await mutateDb((db) => {
-    db.weights.push({
-      id: newId(),
-      animalId,
-      weighedOn,
-      weightG,
-      notes: textField(formData, "notes"),
+  try {
+    await mutateDb((db) => {
+      db.weights.push({
+        id: newId(),
+        animalId,
+        weighedOn,
+        weightG,
+        notes: textField(formData, "notes"),
+      });
     });
-  });
+  } catch (error) {
+    return actionError(error, "記録できませんでした。");
+  }
 
-  revalidatePath("/", "layout");
-  redirect(`/animals/${animalId}`);
+  revalidateApp(`/animals/${animalId}`);
+  return actionOk(`/animals/${animalId}`);
 }
 
 export async function deleteWeight(animalId: string, weightId: string) {
-  await mutateDb((db) => {
-    db.weights = db.weights.filter((row) => row.id !== weightId);
-  });
-  revalidatePath("/", "layout");
-  redirect(`/animals/${animalId}`);
+  try {
+    await mutateDb((db) => {
+      db.weights = db.weights.filter((row) => row.id !== weightId);
+    });
+  } catch (error) {
+    return actionError(error, "削除できませんでした。");
+  }
+  revalidateApp(`/animals/${animalId}`);
+  return actionOk(`/animals/${animalId}`);
 }
