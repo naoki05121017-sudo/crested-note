@@ -89,9 +89,12 @@ function nodeHttpFetch(url: string, init: RequestInit): Promise<Response> {
             if (value == null) continue;
             responseHeaders.set(key, Array.isArray(value) ? value.join(", ") : value);
           }
+          const status = incoming.statusCode ?? 500;
+          const raw = Buffer.concat(chunks);
+          const noBody = status === 204 || status === 205 || status === 304;
           resolve(
-            new Response(Buffer.concat(chunks), {
-              status: incoming.statusCode ?? 500,
+            new Response(noBody ? null : raw, {
+              status,
               statusText: incoming.statusMessage,
               headers: responseHeaders,
             }),

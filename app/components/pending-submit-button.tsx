@@ -16,7 +16,7 @@ export function PendingSubmitButton({
   const { pending } = useFormStatus();
   const [pressed, setPressed] = useState(false);
   const busy = pending || Boolean(props.disabled);
-  const showPending = pending || pressed;
+  const showPending = busy || pressed;
 
   useEffect(() => {
     if (!pending) setPressed(false);

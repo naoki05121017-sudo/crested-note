@@ -147,8 +147,10 @@ function publicDeleteMessage(error: unknown): string {
   return "削除できませんでした。";
 }
 
-export async function deleteAnimal(id: string): Promise<{ error: string | null }> {
-  if (!id) return { error: "削除できませんでした。" };
+export async function deleteAnimal(
+  id: string,
+): Promise<{ error: string | null; deleted: boolean }> {
+  if (!id) return { error: "削除できませんでした。", deleted: false };
   try {
     await mutateDb((db) => {
       const usedAsParent = db.animals.some(
@@ -169,17 +171,22 @@ export async function deleteAnimal(id: string): Promise<{ error: string | null }
       db.projectMembers = db.projectMembers.filter((row) => row.animalId !== id);
     });
   } catch (error) {
-    return { error: publicDeleteMessage(error) };
+    return { error: publicDeleteMessage(error), deleted: false };
   }
 
-  revalidatePath("/", "layout");
-  redirect("/animals");
+  try {
+    revalidatePath("/", "layout");
+    revalidatePath("/animals");
+  } catch {
+    // Next request 外では cache store が無い。削除自体は完了している。
+  }
+  return { error: null, deleted: true };
 }
 
 export async function deleteAnimalForm(
-  _prev: { error: string | null },
+  _prev: { error: string | null; deleted: boolean },
   formData: FormData,
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; deleted: boolean }> {
   return deleteAnimal(textField(formData, "animalId"));
 }
 
