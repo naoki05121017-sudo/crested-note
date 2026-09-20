@@ -29,6 +29,7 @@ export function readLocalJsonFile(): DatabaseFile {
     },
     feedback: parsed.feedback ?? [],
     crestLinkSeq: Number(parsed.crestLinkSeq) || 0,
+    animalCodeSeq: Number(parsed.animalCodeSeq) || 0,
     crestLinks: parsed.crestLinks ?? [],
     crestLinkTransfers: parsed.crestLinkTransfers ?? [],
   };

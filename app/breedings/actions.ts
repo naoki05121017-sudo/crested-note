@@ -2,6 +2,7 @@
 
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import { issueCrestLinkForAnimal } from "@/lib/crest-link/core";
+import { issueAnimalCode } from "@/lib/db/animal-code";
 import { calculatePairing, genotypeFromCopies, type AlleleCopies } from "@/lib/genetics";
 import {
   nowIso,
@@ -199,7 +200,7 @@ export async function hatchEgg(eggId: string, formData: FormData) {
       const record: AnimalRecord = {
         id: animalId,
         crestLinkId: "",
-        code: textField(formData, "code"),
+        code: issueAnimalCode(db),
         name,
         sex: parseSex(textField(formData, "sex")),
         hatchDate:

@@ -51,13 +51,6 @@ export function HatchForm({
           />
         </label>
         <label className="grid gap-1 text-sm">
-          <span>管理番号</span>
-          <input
-            name="code"
-            className="nc-input"
-          />
-        </label>
-        <label className="grid gap-1 text-sm">
           <span>性別</span>
           <select
             name="sex"
@@ -99,7 +92,7 @@ export function HatchForm({
           </label>
         ))}
       </fieldset>
-      <PendingSubmitButton pendingLabel="登録しています…" className="nc-btn w-full sm:w-fit">
+      <PendingSubmitButton pendingLabel="登録中…" className="nc-btn w-full sm:w-fit">
         孵化個体として登録
       </PendingSubmitButton>
     </MutationForm>

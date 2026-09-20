@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { postgresUuid, uuidOrNull } from "@/lib/db/pg-id";
+import { ANIMAL_CODE_SEQ_ROW_ID } from "@/lib/db/animal-code";
 import {
   CREST_LINK_EVENT_TYPES,
   CREST_LINK_STATUSES,
@@ -26,6 +27,16 @@ function timestampOrNull(value: string | undefined): string | null {
   const text = String(value ?? "").trim();
   return text ? text : null;
 }
+
+function seqValue(
+  rows: { id?: unknown; value?: unknown }[] | null | undefined,
+  id: number,
+): number {
+  const row = (rows ?? []).find((item) => Number(item.id) === id);
+  return Number(row?.value) || 0;
+}
+
+const CREST_LINK_SEQ_ROW_ID = 1;
 
 async function must<T>(
   table: string,
@@ -126,7 +137,7 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
     retryOnJwtIssuedAtFuture(() => client.from("profiles").select("*")),
     retryOnJwtIssuedAtFuture(() => client.from("feedback").select("*")),
     retryOnJwtIssuedAtFuture(() =>
-      client.from("crest_link_seq").select("value").eq("id", 1).maybeSingle(),
+      client.from("crest_link_seq").select("id, value"),
     ),
     retryOnJwtIssuedAtFuture(() => client.from("crest_links").select("*")),
     retryOnJwtIssuedAtFuture(() => client.from("crest_link_transfers").select("*")),
@@ -142,7 +153,9 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
   const predictions = await must("predictions", predictionsRes);
   const profiles = await must("profiles", profilesRes);
   const feedback = await must("feedback", feedbackRes);
-  const seqRow = await must("crest_link_seq", seqRes);
+  const seqRows = (await must("crest_link_seq", seqRes)) as
+    | { id?: unknown; value?: unknown }[]
+    | null;
   const crestLinks = await must("crest_links", crestLinksRes);
   const transfers = await must("crest_link_transfers", transfersRes);
 
@@ -258,7 +271,8 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
       updatedAt: iso(row.updated_at),
       adminNote: String(row.admin_note ?? ""),
     })),
-    crestLinkSeq: Number((seqRow as { value?: number } | null)?.value) || 0,
+    crestLinkSeq: seqValue(seqRows, CREST_LINK_SEQ_ROW_ID),
+    animalCodeSeq: seqValue(seqRows, ANIMAL_CODE_SEQ_ROW_ID),
     crestLinks: (crestLinks ?? []).flatMap((row) => {
       const id = String(row.id ?? "");
       if (!id) return [];
@@ -323,15 +337,28 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
   const client = createAdminClient();
   const ownerUserId = await keeperUserId(client);
 
-  const { data: seqRow, error: seqError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("crest_link_seq").select("value").eq("id", 1).maybeSingle(),
+  const { data: seqRows, error: seqError } = await retryOnJwtIssuedAtFuture(() =>
+    client.from("crest_link_seq").select("id, value"),
   );
   if (seqError) {
     throw new Error(`crest_link_seq を読めません: ${seqError.message}`);
   }
-  const nextSeq = Math.max(Number(seqRow?.value) || 0, db.crestLinkSeq);
+  const nextCrestSeq = Math.max(
+    seqValue(seqRows, CREST_LINK_SEQ_ROW_ID),
+    db.crestLinkSeq,
+  );
+  const nextAnimalCodeSeq = Math.max(
+    seqValue(seqRows, ANIMAL_CODE_SEQ_ROW_ID),
+    db.animalCodeSeq,
+  );
   const { error: seqWriteError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("crest_link_seq").upsert({ id: 1, value: nextSeq }, { onConflict: "id" }),
+    client.from("crest_link_seq").upsert(
+      [
+        { id: CREST_LINK_SEQ_ROW_ID, value: nextCrestSeq },
+        { id: ANIMAL_CODE_SEQ_ROW_ID, value: nextAnimalCodeSeq },
+      ],
+      { onConflict: "id" },
+    ),
   );
   if (seqWriteError) {
     throw new Error(`crest_link_seq を保存できません: ${seqWriteError.message}`);

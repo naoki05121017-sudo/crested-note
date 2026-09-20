@@ -5,6 +5,7 @@ import { CrestLinkPanel } from "@/app/animals/crest-link-panel";
 import { DeleteAnimalForm } from "@/app/animals/delete-animal-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
+import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { Card, PageHeader, Badge, SectionTitle, Stat } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
 import {
@@ -65,7 +66,7 @@ export default async function AnimalDetailPage({
     <div className="flex flex-col gap-8">
       <PageHeader
         kicker={SEX_LABEL[animal.sex]}
-        title={animalTitle(animal)}
+        title={animal.name}
         description={`${animal.hatchDate ? `孵化 ${animal.hatchDate}` : "孵化日未登録"}`}
         actions={
           <>
@@ -81,6 +82,8 @@ export default async function AnimalDetailPage({
           </>
         }
       />
+
+      <AnimalCodeBlock code={animal.code} />
 
       <div className="flex flex-wrap gap-2">
         <Badge tone={animal.sex === "female" ? "blush" : animal.sex === "male" ? "mist" : "sand"}>

@@ -66,7 +66,8 @@ export const FEEDBACK_STATUS_LABEL: Record<FeedbackStatus, string> = {
 };
 
 export function animalTitle(animal: { code: string; name: string }): string {
-  return animal.code ? `${animal.name}（${animal.code}）` : animal.name;
+  const code = animal.code.trim();
+  return code ? `${animal.name}（${code}）` : animal.name;
 }
 
 export const PREFECTURES = [

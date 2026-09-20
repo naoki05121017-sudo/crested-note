@@ -48,6 +48,7 @@ function emptyDb(animals: AnimalRecord[] = []): DatabaseFile {
     settings: { ...DEFAULT_SETTINGS, displayName: "N.crest" },
     feedback: [],
     crestLinkSeq: 0,
+    animalCodeSeq: 0,
     crestLinks: [],
     crestLinkTransfers: [],
   };

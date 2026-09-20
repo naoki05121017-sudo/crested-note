@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CrestLinkRedeemCard } from "@/app/animals/crest-link-redeem";
 import { EmptyState, PageHeader, Badge } from "@/app/components/ui";
 import { filterAnimals } from "@/lib/db/queries";
-import { ANIMAL_STATUS_LABEL, SEX_LABEL, animalTitle } from "@/lib/db/labels";
+import { displayAnimalCode } from "@/lib/db/animal-code";
+import { ANIMAL_STATUS_LABEL, SEX_LABEL } from "@/lib/db/labels";
 import { ANIMAL_STATUSES, SEXES } from "@/lib/db/types";
 import { formatGenotypeLabel, visualTraitName } from "@/lib/genetics";
 
@@ -79,6 +80,7 @@ export default async function AnimalsPage({
             <thead>
               <tr>
                 <th>個体</th>
+                <th>管理番号</th>
                 <th>性別</th>
                 <th>遺伝子 / 見た目</th>
                 <th>状態</th>
@@ -89,8 +91,13 @@ export default async function AnimalsPage({
                 <tr key={animal.id}>
                   <td>
                     <Link href={`/animals/${animal.id}`} className="font-medium hover:underline">
-                      {animalTitle(animal)}
+                      {animal.name}
                     </Link>
+                  </td>
+                  <td>
+                    <span className="font-mono text-base font-semibold tracking-wide">
+                      {displayAnimalCode(animal.code)}
+                    </span>
                   </td>
                   <td>
                     <Badge tone={animal.sex === "female" ? "blush" : animal.sex === "male" ? "mist" : "sand"}>

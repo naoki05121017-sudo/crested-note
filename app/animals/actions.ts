@@ -10,6 +10,7 @@ import {
   nowIso,
   textField,
 } from "@/lib/db/form";
+import { issueAnimalCode } from "@/lib/db/animal-code";
 import { issueCrestLinkForAnimal, retireCrestLinkForAnimal, syncCrestLinkParents } from "@/lib/crest-link/core";
 import { replaceGenes } from "@/lib/db/genes";
 import { getAnimal } from "@/lib/db/queries";
@@ -27,7 +28,6 @@ function parseAnimalFields(formData: FormData, existing?: AnimalRecord) {
     error: null,
     data: {
       name,
-      code: textField(formData, "code"),
       sex: parseSex(textField(formData, "sex")),
       hatchDate: textField(formData, "hatchDate"),
       status: parseAnimalStatus(textField(formData, "status")),
@@ -60,7 +60,7 @@ export async function createAnimal(formData: FormData) {
       const record: AnimalRecord = {
         id,
         crestLinkId: "",
-        code: parsed.data.code,
+        code: issueAnimalCode(db),
         name: parsed.data.name,
         sex: parsed.data.sex,
         hatchDate: parsed.data.hatchDate,
@@ -111,7 +111,6 @@ export async function updateAnimal(id: string, formData: FormData) {
     await mutateDb((db) => {
       const record = db.animals.find((animal) => animal.id === id);
       if (!record) return;
-      record.code = parsed.data.code;
       record.name = parsed.data.name;
       record.sex = parsed.data.sex;
       record.hatchDate = parsed.data.hatchDate;

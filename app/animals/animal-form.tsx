@@ -5,6 +5,7 @@ import {
 import { ANIMAL_STATUSES, SEXES, type Animal } from "@/lib/db/types";
 import { ANIMAL_STATUS_LABEL, PREFECTURES, SEX_LABEL, animalTitle } from "@/lib/db/labels";
 import { createAnimal, updateAnimal } from "@/app/animals/actions";
+import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { GenotypeFields } from "@/app/components/genotype-fields";
@@ -30,10 +31,9 @@ export function AnimalForm({
           <span className="font-medium">名前</span>
           <input required name="name" defaultValue={animal?.name} className="nc-input" />
         </label>
-        <label className="grid gap-1 text-sm">
-          <span className="font-medium">管理番号</span>
-          <input name="code" defaultValue={animal?.code} className="nc-input" />
-        </label>
+        <div className="sm:col-span-2">
+          <AnimalCodeBlock code={animal?.code} pending={!animal} />
+        </div>
         <label className="grid gap-1 text-sm">
           <span className="font-medium">性別</span>
           <select name="sex" defaultValue={animal?.sex ?? "unknown"} className="nc-input">
@@ -177,7 +177,7 @@ export function AnimalForm({
       </Card>
 
       <PendingSubmitButton
-        pendingLabel={animal ? "保存しています…" : "登録しています…"}
+        pendingLabel={animal ? "保存しています…" : "登録中…"}
         className="nc-btn w-full sm:w-fit"
       >
         {animal ? "保存する" : "登録する"}

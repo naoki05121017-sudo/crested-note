@@ -32,6 +32,7 @@ async function main() {
         crestLinkTransfers: summary.crestLinkTransfers,
         breedings: summary.breedings,
         crestLinkSeq: summary.crestLinkSeq,
+        animalCodeSeq: summary.animalCodeSeq,
       },
       null,
       2,

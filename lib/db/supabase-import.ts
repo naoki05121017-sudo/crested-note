@@ -1,3 +1,4 @@
+import { ANIMAL_CODE_SEQ_ROW_ID } from "@/lib/db/animal-code";
 import { postgresUuid, uuidOrNull } from "@/lib/db/pg-id";
 import { fetchWithJwtClockSkewRetry } from "@/lib/supabase/clock-skew-fetch";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -13,6 +14,7 @@ export type ImportSummary = {
   crestLinkTransfers: number;
   breedings: number;
   crestLinkSeq: number;
+  animalCodeSeq: number;
 };
 
 function timestampOrNull(value: string | undefined): string | null {
@@ -81,11 +83,11 @@ async function ensureImportOwner(
   return userId;
 }
 
-async function syncCrestLinkSeq(client: SupabaseClient, jsonSeq: number) {
+async function syncSeqRow(client: SupabaseClient, id: number, jsonSeq: number) {
   const { data, error } = await client
     .from("crest_link_seq")
     .select("value")
-    .eq("id", 1)
+    .eq("id", id)
     .maybeSingle();
   if (error) {
     throw new Error(`crest_link_seq を読めません: ${error.message}`);
@@ -94,7 +96,7 @@ async function syncCrestLinkSeq(client: SupabaseClient, jsonSeq: number) {
   const next = Math.max(current, jsonSeq);
   const { error: writeError } = await client
     .from("crest_link_seq")
-    .upsert({ id: 1, value: next }, { onConflict: "id" });
+    .upsert({ id, value: next }, { onConflict: "id" });
   if (writeError) {
     throw new Error(`crest_link_seq を更新できません: ${writeError.message}`);
   }
@@ -104,7 +106,12 @@ async function syncCrestLinkSeq(client: SupabaseClient, jsonSeq: number) {
 export async function importLocalJsonToSupabase(client: SupabaseClient) {
   const db = readLocalJsonFile();
   const ownerUserId = await ensureImportOwner(client, db);
-  const crestLinkSeq = await syncCrestLinkSeq(client, db.crestLinkSeq);
+  const crestLinkSeq = await syncSeqRow(client, 1, db.crestLinkSeq);
+  const animalCodeSeq = await syncSeqRow(
+    client,
+    ANIMAL_CODE_SEQ_ROW_ID,
+    db.animalCodeSeq,
+  );
 
   await upsert(
     client,
@@ -311,6 +318,7 @@ export async function importLocalJsonToSupabase(client: SupabaseClient) {
     crestLinkTransfers: db.crestLinkTransfers.length,
     breedings: db.breedings.length,
     crestLinkSeq,
+    animalCodeSeq,
   };
   return summary;
 }

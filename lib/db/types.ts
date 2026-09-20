@@ -94,6 +94,7 @@ export type AnimalRecord = {
   id: string;
   /** Lifetime Crest Link ID (NC-000001). Empty until assigned. */
   crestLinkId: string;
+  /** Display keeper number (e.g. NC-0001). Not the internal UUID and not Crest Link. */
   code: string;
   name: string;
   sex: Sex;
@@ -246,6 +247,8 @@ export type DatabaseFile = {
   settings: SettingsRecord;
   feedback: FeedbackRecord[];
   crestLinkSeq: number;
+  /** High-water for display animal codes. Survives deletes; not derived from the current list. */
+  animalCodeSeq: number;
   crestLinks: CrestLinkRecord[];
   crestLinkTransfers: CrestLinkTransferRecord[];
 };

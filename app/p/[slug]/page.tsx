@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { GrowthChart } from "@/app/components/growth-chart";
+import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { Badge, Card } from "@/app/components/ui";
 import { getAnimalBySlug, listWeights } from "@/lib/db/queries";
 import { SEX_LABEL } from "@/lib/db/labels";
@@ -25,6 +26,9 @@ export default async function PublicAnimalPage({
           PUBLIC ANIMAL
         </p>
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{animal.name}</h1>
+        <div className="mt-4">
+          <AnimalCodeBlock code={animal.code} />
+        </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Badge tone={animal.sex === "female" ? "blush" : "mist"}>
             {SEX_LABEL[animal.sex]}
