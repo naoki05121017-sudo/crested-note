@@ -18,6 +18,8 @@ create table if not exists public.profiles (
 
 -- ---------------------------------------------------------------------------
 -- Crest Link (global lifetime identity)
+-- Singleton sequence: id must stay 1 (constraint crest_link_seq_id_check).
+-- Do not store keeper display numbers here.
 -- ---------------------------------------------------------------------------
 create table if not exists public.crest_link_seq (
   id integer primary key default 1 check (id = 1),
@@ -27,6 +29,12 @@ create table if not exists public.crest_link_seq (
 insert into public.crest_link_seq (id, value)
 values (1, 0)
 on conflict (id) do nothing;
+
+-- Keeper display numbers (NC-0001). Per-user; may repeat across keepers.
+create table if not exists public.animal_code_seq (
+  user_id uuid primary key references public.profiles (id) on delete cascade,
+  value integer not null default 0 check (value >= 0)
+);
 
 create table if not exists public.crest_links (
   id text primary key,
@@ -198,6 +206,9 @@ begin
   insert into public.profiles (id)
   values (new.id)
   on conflict (id) do nothing;
+  insert into public.animal_code_seq (user_id, value)
+  values (new.id, 0)
+  on conflict (user_id) do nothing;
   return new;
 end;
 $$;
@@ -227,6 +238,23 @@ create trigger crest_link_seq_no_decrease
   before update on public.crest_link_seq
   for each row execute function public.prevent_crest_link_seq_decrease();
 
+create or replace function public.prevent_animal_code_seq_decrease()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.value < old.value then
+    raise exception 'animal_code_seq must never decrease';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists animal_code_seq_no_decrease on public.animal_code_seq;
+create trigger animal_code_seq_no_decrease
+  before update on public.animal_code_seq
+  for each row execute function public.prevent_animal_code_seq_decrease();
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security
 -- ---------------------------------------------------------------------------
@@ -244,6 +272,7 @@ alter table public.feedback enable row level security;
 alter table public.crest_links enable row level security;
 alter table public.crest_link_transfers enable row level security;
 alter table public.crest_link_seq enable row level security;
+alter table public.animal_code_seq enable row level security;
 
 drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own on public.profiles
@@ -420,3 +449,5 @@ create policy transfers_update_own on public.crest_link_transfers
 -- Sequence and Crest Link insert: service role / later RPC only (no authenticated insert of new IDs)
 revoke all on public.crest_link_seq from anon, authenticated;
 grant select, insert, update, delete on public.crest_link_seq to service_role;
+revoke all on public.animal_code_seq from anon, authenticated;
+grant select, insert, update, delete on public.animal_code_seq to service_role;

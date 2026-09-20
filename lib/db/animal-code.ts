@@ -4,12 +4,6 @@ import type { DatabaseFile } from "@/lib/db/types";
 export const ANIMAL_CODE_PREFIX = "NC-";
 export const ANIMAL_CODE_PAD = 4;
 
-/**
- * Persistent counter row in `crest_link_seq`.
- * Crest Link already uses id=1. Future multi-user: one sequence per keeper, not a global unique animal id.
- */
-export const ANIMAL_CODE_SEQ_ROW_ID = 2;
-
 export function formatAnimalCode(seq: number): string {
   if (!Number.isInteger(seq) || seq < 1) {
     throw new Error("管理番号の連番が不正です。");

@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { postgresUuid, uuidOrNull } from "@/lib/db/pg-id";
-import { ANIMAL_CODE_SEQ_ROW_ID } from "@/lib/db/animal-code";
+import {
+  ANIMAL_CODE_SEQ_TABLE,
+  animalCodeSeqValueForUser,
+  animalCodeSeqWriteRow,
+} from "@/lib/db/animal-code-seq";
+import { crestLinkSeqValue, crestLinkSeqWriteRow } from "@/lib/db/crest-link-seq";
 import {
   CREST_LINK_EVENT_TYPES,
   CREST_LINK_STATUSES,
@@ -28,16 +33,6 @@ function timestampOrNull(value: string | undefined): string | null {
   return text ? text : null;
 }
 
-function seqValue(
-  rows: { id?: unknown; value?: unknown }[] | null | undefined,
-  id: number,
-): number {
-  const row = (rows ?? []).find((item) => Number(item.id) === id);
-  return Number(row?.value) || 0;
-}
-
-const CREST_LINK_SEQ_ROW_ID = 1;
-
 async function must<T>(
   table: string,
   result: { data: T | null; error: { message: string } | null },
@@ -46,6 +41,16 @@ async function must<T>(
     throw new Error(`${table} を読めません: ${result.error.message}`);
   }
   return result.data as T;
+}
+
+function isMissingTableError(error: { message?: string; code?: string } | null): boolean {
+  const text = `${error?.message ?? ""} ${error?.code ?? ""}`.toLowerCase();
+  return (
+    text.includes("could not find the table") ||
+    text.includes("schema cache") ||
+    text.includes("42p01") ||
+    text.includes("pgrst205")
+  );
 }
 
 async function upsert(
@@ -122,6 +127,7 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
     profilesRes,
     feedbackRes,
     seqRes,
+    animalCodeSeqRes,
     crestLinksRes,
     transfersRes,
   ] = await Promise.all([
@@ -138,6 +144,9 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
     retryOnJwtIssuedAtFuture(() => client.from("feedback").select("*")),
     retryOnJwtIssuedAtFuture(() =>
       client.from("crest_link_seq").select("id, value"),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from(ANIMAL_CODE_SEQ_TABLE).select("user_id, value"),
     ),
     retryOnJwtIssuedAtFuture(() => client.from("crest_links").select("*")),
     retryOnJwtIssuedAtFuture(() => client.from("crest_link_transfers").select("*")),
@@ -156,6 +165,11 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
   const seqRows = (await must("crest_link_seq", seqRes)) as
     | { id?: unknown; value?: unknown }[]
     | null;
+  const animalCodeSeqRows = isMissingTableError(animalCodeSeqRes.error)
+    ? []
+    : ((await must("animal_code_seq", animalCodeSeqRes)) as
+        | { user_id?: unknown; value?: unknown }[]
+        | null);
   const crestLinks = await must("crest_links", crestLinksRes);
   const transfers = await must("crest_link_transfers", transfersRes);
 
@@ -271,8 +285,15 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
       updatedAt: iso(row.updated_at),
       adminNote: String(row.admin_note ?? ""),
     })),
-    crestLinkSeq: seqValue(seqRows, CREST_LINK_SEQ_ROW_ID),
-    animalCodeSeq: seqValue(seqRows, ANIMAL_CODE_SEQ_ROW_ID),
+    crestLinkSeq: crestLinkSeqValue(seqRows),
+    animalCodeSeq: animalCodeSeqValueForUser(
+      animalCodeSeqRows,
+      String(
+        (animals as { user_id?: unknown }[] | null)?.[0]?.user_id ??
+          (profiles as { id?: unknown }[] | null)?.[0]?.id ??
+          "",
+      ),
+    ),
     crestLinks: (crestLinks ?? []).flatMap((row) => {
       const id = String(row.id ?? "");
       if (!id) return [];
@@ -343,22 +364,12 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
   if (seqError) {
     throw new Error(`crest_link_seq を読めません: ${seqError.message}`);
   }
-  const nextCrestSeq = Math.max(
-    seqValue(seqRows, CREST_LINK_SEQ_ROW_ID),
-    db.crestLinkSeq,
-  );
-  const nextAnimalCodeSeq = Math.max(
-    seqValue(seqRows, ANIMAL_CODE_SEQ_ROW_ID),
-    db.animalCodeSeq,
-  );
   const { error: seqWriteError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("crest_link_seq").upsert(
-      [
-        { id: CREST_LINK_SEQ_ROW_ID, value: nextCrestSeq },
-        { id: ANIMAL_CODE_SEQ_ROW_ID, value: nextAnimalCodeSeq },
-      ],
-      { onConflict: "id" },
-    ),
+    client
+      .from("crest_link_seq")
+      .upsert(crestLinkSeqWriteRow(crestLinkSeqValue(seqRows), db.crestLinkSeq), {
+        onConflict: "id",
+      }),
   );
   if (seqWriteError) {
     throw new Error(`crest_link_seq を保存できません: ${seqWriteError.message}`);
@@ -378,6 +389,31 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     ],
     "id",
   );
+
+  const { data: animalCodeSeqRows, error: animalCodeSeqReadError } =
+    await retryOnJwtIssuedAtFuture(() =>
+      client.from(ANIMAL_CODE_SEQ_TABLE).select("user_id, value"),
+    );
+  if (animalCodeSeqReadError) {
+    throw new Error(
+      `animal_code_seq を読めません: ${animalCodeSeqReadError.message}`,
+    );
+  }
+  const { error: animalCodeSeqWriteError } = await retryOnJwtIssuedAtFuture(() =>
+    client.from(ANIMAL_CODE_SEQ_TABLE).upsert(
+      animalCodeSeqWriteRow(
+        ownerUserId,
+        animalCodeSeqValueForUser(animalCodeSeqRows, ownerUserId),
+        db.animalCodeSeq,
+      ),
+      { onConflict: "user_id" },
+    ),
+  );
+  if (animalCodeSeqWriteError) {
+    throw new Error(
+      `animal_code_seq を保存できません: ${animalCodeSeqWriteError.message}`,
+    );
+  }
 
   // Never delete Crest Link rows. IDs are lifetime and must not be reused.
   await upsert(

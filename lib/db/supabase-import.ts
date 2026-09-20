@@ -1,4 +1,4 @@
-import { ANIMAL_CODE_SEQ_ROW_ID } from "@/lib/db/animal-code";
+import { ANIMAL_CODE_SEQ_TABLE, animalCodeSeqWriteRow } from "@/lib/db/animal-code-seq";
 import { postgresUuid, uuidOrNull } from "@/lib/db/pg-id";
 import { fetchWithJwtClockSkewRetry } from "@/lib/supabase/clock-skew-fetch";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
@@ -83,11 +83,11 @@ async function ensureImportOwner(
   return userId;
 }
 
-async function syncSeqRow(client: SupabaseClient, id: number, jsonSeq: number) {
+async function syncCrestLinkSeq(client: SupabaseClient, jsonSeq: number) {
   const { data, error } = await client
     .from("crest_link_seq")
     .select("value")
-    .eq("id", id)
+    .eq("id", 1)
     .maybeSingle();
   if (error) {
     throw new Error(`crest_link_seq を読めません: ${error.message}`);
@@ -96,20 +96,43 @@ async function syncSeqRow(client: SupabaseClient, id: number, jsonSeq: number) {
   const next = Math.max(current, jsonSeq);
   const { error: writeError } = await client
     .from("crest_link_seq")
-    .upsert({ id, value: next }, { onConflict: "id" });
+    .upsert({ id: 1, value: next }, { onConflict: "id" });
   if (writeError) {
     throw new Error(`crest_link_seq を更新できません: ${writeError.message}`);
   }
   return next;
 }
 
+async function syncAnimalCodeSeq(
+  client: SupabaseClient,
+  userId: string,
+  jsonSeq: number,
+) {
+  const { data, error } = await client
+    .from(ANIMAL_CODE_SEQ_TABLE)
+    .select("value")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`animal_code_seq を読めません: ${error.message}`);
+  }
+  const row = animalCodeSeqWriteRow(userId, Number(data?.value) || 0, jsonSeq);
+  const { error: writeError } = await client
+    .from(ANIMAL_CODE_SEQ_TABLE)
+    .upsert(row, { onConflict: "user_id" });
+  if (writeError) {
+    throw new Error(`animal_code_seq を更新できません: ${writeError.message}`);
+  }
+  return row.value;
+}
+
 export async function importLocalJsonToSupabase(client: SupabaseClient) {
   const db = readLocalJsonFile();
   const ownerUserId = await ensureImportOwner(client, db);
-  const crestLinkSeq = await syncSeqRow(client, 1, db.crestLinkSeq);
-  const animalCodeSeq = await syncSeqRow(
+  const crestLinkSeq = await syncCrestLinkSeq(client, db.crestLinkSeq);
+  const animalCodeSeq = await syncAnimalCodeSeq(
     client,
-    ANIMAL_CODE_SEQ_ROW_ID,
+    ownerUserId,
     db.animalCodeSeq,
   );
 
