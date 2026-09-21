@@ -1,3 +1,4 @@
+import { displayAnimalId } from "./animal-code";
 import type {
   AnimalStatus,
   BreedingStatus,
@@ -65,9 +66,9 @@ export const FEEDBACK_STATUS_LABEL: Record<FeedbackStatus, string> = {
   hold: "保留",
 };
 
-export function animalTitle(animal: { code: string; name: string }): string {
-  const code = animal.code.trim();
-  return code ? `${animal.name}（${code}）` : animal.name;
+export function animalTitle(animal: { name: string; code?: string }): string {
+  const id = displayAnimalId(animal);
+  return id !== "未発行" ? `${animal.name}（${id}）` : animal.name;
 }
 
 export const PREFECTURES = [

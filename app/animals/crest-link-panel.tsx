@@ -19,7 +19,7 @@ function RelativeLine({
       <span className="text-muted">{label}：</span>
       {relative ? (
         <Link href={`/animals/${relative.animalId}`} className="hover:underline">
-          {relative.crestLinkId || "未発行"} {animalTitle(relative)}
+          {animalTitle(relative)}
         </Link>
       ) : (
         <span>未登録</span>
@@ -37,9 +37,10 @@ export function CrestLinkPanel({
 }) {
   return (
     <Card>
-      <SectionTitle hint="生涯データ">Crest Link</SectionTitle>
-      <p className="font-mono text-2xl font-semibold tracking-wide">{view.crestLinkId}</p>
-      <p className="mt-2 text-sm text-muted">この個体の生涯データを管理するID。所有者が変わっても変わりません。</p>
+      <SectionTitle hint="生涯データは個体IDで管理します">引き継ぎ</SectionTitle>
+      <p className="mt-2 text-sm text-muted">
+        所有者が変わっても個体IDは変わりません。次の飼育者へデータを渡すときに使います。
+      </p>
       <p className="mt-4 text-sm">
         <span className="text-muted">現在の所有者：</span>
         {view.currentOwnerLabel}
@@ -87,7 +88,7 @@ export function CrestLinkPanel({
               {view.grandparents.map((row) => (
                 <li key={row.animalId}>
                   <Link href={`/animals/${row.animalId}`} className="hover:underline">
-                    {row.crestLinkId} {animalTitle(row)}
+                    {animalTitle(row)}
                   </Link>
                 </li>
               ))}
@@ -101,7 +102,7 @@ export function CrestLinkPanel({
               {view.children.map((child) => (
                 <li key={child.animalId}>
                   <Link href={`/animals/${child.animalId}`} className="hover:underline">
-                    {child.crestLinkId || "未発行"} {animalTitle(child)}
+                    {animalTitle(child)}
                   </Link>
                 </li>
               ))}
@@ -115,7 +116,7 @@ export function CrestLinkPanel({
               {view.grandchildren.map((row) => (
                 <li key={row.animalId}>
                   <Link href={`/animals/${row.animalId}`} className="hover:underline">
-                    {row.crestLinkId} {animalTitle(row)}
+                    {animalTitle(row)}
                   </Link>
                 </li>
               ))}
@@ -129,7 +130,7 @@ export function CrestLinkPanel({
               {view.greatGrandchildren.map((row) => (
                 <li key={row.animalId}>
                   <Link href={`/animals/${row.animalId}`} className="hover:underline">
-                    {row.crestLinkId} {animalTitle(row)}
+                    {animalTitle(row)}
                   </Link>
                 </li>
               ))}

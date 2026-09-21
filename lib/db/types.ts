@@ -92,9 +92,9 @@ export type CrestLinkTransferRecord = {
 
 export type AnimalRecord = {
   id: string;
-  /** Lifetime Crest Link ID (NC-000001). Empty until assigned. */
+  /** Internal Crest Link row id (NC-000001). Not shown as 個体ID. */
   crestLinkId: string;
-  /** Display keeper number (e.g. NC-0001). Not the internal UUID and not Crest Link. */
+  /** User-facing 個体ID (NC-000001 display). Legacy rows may still store NC-0001; UI pads to 6 digits. */
   code: string;
   name: string;
   sex: Sex;

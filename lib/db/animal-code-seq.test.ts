@@ -66,7 +66,7 @@ describe("animal_code_seq persistence", () => {
 });
 
 describe("register animal uses display code without replacing internal ids", () => {
-  it("issues NC-0002 for a child that still points at the sire uuid", () => {
+  it("issues NC-000002 for a child that still points at the sire uuid", () => {
     const store = db([animal({ id: "uuid-sire", name: "父", code: "NC-0001" })], 1);
     const childId = "uuid-child";
     const code = issueAnimalCode(store);
@@ -78,7 +78,7 @@ describe("register animal uses display code without replacing internal ids", () 
         sireId: "uuid-sire",
       }),
     );
-    expect(code).toBe("NC-0002");
+    expect(code).toBe("NC-000002");
     expect(childId).not.toBe(code);
     expect(store.animals[1]?.sireId).toBe("uuid-sire");
     expect(store.animalCodeSeq).toBe(2);

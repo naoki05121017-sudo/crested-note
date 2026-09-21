@@ -8,7 +8,7 @@ export async function CrestLinkRedeemCard() {
   const settings = await getSettings();
   return (
     <Card>
-      <SectionTitle>Crest Link を引き継ぐ</SectionTitle>
+      <SectionTitle>個体を引き継ぐ</SectionTitle>
       <p className="mb-4 text-sm text-muted">
         譲渡された個体の引き継ぎコードを入力すると、出生・親・体重・繁殖などの個体データを受け取れます。前の所有者の個人情報は表示されません。
       </p>

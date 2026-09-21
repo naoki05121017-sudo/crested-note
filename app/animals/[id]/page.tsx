@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addWeight, deleteWeight } from "@/app/animals/actions";
-import { CrestLinkPanel } from "@/app/animals/crest-link-panel";
 import { DeleteAnimalForm } from "@/app/animals/delete-animal-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
@@ -11,7 +10,6 @@ import { GrowthChart } from "@/app/components/growth-chart";
 import {
   breedingsForAnimal,
   getAnimal,
-  getCrestLinkView,
   listWeights,
   pedigreeOf,
 } from "@/lib/db/queries";
@@ -48,7 +46,6 @@ export default async function AnimalDetailPage({
   const { id } = await params;
   const animal = await getAnimal(id);
   if (!animal) notFound();
-  const crestLink = await getCrestLinkView(animal.id);
 
   const tree = await pedigreeOf(animal.id);
   const weights = await listWeights(animal.id);
@@ -117,8 +114,6 @@ export default async function AnimalDetailPage({
           ) : null}
         </div>
       </div>
-
-      {crestLink ? <CrestLinkPanel animalId={animal.id} view={crestLink} /> : null}
 
       {animal.photoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
