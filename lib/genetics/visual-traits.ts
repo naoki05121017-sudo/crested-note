@@ -348,6 +348,14 @@ export function visualTraitName(id: string, level?: number): string {
   return trait.nameJa;
 }
 
+/**
+ * Tags worth showing as chips. Anything that has since become a locus is
+ * dropped here, because the genotype section already reports it.
+ */
+export function displayTraitIds(traits: readonly string[]): string[] {
+  return traits.filter((id) => Boolean(VISUAL_TRAIT_BY_ID[id]));
+}
+
 export function listVisualTraitsByCategory(category: VisualTraitCategory) {
   return VISUAL_TRAITS.filter((trait) => trait.category === category);
 }

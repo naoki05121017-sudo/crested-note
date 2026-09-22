@@ -323,6 +323,7 @@ export {
   TRAIT_CATEGORY_LABEL,
   VISUAL_TRAITS,
   VISUAL_TRAIT_BY_ID,
+  displayTraitIds,
   getVisualTrait,
   listVisualTraitsByCategory,
   visualTraitName,

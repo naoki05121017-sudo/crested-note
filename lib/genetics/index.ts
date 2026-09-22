@@ -7,6 +7,7 @@ export {
   POLYGENIC_TRAITS,
   TRAIT_CATEGORY_LABEL,
   VISUAL_TRAITS,
+  displayTraitIds,
   getLocus,
   getLocusGenotype,
   getLocusState,

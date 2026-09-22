@@ -20,6 +20,7 @@ import {
   animalTitle,
 } from "@/lib/db/labels";
 import {
+  displayTraitIds,
   formatGenotypeLabel,
   listLoci,
   locusStateLabel,
@@ -55,7 +56,7 @@ export default async function AnimalDetailPage({
   const tree = await pedigreeOf(animal.id);
   const weights = await listWeights(animal.id);
   const breedings = await breedingsForAnimal(animal.id);
-  const traitLabels = animal.traits.map((tid) =>
+  const traitLabels = displayTraitIds(animal.traits).map((tid) =>
     visualTraitName(tid, animal.traitLevels?.[tid]),
   );
   const genes = listLoci().filter(
