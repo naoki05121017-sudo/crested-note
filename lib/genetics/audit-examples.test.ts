@@ -101,12 +101,30 @@ describe("major morph pairing examples", () => {
     expect(p(result, "アザンティック (Lava)")).toBe(0);
   });
 
-  it("does not Mendelian-calculate Soft Scale or Sable", () => {
+  it("does not treat Soft Scale as a Mendelian locus; Sable keys map onto cappuccino", () => {
     expect(LOCI.some((locus) => locus.id === "softScale")).toBe(false);
     expect(LOCI.some((locus) => locus.id === "sable")).toBe(false);
-    const result = calculatePairing({ softScale: "visual", sable: "het" }, {});
-    expect(p(result, "ノーマル")).toBe(1);
-    expect(result.unrecognizedLocusIds.sort()).toEqual(["sable", "softScale"]);
+    const soft = calculatePairing({ softScale: "visual" }, {});
+    expect(p(soft, "ノーマル")).toBe(1);
+    expect(soft.unrecognizedLocusIds).toEqual(["softScale"]);
+    const sable = calculatePairing({ sable: "het" }, {});
+    expect(p(sable, "het セーブル")).toBeCloseTo(0.5);
+    expect(p(sable, "ノーマル")).toBeCloseTo(0.5);
+    expect(sable.unrecognizedLocusIds).toEqual([]);
+  });
+
+  it("maps a parent Sable visual tag onto the cappuccino seat", () => {
+    const result = calculatePairing(
+      { lillyWhite: "het" },
+      {},
+      { visualB: ["sable"] },
+    );
+    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
+    expect(p(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(p(result, "リリーホワイト")).toBeCloseTo(0.25);
+    expect(p(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(p(result, "ルワック（スーパーカプチーノ）")).toBe(0);
+    expect(result.unrecognizedLocusIds).toEqual([]);
   });
 
   it("Super Lilly White × Super Lilly White is 100% super", () => {

@@ -6,6 +6,7 @@ import {
   type GeneStatus,
   type Genotype,
 } from "@/lib/genetics";
+import { allelicVisualCoversLocus } from "@/lib/genetics/allelic-visual";
 import type { LocusDefinition } from "@/lib/genetics/types";
 import type { VisualTraitCategory } from "@/lib/genetics/visual-traits";
 
@@ -34,9 +35,11 @@ export type CalculatorTraitOption = {
   kind: CalculatorTraitKind;
   category: CalculatorPickerCategory;
   locus?: LocusDefinition;
+  alleleOf?: string;
   hint?: string;
   badge?: string;
   shortNote?: string;
+  searchText: string;
 };
 
 export const PICKER_CATEGORY_ORDER: CalculatorPickerCategory[] = [
@@ -62,6 +65,7 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
       category: "mendelian",
       locus,
       hint: locus.beginnerDescription,
+      searchText: `${locus.nameJa} ${locus.nameEn} ${locus.id}`,
     });
   }
   options.push({
@@ -70,6 +74,7 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
     kind: "axanthic",
     category: "mendelian",
     hint: "劣性です。系統は別の遺伝子として計算します。",
+    searchText: "アザンティック Axanthic axanthic",
   });
   for (const trait of VISUAL_TRAITS) {
     options.push({
@@ -77,6 +82,7 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
       label: trait.nameJa,
       kind: "visual",
       category: trait.category,
+      alleleOf: trait.alleleOf,
       hint: trait.beginnerDescription,
       badge: trait.badge
         ? trait.badge
@@ -86,6 +92,7 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
             ? "特徴"
             : "見た目",
       shortNote: trait.shortNote,
+      searchText: `${trait.nameJa} ${trait.nameEn} ${trait.id}`,
     });
   }
   return options;
@@ -104,6 +111,7 @@ export function visibleTraitsFromParent(
   for (const locus of listLoci()) {
     const status = genotype[locus.id];
     if (!status || status === "wild") continue;
+    if (allelicVisualCoversLocus(visualTags, locus.id)) continue;
     const id = AXANTHIC_SET.has(locus.id) ? AXANTHIC_TRAIT_ID : locus.id;
     if (seen.has(id)) continue;
     seen.add(id);

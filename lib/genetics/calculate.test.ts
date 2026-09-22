@@ -161,6 +161,19 @@ describe("calculatePairing", () => {
     expect(prob(result, "アザンティックファントム（TUG）")).toBeCloseTo(1);
   });
 
+  it("maps Sable visual tags onto the cappuccino seat without a new locus", () => {
+    expect(LOCI.some((locus) => locus.id === "sable")).toBe(false);
+    const result = calculatePairing(
+      { lillyWhite: "het" },
+      {},
+      { visualB: ["sable"] },
+    );
+    expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
+    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+  });
+
   it("reports unrecognized locus ids without breaking math", () => {
     const result = calculatePairing({ madeUpGene: "het" }, {});
     expect(result.unrecognizedLocusIds).toEqual(["madeUpGene"]);

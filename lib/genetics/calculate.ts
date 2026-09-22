@@ -1,6 +1,12 @@
 import { COMBO_WARNINGS, LOCI, getLocus } from "./catalog";
 import { combinePhenotype, describeCopies, locusOutcomeLabel } from "./phenotype";
 import {
+  cappuccinoMorphDisplay,
+  allelicSeatForTag,
+  type CappuccinoMorphDisplay,
+} from "./allelic-visual";
+import { resolveParentGenotype } from "./parent-input";
+import {
   compactCopyDistribution,
   offspringCopyDistribution,
 } from "./punnett";
@@ -21,7 +27,12 @@ function statusOf(genotype: Genotype, locusId: string): GeneStatus {
 }
 
 function unrecognizedIds(genotype: Genotype): string[] {
-  return Object.keys(genotype).filter((id) => !getLocus(id));
+  return Object.keys(genotype).filter((id) => {
+    if (getLocus(id)) return false;
+    const seat = allelicSeatForTag(id);
+    if (seat && getLocus(seat)) return false;
+    return true;
+  });
 }
 
 function calculateLocus(
@@ -58,7 +69,10 @@ type ExpandState = {
   copies: Record<string, AlleleCopies>;
 };
 
-function expandPairing(loci: LocusResult[]): {
+function expandPairing(
+  loci: LocusResult[],
+  cappuccinoMorph: CappuccinoMorphDisplay,
+): {
   outcomes: CombinedOutcome[];
   warnings: PairingWarning[];
 } {
@@ -77,7 +91,10 @@ function expandPairing(loci: LocusResult[]): {
         if (probability <= EPS) continue;
         next.push({
           probability,
-          copies: { ...state.copies, [locus.locusId]: outcome.copies },
+          copies: {
+            ...state.copies,
+            [locus.locusId]: outcome.copies,
+          },
         });
       }
     }
@@ -92,7 +109,7 @@ function expandPairing(loci: LocusResult[]): {
       locus,
       copies: state.copies[locus.id] ?? 0,
     }));
-    const phenotype = combinePhenotype(parts);
+    const phenotype = combinePhenotype(parts, cappuccinoMorph);
     const existing = merged.get(phenotype);
     if (existing) {
       existing.probability += state.probability;
@@ -105,6 +122,12 @@ function expandPairing(loci: LocusResult[]): {
     }
 
     for (const rule of COMBO_WARNINGS) {
+      if (
+        (cappuccinoMorph === "sable" || cappuccinoMorph === "highway") &&
+        (rule.id === "superCappuccino" || rule.id === "lillyWhiteCappuccino")
+      ) {
+        continue;
+      }
       if (!rule.match(state.copies)) continue;
       const current = warningTotals.get(rule.id);
       if (current) {
@@ -135,10 +158,22 @@ function expandPairing(loci: LocusResult[]): {
   return { outcomes, warnings };
 }
 
+export type PairingOptions = {
+  visualA?: string[];
+  visualB?: string[];
+};
+
 export function calculatePairing(
   parentA: Genotype,
   parentB: Genotype,
+  options?: PairingOptions,
 ): PairingResult {
+  const visualA = options?.visualA ?? [];
+  const visualB = options?.visualB ?? [];
+  const morph = cappuccinoMorphDisplay(parentA, parentB, visualA, visualB);
+  const mergedA = resolveParentGenotype(parentA, visualA);
+  const mergedB = resolveParentGenotype(parentB, visualB);
+
   const unrecognizedLocusIds = [
     ...new Set([
       ...unrecognizedIds(parentA),
@@ -149,12 +184,25 @@ export function calculatePairing(
   const loci = LOCI.map((locus) =>
     calculateLocus(
       locus.id,
-      statusOf(parentA, locus.id),
-      statusOf(parentB, locus.id),
+      statusOf(mergedA, locus.id),
+      statusOf(mergedB, locus.id),
     ),
   ).filter((row): row is LocusResult => row !== null);
 
-  const { outcomes, warnings } = expandPairing(loci);
+  if (morph === "sable" || morph === "highway") {
+    const morphJa = morph === "sable" ? "セーブル" : "ハイウェイ";
+    for (const locus of loci) {
+      if (locus.locusId === "cappuccino") {
+        locus.nameJa = morphJa;
+        locus.outcomes = locus.outcomes.map((outcome) => ({
+          ...outcome,
+          label: outcome.label.replaceAll("カプチーノ", morphJa),
+        }));
+      }
+    }
+  }
+
+  const { outcomes, warnings } = expandPairing(loci, morph);
 
   return {
     loci,

@@ -33,6 +33,12 @@ describe("calculator trait UI helpers", () => {
     ).toEqual({ phantom: "het" });
   });
 
+  it("keeps sable as the visible trait instead of also listing cappuccino", () => {
+    expect(
+      visibleTraitsFromParent({ cappuccino: "het" }, ["sable"]),
+    ).toEqual(["sable"]);
+  });
+
   it("reads the first active axanthic line for the lineage selector", () => {
     expect(
       axanthicFromGenotype({ axanthicMelanistic: "visual" }),

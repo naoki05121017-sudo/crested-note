@@ -15,14 +15,22 @@ export function HatchForm({
   eggId,
   sireGenotype,
   damGenotype,
+  sireTraits = [],
+  damTraits = [],
 }: {
   eggId: string;
   sireGenotype: Genotype;
   damGenotype: Genotype;
+  sireTraits?: string[];
+  damTraits?: string[];
 }) {
   const result = useMemo(
-    () => calculatePairing(sireGenotype, damGenotype),
-    [sireGenotype, damGenotype],
+    () =>
+      calculatePairing(sireGenotype, damGenotype, {
+        visualA: sireTraits,
+        visualB: damTraits,
+      }),
+    [sireGenotype, damGenotype, sireTraits, damTraits],
   );
   const [selected, setSelected] = useState<CombinedOutcome | null>(
     result.outcomes[0] ?? null,

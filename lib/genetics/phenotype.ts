@@ -1,4 +1,5 @@
 import { LOCI } from "./catalog";
+import type { CappuccinoMorphDisplay } from "./allelic-visual";
 import type {
   AlleleCopies,
   GeneStatus,
@@ -42,6 +43,7 @@ export function locusOutcomeLabel(
 
 export function combinePhenotype(
   parts: { locus: LocusDefinition; copies: AlleleCopies }[],
+  cappuccinoMorph: CappuccinoMorphDisplay = "cappuccino",
 ): string {
   const copiesById: Record<string, AlleleCopies> = {};
   for (const part of parts) copiesById[part.locus.id] = part.copies;
@@ -63,45 +65,101 @@ export function combinePhenotype(
     }
   }
 
-  const cap = copiesById.cappuccino ?? 0;
-  const lw = copiesById.lillyWhite ?? 0;
-  if (cap === 2) {
-    const idx = visualTokens.indexOf("カプチーノ");
-    if (idx >= 0) visualTokens[idx] = "ルワック（スーパーカプチーノ）";
-  }
-  if (cap === 2 && lw >= 1) {
-    const lwToken =
-      visualTokens.find((token) => token.includes("リリーホワイト")) ?? "";
-    const luwakToken =
-      visualTokens.find((token) => token.startsWith("ルワック")) ?? "";
-    const next = visualTokens.filter(
-      (token) => token !== lwToken && token !== luwakToken,
-    );
-    next.unshift(
-      lw === 2
-        ? "フラプチーノ（スーパーリリーホワイト＋ルワック）"
-        : "フラプチーノ（リリーホワイト＋ルワック）",
-    );
-    visualTokens.length = 0;
-    visualTokens.push(...next);
-  }
-
-  const axVisual = parts.find(
-    (part) => part.locus.id.startsWith("axanthic") && part.copies === 2,
+  applyNamedCombos(
+    { copies: copiesById, morph: cappuccinoMorph, parts },
+    visualTokens,
+    hetTokens,
   );
-  if (axVisual && (copiesById.phantom ?? 0) === 2) {
-    const line =
-      axVisual.locus.nameEn.match(/\(([^)]+)\)/)?.[1] ?? axVisual.locus.nameJa;
-    const next = visualTokens.filter(
-      (token) => token !== axVisual.locus.visualNameJa && token !== "ファントム",
-    );
-    next.unshift(`アザンティックファントム（${line}）`);
-    visualTokens.length = 0;
-    visualTokens.push(...next);
-  }
 
   const tokens = [...visualTokens, ...hetTokens];
   return tokens.length > 0 ? tokens.join(" ") : "ノーマル";
+}
+
+type ComboContext = {
+  copies: Record<string, AlleleCopies>;
+  morph: CappuccinoMorphDisplay;
+  parts: { locus: LocusDefinition; copies: AlleleCopies }[];
+};
+
+/**
+ * Display names for already-computed copy combinations.
+ * Does not change Punnett math or add loci.
+ */
+function applyNamedCombos(
+  ctx: ComboContext,
+  visualTokens: string[],
+  hetTokens: string[],
+) {
+  const cap = ctx.copies.cappuccino ?? 0;
+  const lw = ctx.copies.lillyWhite ?? 0;
+
+  if (ctx.morph === "sable" || ctx.morph === "highway") {
+    const morphJa = ctx.morph === "sable" ? "セーブル" : "ハイウェイ";
+    const capIdx = visualTokens.indexOf("カプチーノ");
+    if (capIdx >= 0) visualTokens[capIdx] = morphJa;
+    const hetIdx = hetTokens.indexOf("het カプチーノ");
+    if (hetIdx >= 0) hetTokens[hetIdx] = `het ${morphJa}`;
+
+    if (ctx.morph === "sable" && cap >= 1 && lw >= 1) {
+      replaceTokens(visualTokens, hetTokens, {
+        dropVisual: (token) =>
+          token.includes("リリーホワイト") || token === "セーブル",
+        dropHet: (token) => token === "het セーブル",
+        name:
+          lw === 2
+            ? "リリーセーブル（スーパーリリーホワイト）"
+            : "リリーセーブル",
+      });
+    }
+  } else {
+    if (cap === 2) {
+      const idx = visualTokens.indexOf("カプチーノ");
+      if (idx >= 0) visualTokens[idx] = "ルワック（スーパーカプチーノ）";
+    }
+    if (cap === 2 && lw >= 1) {
+      replaceTokens(visualTokens, hetTokens, {
+        dropVisual: (token) =>
+          token.includes("リリーホワイト") || token.startsWith("ルワック"),
+        dropHet: () => false,
+        name:
+          lw === 2
+            ? "フラプチーノ（スーパーリリーホワイト＋ルワック）"
+            : "フラプチーノ（リリーホワイト＋ルワック）",
+      });
+    }
+  }
+
+  const axVisual = ctx.parts.find(
+    (part) => part.locus.id.startsWith("axanthic") && part.copies === 2,
+  );
+  if (axVisual && (ctx.copies.phantom ?? 0) === 2) {
+    const line =
+      axVisual.locus.nameEn.match(/\(([^)]+)\)/)?.[1] ?? axVisual.locus.nameJa;
+    replaceTokens(visualTokens, hetTokens, {
+      dropVisual: (token) =>
+        token === axVisual.locus.visualNameJa || token === "ファントム",
+      dropHet: () => false,
+      name: `アザンティックファントム（${line}）`,
+    });
+  }
+}
+
+function replaceTokens(
+  visualTokens: string[],
+  hetTokens: string[],
+  rule: {
+    dropVisual: (token: string) => boolean;
+    dropHet: (token: string) => boolean;
+    name: string;
+  },
+) {
+  const nextVisual = visualTokens.filter((token) => !rule.dropVisual(token));
+  const nextHet = hetTokens.filter((token) => !rule.dropHet(token));
+  nextVisual.unshift(rule.name);
+  visualTokens.length = 0;
+  visualTokens.push(...nextVisual);
+  hetTokens.length = 0;
+  hetTokens.push(...nextHet);
 }
 
 export function copiesToStatus(copies: AlleleCopies): GeneStatus {

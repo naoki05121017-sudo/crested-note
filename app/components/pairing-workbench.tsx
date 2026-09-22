@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   calculatePairing,
   geneStatusLabelJa,
+  getVisualTrait,
   listLoci,
+  allelicVisualCoversLocus,
+  mergeAllelicVisuals,
   type GeneStatus,
   type Genotype,
   type PairingResult,
@@ -17,17 +20,23 @@ import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { savePrediction } from "@/app/predictions/actions";
 import type { CalculatorAnimal } from "@/app/calculator/types";
 import { Hint } from "@/app/components/ui";
+import { TraitCategoryPicker } from "@/app/components/trait-category-picker";
 import {
   AXANTHIC_LOCI,
-  PICKER_CATEGORY_LABEL,
-  PICKER_CATEGORY_ORDER,
   axanthicFromGenotype,
   calculatorTraitOptions,
-  clearTraitFromGenotype,
   setAxanthicGenotype,
   visibleTraitsFromParent,
   type CalculatorTraitOption,
 } from "@/app/components/calculator-traits";
+import {
+  addCalculatorTrait,
+  collectVisualTagsForPairing,
+  hydrateParentForPairing,
+  removeCalculatorTrait,
+  uiTagsForPairing,
+  type CalculatorParentState,
+} from "@/app/components/calculator-pairing";
 
 const RECESSIVE_STATUSES: GeneStatus[] = [
   "wild",
@@ -42,10 +51,6 @@ function statusesFor(locus: LocusDefinition): GeneStatus[] {
   return locus.inheritance === "recessive"
     ? RECESSIVE_STATUSES
     : INCOMPLETE_STATUSES;
-}
-
-function defaultStatus(): GeneStatus {
-  return "het";
 }
 
 function ParentHeading({ sex }: { sex: "male" | "female" }) {
@@ -64,64 +69,56 @@ function ParentHeading({ sex }: { sex: "male" | "female" }) {
   );
 }
 
+function parentStateFromAnimal(animal?: CalculatorAnimal): CalculatorParentState {
+  const genotype = mergeAllelicVisuals(animal?.genotype ?? {}, animal?.traits ?? []);
+  const visualTags = animal?.traits ?? [];
+  return {
+    genotype,
+    visualTags,
+    addedTraits: visibleTraitsFromParent(animal?.genotype ?? {}, visualTags),
+  };
+}
+
 function ParentEditor({
   title,
   stepLabel,
-  genotype,
-  onChange,
-  visualTags,
-  onChangeVisualTags,
-  addedTraits,
-  onAddedTraitsChange,
+  state,
+  onStateChange,
   animals,
   selectedId,
   onSelectAnimal,
 }: {
   title: React.ReactNode;
   stepLabel: string;
-  genotype: Genotype;
-  onChange: (next: Genotype) => void;
-  visualTags: string[];
-  onChangeVisualTags: (next: string[]) => void;
-  addedTraits: string[];
-  onAddedTraitsChange: (next: string[]) => void;
+  state: CalculatorParentState;
+  onStateChange: (next: CalculatorParentState) => void;
   animals: CalculatorAnimal[];
   selectedId: string;
   onSelectAnimal: (id: string) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const { genotype, visualTags, addedTraits } = state;
   const options = calculatorTraitOptions();
-  const available = options.filter((option) => !addedTraits.includes(option.id));
+  const available = options.filter((option) => {
+    if (addedTraits.includes(option.id)) return false;
+    if (option.kind === "locus" && allelicVisualCoversLocus(visualTags, option.id)) {
+      return false;
+    }
+    return true;
+  });
   const axanthic = axanthicFromGenotype(genotype);
   const axanthicLocus = listLoci().find((locus) => locus.id === axanthic.locusId);
 
   function addTrait(option: CalculatorTraitOption) {
-    onAddedTraitsChange([...addedTraits, option.id]);
-    if (option.kind === "visual") {
-      onChangeVisualTags([...visualTags, option.id]);
-    } else if (option.kind === "axanthic") {
-      onChange(
-        setAxanthicGenotype(
-          genotype,
-          axanthic.locusId,
-          axanthic.locusId,
-          defaultStatus(),
-        ),
-      );
-    } else {
-      onChange({ ...genotype, [option.id]: defaultStatus() });
-    }
-    setPickerOpen(false);
+    onStateChange(addCalculatorTrait(state, option));
   }
 
   function removeTrait(id: string) {
     const option = options.find((row) => row.id === id);
-    onAddedTraitsChange(addedTraits.filter((row) => row !== id));
-    if (option?.kind === "visual") {
-      onChangeVisualTags(visualTags.filter((tag) => tag !== id));
-      return;
-    }
-    onChange(clearTraitFromGenotype(genotype, id));
+    onStateChange(removeCalculatorTrait(state, option, id));
+  }
+
+  function patchGenotype(nextGenotype: Genotype) {
+    onStateChange({ ...state, genotype: nextGenotype });
   }
 
   const visible = addedTraits;
@@ -160,6 +157,10 @@ function ParentEditor({
             const option = options.find((row) => row.id === id);
             if (!option) return null;
             if (option.kind === "visual") {
+              const alleleLocusId = getVisualTrait(id)?.alleleOf;
+              const alleleLocus = alleleLocusId
+                ? listLoci().find((locus) => locus.id === alleleLocusId)
+                : undefined;
               return (
                 <div
                   key={id}
@@ -190,6 +191,32 @@ function ParentEditor({
                       外す
                     </button>
                   </div>
+                  {alleleLocus ? (
+                    <label className="mt-3 grid gap-1 text-sm">
+                      <span>状態</span>
+                      <select
+                        className="nc-input"
+                        value={genotype[alleleLocus.id] ?? "het"}
+                        onChange={(event) => {
+                          const status = event.target.value as GeneStatus;
+                          const next = { ...genotype };
+                          if (status === "wild") delete next[alleleLocus.id];
+                          else next[alleleLocus.id] = status;
+                          patchGenotype(next);
+                        }}
+                      >
+                        {statusesFor(alleleLocus).map((status) => (
+                          <option key={status} value={status}>
+                            {geneStatusLabelJa(
+                              status,
+                              alleleLocus.inheritance,
+                              option.label,
+                            )}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                 </div>
               );
             }
@@ -216,11 +243,12 @@ function ParentEditor({
                       value={axanthic.status}
                       onChange={(event) => {
                         const status = event.target.value as GeneStatus;
-                        onChange(
+                        const currentAx = axanthicFromGenotype(genotype);
+                        patchGenotype(
                           setAxanthicGenotype(
                             genotype,
-                            axanthic.locusId,
-                            axanthic.locusId,
+                            currentAx.locusId,
+                            currentAx.locusId,
                             status,
                           ),
                         );
@@ -244,12 +272,14 @@ function ParentEditor({
                         className="nc-input"
                         value={axanthic.locusId}
                         onChange={(event) => {
-                          onChange(
+                          const toLocusId = event.target.value;
+                          const currentAx = axanthicFromGenotype(genotype);
+                          patchGenotype(
                             setAxanthicGenotype(
                               genotype,
-                              axanthic.locusId,
-                              event.target.value,
-                              axanthic.status,
+                              currentAx.locusId,
+                              toLocusId,
+                              currentAx.status,
                             ),
                           );
                         }}
@@ -292,7 +322,7 @@ function ParentEditor({
                         const next = { ...genotype };
                         if (status === "wild") delete next[option.id];
                         else next[option.id] = status;
-                        onChange(next);
+                        patchGenotype(next);
                       }}
                     >
                       {statusesFor(option.locus).map((status) => (
@@ -314,51 +344,8 @@ function ParentEditor({
         </div>
       )}
 
-      <div>
-        <button
-          type="button"
-          className="nc-btn-ghost w-full sm:w-auto"
-          onClick={() => setPickerOpen((open) => !open)}
-        >
-          遺伝形質を追加 ＋
-        </button>
-        {pickerOpen ? (
-          <ul className="mt-3 overflow-hidden rounded-2xl border border-line">
-            {available.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-muted">
-                追加できる遺伝形質はすべて表示中です。
-              </li>
-            ) : (
-              PICKER_CATEGORY_ORDER.map((category) => {
-                const items = available.filter((option) => option.category === category);
-                if (items.length === 0) return null;
-                return (
-                  <li key={category} className="border-t border-line first:border-t-0">
-                    <p className="bg-[#faf7f2] px-4 py-2 text-[11px] tracking-[0.18em] text-muted uppercase">
-                      {PICKER_CATEGORY_LABEL[category]}
-                    </p>
-                    <ul>
-                      {items.map((option) => (
-                        <li key={option.id} className="border-t border-line">
-                          <button
-                            type="button"
-                            className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2 text-left text-sm hover:bg-sand"
-                            onClick={() => addTrait(option)}
-                          >
-                            <span>{option.label}</span>
-                            {option.badge ? (
-                              <span className="text-xs text-muted">{option.badge}</span>
-                            ) : null}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        ) : null}
+      <div className="mt-2">
+        <TraitCategoryPicker options={available} onPick={addTrait} />
       </div>
     </section>
   );
@@ -383,50 +370,40 @@ export function PairingWorkbench({
   );
   const [selectedA, setSelectedA] = useState(initialA);
   const [selectedB, setSelectedB] = useState(initialB);
-  const [parentA, setParentA] = useState<Genotype>(
-    byId.get(initialA)?.genotype ?? {},
+  const [stateA, setStateA] = useState<CalculatorParentState>(() =>
+    parentStateFromAnimal(byId.get(initialA)),
   );
-  const [parentB, setParentB] = useState<Genotype>(
-    byId.get(initialB)?.genotype ?? {},
-  );
-  const [tagsA, setTagsA] = useState<string[]>(
-    byId.get(initialA)?.traits ?? [],
-  );
-  const [tagsB, setTagsB] = useState<string[]>(
-    byId.get(initialB)?.traits ?? [],
-  );
-  const [addedA, setAddedA] = useState<string[]>(() =>
-    visibleTraitsFromParent(
-      byId.get(initialA)?.genotype ?? {},
-      byId.get(initialA)?.traits ?? [],
-    ),
-  );
-  const [addedB, setAddedB] = useState<string[]>(() =>
-    visibleTraitsFromParent(
-      byId.get(initialB)?.genotype ?? {},
-      byId.get(initialB)?.traits ?? [],
-    ),
+  const [stateB, setStateB] = useState<CalculatorParentState>(() =>
+    parentStateFromAnimal(byId.get(initialB)),
   );
   const [result, setResult] = useState<PairingResult | null>(null);
-  const [calcBusy, setCalcBusy] = useState(false);
   const [name, setName] = useState("");
   const [projectId, setProjectId] = useState("");
+  const stateARef = useRef(stateA);
+  const stateBRef = useRef(stateB);
+  stateARef.current = stateA;
+  stateBRef.current = stateB;
+
+  function commitA(next: CalculatorParentState) {
+    stateARef.current = next;
+    setStateA(next);
+    setResult(null);
+  }
+  function commitB(next: CalculatorParentState) {
+    stateBRef.current = next;
+    setStateB(next);
+    setResult(null);
+  }
 
   function pickA(id: string) {
     const animal = id ? byId.get(id) : undefined;
     setSelectedA(id);
-    setParentA(animal?.genotype ?? {});
-    setTagsA(animal?.traits ?? []);
-    setAddedA(visibleTraitsFromParent(animal?.genotype ?? {}, animal?.traits ?? []));
-    setResult(null);
+    commitA(parentStateFromAnimal(animal));
   }
   function pickB(id: string) {
     const animal = id ? byId.get(id) : undefined;
     setSelectedB(id);
-    setParentB(animal?.genotype ?? {});
-    setTagsB(animal?.traits ?? []);
-    setAddedB(visibleTraitsFromParent(animal?.genotype ?? {}, animal?.traits ?? []));
-    setResult(null);
+    commitB(parentStateFromAnimal(animal));
   }
 
   const maleChoices = animals.filter(
@@ -442,18 +419,8 @@ export function PairingWorkbench({
         <ParentEditor
           title={<ParentHeading sex="male" />}
           stepLabel="1. オスを選ぶ"
-          genotype={parentA}
-          onChange={(next) => {
-            setParentA(next);
-            setResult(null);
-          }}
-          visualTags={tagsA}
-          onChangeVisualTags={(next) => {
-            setTagsA(next);
-            setResult(null);
-          }}
-          addedTraits={addedA}
-          onAddedTraitsChange={setAddedA}
+          state={stateA}
+          onStateChange={commitA}
           animals={maleChoices}
           selectedId={selectedA}
           onSelectAnimal={pickA}
@@ -461,18 +428,8 @@ export function PairingWorkbench({
         <ParentEditor
           title={<ParentHeading sex="female" />}
           stepLabel="2. メスを選ぶ"
-          genotype={parentB}
-          onChange={(next) => {
-            setParentB(next);
-            setResult(null);
-          }}
-          visualTags={tagsB}
-          onChangeVisualTags={(next) => {
-            setTagsB(next);
-            setResult(null);
-          }}
-          addedTraits={addedB}
-          onAddedTraitsChange={setAddedB}
+          state={stateB}
+          onStateChange={commitB}
           animals={femaleChoices}
           selectedId={selectedB}
           onSelectAnimal={pickB}
@@ -486,14 +443,18 @@ export function PairingWorkbench({
         <button
           type="button"
           className="nc-btn w-full sm:w-auto"
-          aria-busy={calcBusy}
-          onPointerDown={() => setCalcBusy(true)}
           onClick={() => {
-            setResult(calculatePairing(parentA, parentB));
-            setCalcBusy(false);
+            const a = hydrateParentForPairing(stateARef.current);
+            const b = hydrateParentForPairing(stateBRef.current);
+            setResult(
+              calculatePairing(a.genotype, b.genotype, {
+                visualA: uiTagsForPairing(a),
+                visualB: uiTagsForPairing(b),
+              }),
+            );
           }}
         >
-          {calcBusy ? "計算しています…" : "遺伝を計算する"}
+          遺伝を計算する
         </button>
       </div>
 
@@ -511,8 +472,10 @@ export function PairingWorkbench({
           >
             <input type="hidden" name="maleId" value={selectedA} />
             <input type="hidden" name="femaleId" value={selectedB} />
-            <input type="hidden" name="parentA" value={JSON.stringify(parentA)} />
-            <input type="hidden" name="parentB" value={JSON.stringify(parentB)} />
+            <input type="hidden" name="parentA" value={JSON.stringify(hydrateParentForPairing(stateA).genotype)} />
+            <input type="hidden" name="parentB" value={JSON.stringify(hydrateParentForPairing(stateB).genotype)} />
+            <input type="hidden" name="visualA" value={JSON.stringify(collectVisualTagsForPairing(stateA))} />
+            <input type="hidden" name="visualB" value={JSON.stringify(collectVisualTagsForPairing(stateB))} />
             <h2 className="text-lg font-semibold">計算結果を保存</h2>
             <label className="grid gap-1 text-sm">
               <span>名前</span>

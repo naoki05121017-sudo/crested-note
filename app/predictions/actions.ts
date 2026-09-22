@@ -15,12 +15,23 @@ function parseJsonGenotype(raw: string): Genotype {
   }
 }
 
+function parseJsonStringArray(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.map((value) => String(value)) : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function savePrediction(formData: FormData) {
   const maleId = textField(formData, "maleId");
   const femaleId = textField(formData, "femaleId");
   const parentA = parseJsonGenotype(textField(formData, "parentA"));
   const parentB = parseJsonGenotype(textField(formData, "parentB"));
-  const pairing = calculatePairing(parentA, parentB);
+  const visualA = parseJsonStringArray(textField(formData, "visualA"));
+  const visualB = parseJsonStringArray(textField(formData, "visualB"));
+  const pairing = calculatePairing(parentA, parentB, { visualA, visualB });
   const male = maleId ? await getAnimal(maleId) : undefined;
   const female = femaleId ? await getAnimal(femaleId) : undefined;
   const name =

@@ -36,7 +36,10 @@ export async function createBreeding(formData: FormData) {
 
   const id = newId();
   const predictionId = newId();
-  const pairing = calculatePairing(male.genotype, female.genotype);
+  const pairing = calculatePairing(male.genotype, female.genotype, {
+    visualA: male.traits,
+    visualB: female.traits,
+  });
   try {
     await mutateDb((db) => {
       db.predictions.push({

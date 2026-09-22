@@ -1,4 +1,12 @@
 export { calculatePairing, emptyGenotype } from "./calculate";
+export type { PairingOptions } from "./calculate";
+export {
+  allelicSeatForTag,
+  allelicVisualCoversLocus,
+  cappuccinoMorphDisplay,
+  mergeAllelicVisuals,
+} from "./allelic-visual";
+export { resolveParentGenotype, parentLocusIds } from "./parent-input";
 export {
   COMBO_WARNINGS,
   LOCI,

@@ -33,7 +33,10 @@ export default async function BreedingDetailPage({
   const female = await getAnimal(breeding.femaleId);
   if (!male || !female) notFound();
 
-  const pairing = calculatePairing(male.genotype, female.genotype);
+  const pairing = calculatePairing(male.genotype, female.genotype, {
+    visualA: male.traits,
+    visualB: female.traits,
+  });
   const prediction = await predictionForBreeding(breeding.id);
   const addClutchAction = addClutch.bind(null, breeding.id);
   const closeAction = closeBreeding.bind(null, breeding.id);
@@ -183,6 +186,8 @@ export default async function BreedingDetailPage({
                           eggId={egg.id}
                           sireGenotype={male.genotype}
                           damGenotype={female.genotype}
+                          sireTraits={male.traits}
+                          damTraits={female.traits}
                         />
                       ) : null}
                     </>

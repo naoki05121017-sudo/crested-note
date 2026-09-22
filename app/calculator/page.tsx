@@ -34,7 +34,7 @@ export default async function CalculatorPage({
       <PageHeader
         kicker="GENETICS"
         title="遺伝計算"
-        description="親♂と親♀を選び、必要な遺伝形質を追加してから計算します。ピンストライプなどの見た目タグは確率に含めません。"
+        description="親♂と親♀を選び、必要な遺伝形質を追加してから計算します。セーブルなど座位に紐づく見た目は確率に含めます。ピンストライプなど多因子の見た目は確率に含めません。"
       />
       <PairingWorkbench
         animals={animals}
