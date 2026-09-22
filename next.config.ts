@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       static: 30,
     },
     serverActions: {
-      bodySizeLimit: "5mb",
+      bodySizeLimit: "10mb",
     },
   },
 };

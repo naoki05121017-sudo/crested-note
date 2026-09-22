@@ -23,11 +23,14 @@ describe("animal photo files", () => {
       "写真ファイルが空です。",
     );
     expect(
-      validatePhotoFile(new File([new Uint8Array(5 * 1024 * 1024)], "big.jpg", { type: "image/jpeg" })),
-    ).toBe("写真は 4MB 以下にしてください。");
+      validatePhotoFile(new File([new Uint8Array(9 * 1024 * 1024)], "big.jpg", { type: "image/jpeg" })),
+    ).toBe("写真は 8MB 以下にしてください。");
     expect(validatePhotoFile(new File([new Uint8Array(8)], "notes.pdf", { type: "application/pdf" }))).toBe(
-      "写真は JPEG / PNG / WebP / GIF で選んでください。",
+      "写真ファイルを選んでください。",
     );
+    expect(
+      validatePhotoFile(new File([new Uint8Array(8)], "IMG_0001.HEIC", { type: "" })),
+    ).toBeNull();
   });
 
   it("reads a chosen file and an explicit remove from the form", () => {
@@ -49,6 +52,9 @@ describe("animal photo files", () => {
       "https://new.example/b.jpg",
     );
     expect(nextPhotoUrl("https://old.example/a.jpg", null, true)).toBe("");
+    expect(nextPhotoUrl("", null, false, "https://cdn.example/gecko.jpg")).toBe(
+      "https://cdn.example/gecko.jpg",
+    );
   });
 
   it("stores files under the animal id and recognizes managed public URLs", () => {

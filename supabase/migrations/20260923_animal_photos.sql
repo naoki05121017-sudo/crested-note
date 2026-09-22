@@ -4,8 +4,8 @@ values (
   'animal-photos',
   'animal-photos',
   true,
-  4194304,
-  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  8388608,
+  array['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
 )
 on conflict (id) do nothing;
 

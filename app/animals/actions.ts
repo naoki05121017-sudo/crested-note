@@ -59,7 +59,12 @@ async function photoUrlFromForm(animalId: string, formData: FormData, existing =
   const uploaded = intent.file ? await uploadAnimalPhoto(animalId, intent.file) : null;
   return {
     error: null as string | null,
-    photoUrl: nextPhotoUrl(existing, uploaded, intent.remove),
+    photoUrl: nextPhotoUrl(
+      existing,
+      uploaded,
+      intent.remove,
+      textField(formData, "photoUrl"),
+    ),
     uploaded,
   };
 }

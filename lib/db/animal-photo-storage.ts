@@ -1,11 +1,12 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ANIMAL_PHOTO_BUCKET,
+  ANIMAL_PHOTO_MIME_TYPES,
   MAX_ANIMAL_PHOTO_BYTES,
   animalPhotoObjectKey,
   animalPhotoObjectPath,
   animalPhotoPrefix,
-  photoExtensionForType,
+  photoExtensionForFile,
 } from "@/lib/db/animal-photo";
 import { newId } from "@/lib/db/store";
 
@@ -23,14 +24,16 @@ async function ensurePhotoBucket(): Promise<void> {
       if (listed.error) {
         throw new Error(`写真の保存先を確認できません: ${listed.error.message}`);
       }
-      if (listed.data?.some((bucket) => bucket.name === ANIMAL_PHOTO_BUCKET)) {
-        return;
-      }
-      const created = await client.createBucket(ANIMAL_PHOTO_BUCKET, {
+      const bucketOptions = {
         public: true,
         fileSizeLimit: MAX_ANIMAL_PHOTO_BYTES,
-        allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
-      });
+        allowedMimeTypes: ANIMAL_PHOTO_MIME_TYPES,
+      };
+      if (listed.data?.some((bucket) => bucket.name === ANIMAL_PHOTO_BUCKET)) {
+        await client.updateBucket(ANIMAL_PHOTO_BUCKET, bucketOptions);
+        return;
+      }
+      const created = await client.createBucket(ANIMAL_PHOTO_BUCKET, bucketOptions);
       if (created.error && !/already exists/i.test(created.error.message)) {
         throw new Error(`写真の保存先を作れません: ${created.error.message}`);
       }
@@ -45,14 +48,16 @@ async function ensurePhotoBucket(): Promise<void> {
 export async function uploadAnimalPhoto(animalId: string, file: File): Promise<string> {
   await ensurePhotoBucket();
   const path = animalPhotoObjectPath(animalId, file, newId());
-  const type = file.type;
-  if (!photoExtensionForType(type)) {
-    throw new Error("写真は JPEG / PNG / WebP / GIF で選んでください。");
+  const ext = photoExtensionForFile(file);
+  if (!ext) {
+    throw new Error("写真ファイルを選んでください。");
   }
+  const contentType =
+    file.type || (ext === "jpg" ? "image/jpeg" : ext === "heic" ? "image/heic" : `image/${ext}`);
   const bytes = Buffer.from(await file.arrayBuffer());
   const client = await storage();
   const uploaded = await client.from(ANIMAL_PHOTO_BUCKET).upload(path, bytes, {
-    contentType: type,
+    contentType,
     upsert: false,
   });
   if (uploaded.error) {
