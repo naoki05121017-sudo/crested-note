@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CrestLinkRedeemCard } from "@/app/animals/crest-link-redeem";
+import { AnimalPhoto } from "@/app/components/animal-photo";
 import { EmptyState, PageHeader, Badge } from "@/app/components/ui";
 import { filterAnimals } from "@/lib/db/queries";
 import { displayAnimalId } from "@/lib/db/animal-code";
@@ -90,7 +91,14 @@ export default async function AnimalsPage({
               {animals.map((animal) => (
                 <tr key={animal.id}>
                   <td>
-                    <Link href={`/animals/${animal.id}`} className="font-medium hover:underline">
+                    <Link href={`/animals/${animal.id}`} className="flex items-center gap-3 font-medium hover:underline">
+                      {animal.photoUrl ? (
+                        <AnimalPhoto
+                          src={animal.photoUrl}
+                          alt=""
+                          className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : null}
                       {animal.name}
                     </Link>
                   </td>

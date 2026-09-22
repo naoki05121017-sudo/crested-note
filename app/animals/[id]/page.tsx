@@ -5,6 +5,7 @@ import { DeleteAnimalForm } from "@/app/animals/delete-animal-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { AnimalCodeBlock } from "@/app/components/animal-code-block";
+import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Card, PageHeader, Badge, SectionTitle, Stat } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
 import {
@@ -116,8 +117,7 @@ export default async function AnimalDetailPage({
       </div>
 
       {animal.photoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <AnimalPhoto
           src={animal.photoUrl}
           alt={animal.name}
           className="max-h-80 w-full rounded-[1.5rem] object-cover"

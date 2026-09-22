@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
       dynamic: 0,
       static: 30,
     },
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
   },
 };
 

@@ -11,6 +11,12 @@ import {
   textField,
 } from "@/lib/db/form";
 import { issueAnimalCode } from "@/lib/db/animal-code";
+import { nextPhotoUrl, parsePhotoForm } from "@/lib/db/animal-photo";
+import {
+  discardPreviousAnimalPhoto,
+  removeManagedAnimalPhoto,
+  uploadAnimalPhoto,
+} from "@/lib/db/animal-photo-storage";
 import { issueCrestLinkForAnimal, retireCrestLinkForAnimal, syncCrestLinkParents } from "@/lib/crest-link/core";
 import { replaceGenes } from "@/lib/db/genes";
 import { getAnimal } from "@/lib/db/queries";
@@ -37,12 +43,24 @@ function parseAnimalFields(formData: FormData, existing?: AnimalRecord) {
       traits,
       traitLevels: parseTraitLevels(formData, traits),
       notes: textField(formData, "notes"),
-      photoUrl: textField(formData, "photoUrl"),
       prefecture: textField(formData, "prefecture"),
       isPublic,
       shareSlug: existing?.shareSlug || (isPublic ? newSlug() : ""),
       genotype: parseGenotype(formData),
     },
+  };
+}
+
+async function photoUrlFromForm(animalId: string, formData: FormData, existing = "") {
+  const intent = parsePhotoForm(formData);
+  if (intent.error) {
+    return { error: intent.error, photoUrl: existing, uploaded: null as string | null };
+  }
+  const uploaded = intent.file ? await uploadAnimalPhoto(animalId, intent.file) : null;
+  return {
+    error: null as string | null,
+    photoUrl: nextPhotoUrl(existing, uploaded, intent.remove),
+    uploaded,
   };
 }
 
@@ -54,8 +72,13 @@ export async function createAnimal(formData: FormData) {
 
   const id = newId();
   const stamp = nowIso();
+  let uploaded: string | null = null;
 
   try {
+    const photo = await photoUrlFromForm(id, formData);
+    if (photo.error) return actionError(photo.error);
+    uploaded = photo.uploaded;
+
     await mutateDb((db) => {
       const record: AnimalRecord = {
         id,
@@ -71,7 +94,7 @@ export async function createAnimal(formData: FormData) {
         traits: parsed.data.traits,
         traitLevels: parsed.data.traitLevels,
         notes: parsed.data.notes,
-        photoUrl: parsed.data.photoUrl,
+        photoUrl: photo.photoUrl,
         prefecture: parsed.data.prefecture || db.settings.prefecture,
         isPublic: parsed.data.isPublic,
         shareSlug: parsed.data.isPublic
@@ -85,6 +108,9 @@ export async function createAnimal(formData: FormData) {
       db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
     });
   } catch (error) {
+    if (uploaded) {
+      await removeManagedAnimalPhoto(uploaded).catch(() => undefined);
+    }
     return actionError(error, "登録できませんでした。");
   }
 
@@ -107,7 +133,14 @@ export async function updateAnimal(id: string, formData: FormData) {
     return actionError("自分自身を親にはできません。");
   }
 
+  const previousPhotoUrl = existing.photoUrl;
+  let uploaded: string | null = null;
+
   try {
+    const photo = await photoUrlFromForm(id, formData, previousPhotoUrl);
+    if (photo.error) return actionError(photo.error);
+    uploaded = photo.uploaded;
+
     await mutateDb((db) => {
       const record = db.animals.find((animal) => animal.id === id);
       if (!record) return;
@@ -121,7 +154,7 @@ export async function updateAnimal(id: string, formData: FormData) {
       record.traits = parsed.data.traits;
       record.traitLevels = parsed.data.traitLevels;
       record.notes = parsed.data.notes;
-      record.photoUrl = parsed.data.photoUrl;
+      record.photoUrl = photo.photoUrl;
       record.prefecture = parsed.data.prefecture;
       record.isPublic = parsed.data.isPublic;
       if (parsed.data.isPublic && !record.shareSlug) {
@@ -131,7 +164,13 @@ export async function updateAnimal(id: string, formData: FormData) {
       db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
       syncCrestLinkParents(db, id);
     });
+    await discardPreviousAnimalPhoto(previousPhotoUrl, photo.photoUrl, id).catch(
+      () => undefined,
+    );
   } catch (error) {
+    if (uploaded) {
+      await removeManagedAnimalPhoto(uploaded).catch(() => undefined);
+    }
     return actionError(error, "保存できませんでした。");
   }
 
@@ -143,6 +182,7 @@ export async function deleteAnimal(
   id: string,
 ): Promise<{ error: string | null; deleted: boolean }> {
   if (!id) return { error: "削除できませんでした。", deleted: false };
+  let previousPhotoUrl = "";
   try {
     await mutateDb((db) => {
       const usedAsParent = db.animals.some(
@@ -156,6 +196,8 @@ export async function deleteAnimal(
           "血統または繁殖ペアで参照されているため削除できません。先に紐付けを外してください。",
         );
       }
+      previousPhotoUrl =
+        db.animals.find((animal) => animal.id === id)?.photoUrl ?? "";
       retireCrestLinkForAnimal(db, id);
       db.animals = db.animals.filter((animal) => animal.id !== id);
       db.genes = db.genes.filter((gene) => gene.animalId !== id);
@@ -165,6 +207,7 @@ export async function deleteAnimal(
   } catch (error) {
     return { error: actionError(error, "削除できませんでした。").error, deleted: false };
   }
+  await discardPreviousAnimalPhoto(previousPhotoUrl, "", id).catch(() => undefined);
 
   revalidateApp("/animals");
   return { error: null, deleted: true };

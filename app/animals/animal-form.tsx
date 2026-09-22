@@ -9,7 +9,9 @@ import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { GenotypeFields } from "@/app/components/genotype-fields";
+import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Card, Hint, SectionTitle } from "@/app/components/ui";
+import { ANIMAL_PHOTO_ACCEPT } from "@/lib/db/animal-photo";
 import type { VisualTraitCategory } from "@/lib/genetics/visual-traits";
 
 export function AnimalForm({
@@ -89,10 +91,30 @@ export function AnimalForm({
             className="nc-input"
           />
         </label>
-        <label className="grid gap-1 text-sm sm:col-span-2">
-          <span className="font-medium">写真 URL</span>
-          <input name="photoUrl" defaultValue={animal?.photoUrl} className="nc-input" />
-        </label>
+        <div className="grid gap-2 text-sm sm:col-span-2">
+          <span className="font-medium">写真</span>
+          {animal?.photoUrl ? (
+            <AnimalPhoto
+              src={animal.photoUrl}
+              alt={animal.name}
+              className="max-h-56 w-full rounded-2xl object-cover"
+            />
+          ) : (
+            <p className="text-muted">未設定</p>
+          )}
+          <input
+            type="file"
+            name="photo"
+            accept={ANIMAL_PHOTO_ACCEPT}
+            className="nc-input"
+          />
+          {animal?.photoUrl ? (
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="removePhoto" className="nc-check" />
+              写真を削除する
+            </label>
+          ) : null}
+        </div>
         <label className="grid gap-1 text-sm">
           <span className="font-medium">都道府県</span>
           <select name="prefecture" defaultValue={animal?.prefecture ?? ""} className="nc-input">

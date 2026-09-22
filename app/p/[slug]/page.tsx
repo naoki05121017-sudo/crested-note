@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AnimalPhoto } from "@/app/components/animal-photo";
 import { GrowthChart } from "@/app/components/growth-chart";
 import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { Badge, Card } from "@/app/components/ui";
@@ -37,8 +38,11 @@ export default async function PublicAnimalPage({
         </div>
       </div>
       {animal.photoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={animal.photoUrl} alt="" className="max-h-80 rounded-[1.5rem] object-cover" />
+        <AnimalPhoto
+          src={animal.photoUrl}
+          alt=""
+          className="max-h-80 rounded-[1.5rem] object-cover"
+        />
       ) : null}
       <Card>
         <h2 className="text-lg font-semibold">モルフ</h2>
