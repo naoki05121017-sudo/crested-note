@@ -135,7 +135,8 @@ function hasTag(tags: Iterable<string>, id: string): boolean {
 }
 
 /**
- * Infer the CSH diplotype from stored `csh`, visual tags, and the cappuccino seat.
+ * Infer the CSH diplotype from visual tags and the cappuccino seat.
+ * Stored `csh` is ignored so a leftover value cannot leak sable onto the other parent.
  */
 export function inferCshDiplotype(
   genotype: { csh?: string; cappuccino?: string; sable?: string; highway?: string } & Record<
@@ -144,11 +145,12 @@ export function inferCshDiplotype(
   >,
   visualTags: string[] = [],
 ): CshDiplotype {
-  if (isCshDiplotype(genotype.csh)) return genotype.csh;
-
   const tags = [
     ...visualTags,
-    ...Object.keys(genotype).filter((key) => genotype[key] && genotype[key] !== "wild"),
+    ...Object.keys(genotype).filter((key) => {
+      if (key === "csh") return false;
+      return Boolean(genotype[key] && genotype[key] !== "wild");
+    }),
   ];
   const sable = hasTag(tags, "sable");
   const highway = hasTag(tags, "highway");

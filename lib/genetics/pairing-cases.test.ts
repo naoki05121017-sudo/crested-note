@@ -81,10 +81,10 @@ describe("pairing cases: parent signals must reach offspring", () => {
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
     expectLocusSurvives(result, "lillyWhite");
     expectLocusSurvives(result, "cappuccino");
-    const combo = result.outcomes.find((row) => row.phenotype === "セーブル・リリーホワイト");
+    const combo = result.outcomes.find((row) => row.phenotype === "リリーセーブル");
     expect(combo?.copies.lillyWhite).toBe(1);
     expect(combo?.copies.cappuccino).toBe(1);
     expect(formatCopiesAsGenotype(combo?.copies ?? {}, "sable")).toMatch(/リリーホワイト/);

@@ -123,7 +123,7 @@ describe("major morph pairing examples", () => {
     expect(p(result, "ノーマル")).toBeCloseTo(0.25);
     expect(p(result, "セーブル")).toBeCloseTo(0.25);
     expect(p(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(p(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
+    expect(p(result, "リリーセーブル")).toBeCloseTo(0.25);
     expect(p(result, "スーパーカプチーノ")).toBe(0);
     expect(result.unrecognizedLocusIds).toEqual([]);
   });

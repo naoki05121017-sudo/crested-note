@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import {
-  calculatePairing,
   getVisualTrait,
   listLoci,
   allelicVisualCoversLocus,
@@ -32,7 +31,7 @@ import {
   collectVisualTagsForPairing,
   hydrateParentForPairing,
   removeCalculatorTrait,
-  uiTagsForPairing,
+  runCalculatorPairing,
   type CalculatorParentState,
 } from "@/app/components/calculator-pairing";
 import {
@@ -428,13 +427,8 @@ export function PairingWorkbench({
           type="button"
           className="nc-btn w-full sm:w-auto"
           onClick={() => {
-            const a = hydrateParentForPairing(stateARef.current);
-            const b = hydrateParentForPairing(stateBRef.current);
             setResult(
-              calculatePairing(a.genotype, b.genotype, {
-                visualA: uiTagsForPairing(a),
-                visualB: uiTagsForPairing(b),
-              }),
+              runCalculatorPairing(stateARef.current, stateBRef.current),
             );
           }}
         >

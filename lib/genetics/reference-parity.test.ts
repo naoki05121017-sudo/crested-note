@@ -55,8 +55,11 @@ describe("reference site parity (crested-gecko-calc.pages.dev)", () => {
       { phenotype: "ノーマル", probability: 0.25 },
       { phenotype: "セーブル", probability: 0.25 },
       { phenotype: "リリーホワイト", probability: 0.25 },
-      { phenotype: "セーブル・リリーホワイト", probability: 0.25 },
+      { phenotype: "リリーセーブル", probability: 0.25 },
     ]);
+    expect(result.outcomes.some((row) => row.phenotype.includes("スーパー"))).toBe(
+      false,
+    );
   });
 
   it("4. カプチーノ × セーブル → ルアク 25%", () => {

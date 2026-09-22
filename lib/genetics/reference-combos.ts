@@ -47,7 +47,7 @@ export const HET_TOKEN_JA: Record<string, string> = {
 
 export const NAMED_COMBOS_JA: Record<string, string> = {
   "capp+lw": "フラペチーノ",
-  "lw+sable": "セーブル・リリーホワイト",
+  "lw+sable": "リリーセーブル",
   "highway+lw": "ハイウェイ・リリーホワイト",
   "lw+phantom": "ファントム・リリーホワイト",
   "axanthic+lw": "アザンティック・リリーホワイト",

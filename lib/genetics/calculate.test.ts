@@ -169,7 +169,7 @@ describe("calculatePairing", () => {
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
   });
 
   it("labels sable × sable from the same copy counts as the locus breakdown", () => {

@@ -21,7 +21,7 @@ import {
   cshPunnett,
   cshToCopies,
   cshToGeneStatus,
-  inferCshDiplotype,
+  isCshDiplotype,
   type CshDiplotype,
 } from "./csh";
 import { GENE_STATUSES } from "./types";
@@ -259,8 +259,8 @@ export function calculatePairing(
   const morph = cappuccinoMorphDisplay(parentA, parentB, visualA, visualB);
   const mergedA = resolveParentGenotype(parentA, visualA);
   const mergedB = resolveParentGenotype(parentB, visualB);
-  const cshA = inferCshDiplotype(mergedA, visualA);
-  const cshB = inferCshDiplotype(mergedB, visualB);
+  const cshA = isCshDiplotype(mergedA.csh) ? mergedA.csh : "NN";
+  const cshB = isCshDiplotype(mergedB.csh) ? mergedB.csh : "NN";
 
   const unrecognizedLocusIds = [
     ...new Set([...unrecognizedIds(parentA), ...unrecognizedIds(parentB)]),

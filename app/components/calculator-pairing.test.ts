@@ -145,24 +145,47 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const result = runCalculatorPairing(guilty, virtualSable);
     const rows = screenRows(result);
     expect(rows.map((row) => row.phenotype).sort()).toEqual(
-      ["セーブル", "ノーマル", "セーブル・リリーホワイト", "リリーホワイト"].sort(),
+      ["セーブル", "ノーマル", "リリーセーブル", "リリーホワイト"].sort(),
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
-    const combo = rows.find((row) => row.phenotype === "セーブル・リリーホワイト");
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    const combo = rows.find((row) => row.phenotype === "リリーセーブル");
     expect(combo?.copies.lillyWhite).toBe(1);
     expect(combo?.copies.cappuccino).toBe(1);
   });
 
-  it("セーブル × リリーホワイト", () => {
-    const father = addCalculatorTrait(emptyParent(), option("sable"));
-    const mother = addCalculatorTrait(emptyParent(), option("lillyWhite"));
-    const result = runCalculatorPairing(father, mother);
-    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
+  it("リリーホワイト1コピー × セーブル1コピー is 4×25% with no super sable", () => {
+    const lily = addCalculatorTrait(emptyParent(), option("lillyWhite"));
+    const sable = addCalculatorTrait(emptyParent(), option("sable"));
+    const result = runCalculatorPairing(lily, sable);
+    expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(result.outcomes).toHaveLength(4);
+    expect(result.outcomes.some((row) => row.phenotype.includes("スーパー"))).toBe(
+      false,
+    );
   });
+
+  it("leftover sable diplotype on a Lilly White-only parent does not create super sable", () => {
+    const lily: CalculatorParentState = {
+      genotype: { lillyWhite: "het", csh: "N/Sable", cappuccino: "het" },
+      visualTags: [],
+      addedTraits: ["lillyWhite"],
+    };
+    const sable = addCalculatorTrait(emptyParent(), option("sable"));
+    const hydratedLily = hydrateParentForPairing(lily);
+    expect(hydratedLily.genotype.csh).toBeUndefined();
+    expect(hydratedLily.genotype.cappuccino).toBeUndefined();
+    const result = runCalculatorPairing(lily, sable);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "スーパーセーブル")).toBe(0);
+    expect(result.outcomes).toHaveLength(4);
+  });
+
 
   it("ファントム（見た目）× リリーホワイト", () => {
     let father = addCalculatorTrait(emptyParent(), option("phantom"));
@@ -196,7 +219,7 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
     expect(result.unrecognizedLocusIds).toEqual([]);
   });
 });

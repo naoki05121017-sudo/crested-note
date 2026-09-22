@@ -21,6 +21,12 @@ export type CalculatorParentState = {
   addedTraits: string[];
 };
 
+function parentHasCshTrait(addedTraits: string[], visualTags: string[]): boolean {
+  return [...addedTraits, ...visualTags].some(
+    (id) => id === "sable" || id === "highway" || id === "cappuccino",
+  );
+}
+
 function defaultStatus(): GeneStatus {
   return "het";
 }
@@ -81,6 +87,13 @@ export function hydrateParentForPairing(
     if (getLocus(id) && (!genotype[id] || genotype[id] === "wild")) {
       genotype[id] = defaultStatus();
     }
+  }
+
+  if (!parentHasCshTrait(state.addedTraits, [...visualTags])) {
+    delete genotype.cappuccino;
+    delete genotype.csh;
+    delete genotype.sable;
+    delete genotype.highway;
   }
 
   const tags = [...visualTags];
@@ -150,12 +163,14 @@ export function removeCalculatorTrait(
 }
 
 export function uiTagsForPairing(state: CalculatorParentState): string[] {
+  const hydrated = hydrateParentForPairing(state);
   const tags = new Set<string>();
-  for (const tag of state.visualTags) tags.add(tag);
-  for (const id of state.addedTraits) tags.add(id);
-  for (const [id, status] of Object.entries(state.genotype)) {
-    if (!status || status === "wild") continue;
-    tags.add(id);
+  for (const tag of hydrated.visualTags) {
+    if (tag === "sable" || tag === "highway" || tag === "cappuccino") tags.add(tag);
+    else if (getVisualTrait(tag)) tags.add(tag);
+  }
+  for (const id of hydrated.addedTraits) {
+    if (id === "sable" || id === "highway" || id === "cappuccino") tags.add(id);
   }
   return [...tags];
 }
