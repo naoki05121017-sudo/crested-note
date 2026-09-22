@@ -3,7 +3,11 @@
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import { issueCrestLinkForAnimal } from "@/lib/crest-link/core";
 import { issueAnimalCode } from "@/lib/db/animal-code";
-import { calculatePairing, genotypeFromCopies, type AlleleCopies } from "@/lib/genetics";
+import {
+  calculatePairing,
+  resolveParentGenotype,
+  type Genotype,
+} from "@/lib/genetics";
 import {
   nowIso,
   parseEggResult,
@@ -37,8 +41,8 @@ export async function createBreeding(formData: FormData) {
   const id = newId();
   const predictionId = newId();
   const pairing = calculatePairing(male.genotype, female.genotype, {
-    visualA: male.traits,
-    visualB: female.traits,
+    traitsA: male.traits,
+    traitsB: female.traits,
   });
   try {
     await mutateDb((db) => {
@@ -172,12 +176,11 @@ export async function hatchEgg(eggId: string, formData: FormData) {
   const name = textField(formData, "name");
   if (!name) return actionError("孵化個体の名前は必須です。");
 
-  const copiesRaw = textField(formData, "copiesJson");
+  const pickedRaw = textField(formData, "genotypeJson");
   let genotype = parseGenotype(formData);
-  if (copiesRaw) {
+  if (pickedRaw) {
     try {
-      const copies = JSON.parse(copiesRaw) as Record<string, AlleleCopies>;
-      genotype = genotypeFromCopies(copies);
+      genotype = resolveParentGenotype(JSON.parse(pickedRaw) as Genotype);
     } catch {
       // keep form genotype
     }

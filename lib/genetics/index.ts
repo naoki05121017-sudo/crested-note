@@ -1,50 +1,64 @@
 export { calculatePairing, emptyGenotype } from "./calculate";
 export type { PairingOptions } from "./calculate";
 export {
-  allelicSeatForTag,
-  allelicVisualCoversLocus,
-  cappuccinoMorphDisplay,
-  mergeAllelicVisuals,
-} from "./allelic-visual";
-export { resolveParentGenotype, parentLocusIds } from "./parent-input";
-export {
-  COMBO_WARNINGS,
+  COMBO_NAMES,
   LOCI,
   LOCUS_BY_ID,
   POLYGENIC_TRAITS,
   TRAIT_CATEGORY_LABEL,
   VISUAL_TRAITS,
   getLocus,
+  getLocusGenotype,
+  getLocusState,
   getVisualTrait,
   listLoci,
   listVisualTraitsByCategory,
+  selectableStates,
   visualTraitName,
+  wildGenotype,
 } from "./catalog";
-export { formatCopiesAsGenotype } from "./display";
-export { formatProbability, geneStatusLabelJa } from "./format";
 export {
-  combinePhenotype,
-  copiesToStatus,
-  describeCopies,
+  isCalculableTraitTag,
+  normalizeGenotype,
+  parentLocusIds,
+  resolveParentGenotype,
+  traitTagLocusId,
+} from "./normalize";
+export {
+  formatGenotypeDetail,
+  formatParentGenotypeDetail,
+  locusStateLabel,
+} from "./display";
+export { formatProbability } from "./format";
+export {
+  NORMAL_PHENOTYPE,
   formatGenotypeLabel,
-  genotypeFromCopies,
-  locusOutcomeLabel,
+  locusGenotypeLabel,
+  phenotypeName,
+  visualPhenotypeName,
 } from "./phenotype";
 export {
-  morphAllelePassProbability,
-  offspringCopyDistribution,
+  gameteDistribution,
+  genotypeIdForPair,
+  offspringGenotypeDistribution,
+  parentGenotypeDistribution,
 } from "./punnett";
 export type {
-  AlleleCopies,
-  CombinedOutcome,
-  ComboWarningRule,
-  GeneStatus,
+  AlleleDefinition,
+  AlleleId,
+  ComboNameRule,
   Genotype,
   Inheritance,
   LocusDefinition,
+  LocusGenotypeDefinition,
+  LocusOutcome,
+  LocusPickerEntry,
   LocusResult,
+  LocusStateDefinition,
+  CombinedOutcome,
+  OffspringGenotype,
   PairingResult,
   PairingWarning,
   TraitConfidence,
+  WarningSeverity,
 } from "./types";
-export { GENE_STATUSES } from "./types";

@@ -43,7 +43,6 @@ export function pickerGroupFor(option: CalculatorTraitOption): TraitPickerGroup 
 
 export function otherSectionFor(option: CalculatorTraitOption): OtherSection {
   if (option.kind === "locus" || option.kind === "axanthic") return "genetic";
-  if (option.alleleOf) return "genetic";
   if (option.category === "pattern") return "pattern";
   return "special";
 }
@@ -76,7 +75,9 @@ export function optionsInGroup(
 
 export function traitMetaLabel(option: CalculatorTraitOption): string | undefined {
   if (option.kind === "locus" && option.locus) {
-    return option.locus.inheritance === "recessive" ? "劣性" : "不完全優性";
+    if (option.locus.inheritance === "recessive") return "劣性";
+    if (option.locus.inheritance === "allelic_series") return "アレリック";
+    return "不完全優性";
   }
   if (option.kind === "axanthic") return "劣性";
   return option.badge;

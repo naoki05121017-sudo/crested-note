@@ -1,15 +1,22 @@
-export const GENE_STATUSES = [
-  "wild",
-  "het",
-  "visual",
-  "possible_50",
-  "possible_66",
-  "unknown",
-] as const;
+/**
+ * Allele-based genetics model.
+ *
+ * Every calculable morph lives on a locus that owns an explicit allele list and
+ * an explicit list of allele pairs (genotypes). Nothing in the pipeline counts
+ * "copies" of a single morph allele, so allelic series such as
+ * Cappuccino / Sable / Highway are first-class instead of string rewrites.
+ *
+ * Pipeline: locus state → genotype mixture → gametes → offspring genotype →
+ * phenotype → probability aggregation → UI.
+ */
 
-export type GeneStatus = (typeof GENE_STATUSES)[number];
+export type AlleleId = string;
 
-export type Inheritance = "recessive" | "incomplete_dominant";
+export type Inheritance =
+  | "recessive"
+  | "incomplete_dominant"
+  /** Three or more alleles on one seat, each visual in a single copy. */
+  | "allelic_series";
 
 export type TraitConfidence =
   | "CONFIRMED"
@@ -19,58 +26,118 @@ export type TraitConfidence =
   | "POLYGENIC"
   | "REFERENCE_ONLY";
 
-export type AlleleCopies = 0 | 1 | 2;
-
 export type WarningSeverity = "caution" | "danger";
+
+export type AlleleDefinition = {
+  id: AlleleId;
+  nameJa: string;
+  nameEn: string;
+};
+
+export type GenotypeRisk = {
+  id: string;
+  severity: WarningSeverity;
+  messageJa: string;
+};
+
+/** One unordered allele pair on a locus. */
+export type LocusGenotypeDefinition = {
+  /** Stable id, also usable as a certain parent state id. */
+  id: string;
+  alleles: readonly [AlleleId, AlleleId];
+  /** Phenotype name for this pair, e.g. セーブル / スーパーリリーホワイト. */
+  nameJa: string;
+  nameEn: string;
+  /** Breeder notation shown in the detail table, e.g. N/Sable, Aa. */
+  notation: string;
+  /** Homozygous wild type. */
+  wild: boolean;
+  /** Looks wild type but carries a morph allele (recessive het). */
+  carrier: boolean;
+  risk?: GenotypeRisk;
+};
+
+/**
+ * What a keeper can record for one parent. Certain states map 1:1 onto a
+ * genotype; possible hets are a weighted mixture of genotypes.
+ */
+export type LocusStateDefinition = {
+  id: string;
+  labelJa: string;
+  mixture: readonly { genotypeId: string; weight: number }[];
+  /** Kept for stored data but not offered in pickers. */
+  hidden?: boolean;
+};
+
+/** Shortcut shown in the calculator picker, e.g. セーブル on the capp seat. */
+export type LocusPickerEntry = {
+  id: string;
+  labelJa: string;
+  stateId: string;
+  /** Basic morphs are pinned to the top of the picker. */
+  shortNoteJa?: string;
+};
 
 export type LocusDefinition = {
   id: string;
   nameJa: string;
   nameEn: string;
   inheritance: Inheritance;
-  /** Homozygous recessive visual, or incomplete-dominant single copy. */
-  visualNameJa: string;
-  /** Incomplete-dominant two copies (e.g. Super Lilly White). */
-  superNameJa?: string;
+  /** Index 0 is always the wild-type allele. */
+  alleles: readonly AlleleDefinition[];
+  genotypes: readonly LocusGenotypeDefinition[];
+  states: readonly LocusStateDefinition[];
+  /** Ascending sort key for phenotype tokens. */
+  phenotypeOrder: number;
+  confidence?: TraitConfidence;
   notesJa?: string;
   beginnerDescription?: string;
-  confidence?: TraitConfidence;
-  /** Shared seat for allelic series (e.g. cappuccino / sable / highway). */
-  alleleGroup?: string;
+  pickerEntries?: readonly LocusPickerEntry[];
 };
 
-export type ComboWarningRule = {
+/** locus id → state id. Omitted loci are wild type. */
+export type Genotype = Partial<Record<string, string>>;
+
+/** locus id → genotype id. Every locus is certain. */
+export type OffspringGenotype = Partial<Record<string, string>>;
+
+/** Renames a set of genotypes to one community name, e.g. フラペチーノ. */
+export type ComboNameRule = {
   id: string;
-  severity: WarningSeverity;
-  messageJa: string;
-  match: (copies: Record<string, AlleleCopies>) => boolean;
+  /** locus id → genotype id; all entries must match. */
+  match: Record<string, string>;
+  nameJa: string;
 };
 
-/** Locus id → status. Omitted keys are treated as wild. */
-export type Genotype = Partial<Record<string, GeneStatus>>;
-
-export type ZygosityKind = "wild" | "het" | "visual" | "super";
-
-export type LocusCopyOutcome = {
-  copies: AlleleCopies;
-  probability: number;
-  kind: ZygosityKind;
+export type LocusOutcome = {
+  genotypeId: string;
+  /** Per-locus label shown in the breakdown, e.g. ヘテロ ファントム. */
   label: string;
+  nameJa: string;
+  notation: string;
+  wild: boolean;
+  carrier: boolean;
+  probability: number;
 };
 
 export type LocusResult = {
   locusId: string;
   nameJa: string;
   inheritance: Inheritance;
-  parentA: GeneStatus;
-  parentB: GeneStatus;
-  outcomes: LocusCopyOutcome[];
+  parentA: string;
+  parentB: string;
+  parentALabel: string;
+  parentBLabel: string;
+  outcomes: LocusOutcome[];
 };
 
 export type CombinedOutcome = {
   phenotype: string;
   probability: number;
-  copies: Record<string, AlleleCopies>;
+  /** The genotype this row was named from; also storable as a parent. */
+  genotype: OffspringGenotype;
+  /** Detail line built from the same genotype, never a second derivation. */
+  detail: string;
 };
 
 export type PairingWarning = {

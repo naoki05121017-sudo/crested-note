@@ -1,14 +1,9 @@
-import {
-  formatCopiesAsGenotype,
-  formatProbability,
-  type PairingResult,
-} from "@/lib/genetics";
+import { formatProbability, type PairingResult } from "@/lib/genetics";
 import { Notice, SectionTitle } from "@/app/components/ui";
 
 export function PairingResults({ result }: { result: PairingResult }) {
   const activeLoci = result.loci.filter((locus) => {
-    const onlyWild =
-      locus.outcomes.length === 1 && locus.outcomes[0]?.copies === 0;
+    const onlyWild = locus.outcomes.length === 1 && locus.outcomes[0]?.wild;
     return !onlyWild;
   });
 
@@ -69,9 +64,7 @@ export function PairingResults({ result }: { result: PairingResult }) {
                 {result.outcomes.map((outcome) => (
                   <tr key={outcome.phenotype}>
                     <td className="font-medium">{outcome.phenotype}</td>
-                    <td className="text-muted">
-                      {formatCopiesAsGenotype(outcome.copies)}
-                    </td>
+                    <td className="text-muted">{outcome.detail}</td>
                     <td className="text-2xl font-semibold tabular-nums">
                       {formatProbability(outcome.probability)}
                     </td>
@@ -94,10 +87,15 @@ export function PairingResults({ result }: { result: PairingResult }) {
                     <ul className="flex flex-col gap-2">
                       {locus.outcomes.map((outcome) => (
                         <li
-                          key={outcome.copies}
+                          key={outcome.genotypeId}
                           className="flex justify-between gap-4"
                         >
-                          <span>{outcome.label}</span>
+                          <span>
+                            {outcome.label}
+                            <span className="ml-2 text-muted">
+                              {outcome.notation}
+                            </span>
+                          </span>
                           <span className="font-semibold tabular-nums">
                             {formatProbability(outcome.probability)}
                           </span>

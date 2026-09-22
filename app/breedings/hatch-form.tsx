@@ -27,8 +27,8 @@ export function HatchForm({
   const result = useMemo(
     () =>
       calculatePairing(sireGenotype, damGenotype, {
-        visualA: sireTraits,
-        visualB: damTraits,
+        traitsA: sireTraits,
+        traitsB: damTraits,
       }),
     [sireGenotype, damGenotype, sireTraits, damTraits],
   );
@@ -41,8 +41,8 @@ export function HatchForm({
     <MutationForm action={action} className="mt-3 flex flex-col gap-3 rounded-2xl bg-sand p-4">
       <input
         type="hidden"
-        name="copiesJson"
-        value={JSON.stringify(selected?.copies ?? {})}
+        name="genotypeJson"
+        value={JSON.stringify(selected?.genotype ?? {})}
       />
       <input
         type="hidden"

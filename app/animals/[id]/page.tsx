@@ -19,7 +19,12 @@ import {
   SEX_LABEL,
   animalTitle,
 } from "@/lib/db/labels";
-import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
+import {
+  formatGenotypeLabel,
+  listLoci,
+  locusStateLabel,
+  visualTraitName,
+} from "@/lib/genetics";
 import { growthPoints } from "@/lib/stats/compare";
 
 export const dynamic = "force-dynamic";
@@ -138,10 +143,9 @@ export default async function AnimalDetailPage({
               <li key={locus.id} className="flex justify-between gap-3">
                 <span>{locus.nameJa}</span>
                 <span className="text-muted">
-                  {geneStatusLabelJa(
+                  {locusStateLabel(
+                    locus.id,
                     animal.genotype[locus.id] ?? "wild",
-                    locus.inheritance,
-                    locus.nameJa,
                   )}
                 </span>
               </li>

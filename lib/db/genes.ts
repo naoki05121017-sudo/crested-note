@@ -1,4 +1,4 @@
-import { getLocus, type GeneStatus, type Genotype } from "@/lib/genetics";
+import { getLocusState, type Genotype } from "@/lib/genetics";
 import type { AnimalGeneRecord } from "./types";
 
 export function replaceGenes(
@@ -9,8 +9,8 @@ export function replaceGenes(
   const next = genes.filter((gene) => gene.animalId !== animalId);
   for (const [locusId, status] of Object.entries(genotype)) {
     if (!status || status === "wild") continue;
-    if (!getLocus(locusId)) continue;
-    next.push({ animalId, locusId, status: status as GeneStatus });
+    if (!getLocusState(locusId, status)) continue;
+    next.push({ animalId, locusId, status });
   }
   return next;
 }

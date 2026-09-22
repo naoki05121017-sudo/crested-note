@@ -1,199 +1,238 @@
 import { describe, expect, it } from "vitest";
 import { calculatePairing } from "./calculate";
-import { LOCI } from "./catalog";
+import { getLocus, LOCI } from "./catalog";
+import { offspringGenotypeDistribution } from "./punnett";
+import type { PairingResult } from "./types";
 
-function p(
-  result: ReturnType<typeof calculatePairing>,
-  phenotype: string,
-): number {
+/**
+ * Cross-check against https://crested-gecko-calc.pages.dev/, which is the
+ * source of truth for inheritance mode, allele membership and naming.
+ */
+
+function p(result: PairingResult, phenotype: string): number {
   return (
     result.outcomes.find((row) => row.phenotype === phenotype)?.probability ?? 0
   );
 }
 
-describe("major morph pairing examples", () => {
-  it("Lilly White × Lilly White is 1 : 2 : 1 incomplete dominant", () => {
+function distribution(
+  locusId: string,
+  stateA: string,
+  stateB: string,
+): Record<string, number> {
+  const locus = getLocus(locusId);
+  if (!locus) throw new Error(`missing locus ${locusId}`);
+  return Object.fromEntries(
+    offspringGenotypeDistribution(locus, stateA, stateB).map((row) => [
+      row.genotypeId,
+      Number(row.probability.toFixed(6)),
+    ]),
+  );
+}
+
+describe("inheritance modes match the reference calculator", () => {
+  const expected: Record<string, string> = {
+    lillyWhite: "incomplete_dominant",
+    emptyBack: "incomplete_dominant",
+    cappuccino: "allelic_series",
+    axanthicTug: "recessive",
+    axanthicMelanistic: "recessive",
+    axanthicArv: "recessive",
+    axanthicLava: "recessive",
+    albino: "recessive",
+    chocho: "recessive",
+    phantom: "recessive",
+    redBase: "recessive",
+    superStripe: "recessive",
+  };
+
+  for (const [locusId, inheritance] of Object.entries(expected)) {
+    it(`${locusId} is ${inheritance}`, () => {
+      expect(getLocus(locusId)?.inheritance).toBe(inheritance);
+    });
+  }
+
+  it("covers every reference locus", () => {
+    for (const locusId of Object.keys(expected)) {
+      expect(LOCI.some((locus) => locus.id === locusId)).toBe(true);
+    }
+  });
+
+  it("does not model a polygenic trait as a gene", () => {
+    for (const id of [
+      "pinstripe",
+      "dalmatian",
+      "harlequin",
+      "flame",
+      "tiger",
+      "lavender",
+      "moonlight",
+      "porthole",
+      "pied",
+      "marbling",
+      "softScale",
+    ]) {
+      expect(getLocus(id)).toBeUndefined();
+    }
+  });
+});
+
+describe("per-locus genotype ratios", () => {
+  it("Lilly White × Lilly White is 1 : 2 : 1", () => {
+    expect(distribution("lillyWhite", "het", "het")).toEqual({
+      wild: 0.25,
+      het: 0.5,
+      visual: 0.25,
+    });
+  });
+
+  it("Super Lilly White × normal is 100% Lilly White", () => {
+    expect(distribution("lillyWhite", "visual", "wild")).toEqual({ het: 1 });
+  });
+
+  it("Empty Back × Empty Back gives a super at 25%", () => {
+    expect(distribution("emptyBack", "het", "het")).toEqual({
+      wild: 0.25,
+      het: 0.5,
+      visual: 0.25,
+    });
+  });
+
+  it("Sable × Sable is 1 : 2 : 1 across the allelic seat", () => {
+    expect(distribution("cappuccino", "sable", "sable")).toEqual({
+      wild: 0.25,
+      sable: 0.5,
+      superSable: 0.25,
+    });
+  });
+
+  it("Luwak × normal splits into Cappuccino and Sable", () => {
+    expect(distribution("cappuccino", "luwak", "wild")).toEqual({
+      cappuccino: 0.5,
+      sable: 0.5,
+    });
+  });
+
+  it("Luwak × Luwak produces all four supers", () => {
+    expect(distribution("cappuccino", "luwak", "luwak")).toEqual({
+      superCappuccino: 0.25,
+      superSable: 0.25,
+      luwak: 0.5,
+    });
+  });
+
+  it("Sable/Highway × Cappuccino covers the three compounds", () => {
+    expect(distribution("cappuccino", "sableHighway", "cappuccino")).toEqual({
+      sable: 0.25,
+      highway: 0.25,
+      luwak: 0.25,
+      cappHighway: 0.25,
+    });
+  });
+
+  it("het Axanthic × het Axanthic is 1 : 2 : 1", () => {
+    expect(distribution("axanthicTug", "het", "het")).toEqual({
+      wild: 0.25,
+      het: 0.5,
+      visual: 0.25,
+    });
+  });
+});
+
+describe("combined naming follows the reference", () => {
+  it("names Cappuccino plus Lilly White フラペチーノ", () => {
     const result = calculatePairing(
-      { lillyWhite: "het" },
-      { lillyWhite: "het" },
+      { cappuccino: "cappuccino" },
+      { lillyWhite: "visual" },
     );
-    expect(p(result, "スーパーリリーホワイト")).toBeCloseTo(0.25);
+    expect(p(result, "フラペチーノ")).toBeCloseTo(0.5);
     expect(p(result, "リリーホワイト")).toBeCloseTo(0.5);
-    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
   });
 
-  it("Lilly White (one copy) × wild is 50% Lilly White, not 100%", () => {
-    const result = calculatePairing({ lillyWhite: "het" }, {});
-    expect(p(result, "リリーホワイト")).toBeCloseTo(0.5);
-    expect(p(result, "ノーマル")).toBeCloseTo(0.5);
+  it("names Sable, Highway and Phantom combos by joining the morphs", () => {
+    const sable = calculatePairing(
+      { cappuccino: "sable" },
+      { lillyWhite: "visual" },
+    );
+    expect(p(sable, "セーブル・リリーホワイト")).toBeCloseTo(0.5);
+
+    const highway = calculatePairing(
+      { cappuccino: "highway" },
+      { lillyWhite: "visual" },
+    );
+    expect(p(highway, "ハイウェイ・リリーホワイト")).toBeCloseTo(0.5);
+
+    const phantom = calculatePairing(
+      { phantom: "visual" },
+      { phantom: "visual", lillyWhite: "visual" },
+    );
+    expect(p(phantom, "ファントム・リリーホワイト")).toBeCloseTo(1);
   });
 
-  it("Super Lilly White × wild is 100% Lilly White", () => {
-    const result = calculatePairing({ lillyWhite: "visual" }, {});
-    expect(p(result, "リリーホワイト")).toBeCloseTo(1);
-  });
-
-  it("het Phantom × het Phantom is 1 : 2 : 1 recessive", () => {
-    const result = calculatePairing({ phantom: "het" }, { phantom: "het" });
-    expect(p(result, "ファントム")).toBeCloseTo(0.25);
-    expect(p(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
-  });
-
-  it("visual Phantom × wild is 100% het (not visual)", () => {
-    const result = calculatePairing({ phantom: "visual" }, {});
-    expect(p(result, "het ファントム")).toBeCloseTo(1);
-    expect(p(result, "ファントム")).toBe(0);
-  });
-
-  it("het Patternless × het Patternless matches Phantom math", () => {
+  it("names the axanthic phantom double recessive", () => {
     const result = calculatePairing(
-      { patternless: "het" },
-      { patternless: "het" },
+      { phantom: "visual", axanthicTug: "visual" },
+      { phantom: "visual", axanthicTug: "visual" },
     );
-    expect(p(result, "パターンレス")).toBeCloseTo(0.25);
-    expect(p(result, "het パターンレス")).toBeCloseTo(0.5);
+    expect(p(result, "アザンティック (TUG)・ファントム")).toBeCloseTo(1);
   });
 
-  it("het Cappuccino × het Cappuccino can produce Luwak at 25%", () => {
-    const result = calculatePairing(
-      { cappuccino: "het" },
-      { cappuccino: "het" },
-    );
-    expect(p(result, "ルワック（スーパーカプチーノ）")).toBeCloseTo(0.25);
-    expect(p(result, "het カプチーノ")).toBeCloseTo(0.5);
-    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(
-      result.warnings.find((w) => w.id === "superCappuccino")?.probability,
-    ).toBeCloseTo(0.25);
-  });
-
-  it("TUG het × TUG het can produce visual TUG; TUG het × Lava het cannot fuse into one axanthic gene", () => {
-    const same = calculatePairing(
-      { axanthicTug: "het" },
-      { axanthicTug: "het" },
-    );
-    expect(p(same, "アザンティック (TUG)")).toBeCloseTo(0.25);
-
+  it("keeps the axanthic lines apart instead of fusing them", () => {
     const cross = calculatePairing(
-      { axanthicTug: "het" },
-      { axanthicLava: "het" },
-    );
-    expect(p(cross, "アザンティック (TUG)")).toBe(0);
-    expect(p(cross, "アザンティック (Lava)")).toBe(0);
-    expect(p(cross, "het アザンティック (TUG)")).toBeCloseTo(0.25);
-    expect(p(cross, "het アザンティック (Lava)")).toBeCloseTo(0.25);
-    expect(
-      p(cross, "het アザンティック (TUG) het アザンティック (Lava)"),
-    ).toBeCloseTo(0.25);
-    expect(p(cross, "ノーマル")).toBeCloseTo(0.25);
-  });
-
-  it("visual TUG × visual Lava yields double hets, not visual axanthic", () => {
-    const result = calculatePairing(
       { axanthicTug: "visual" },
       { axanthicLava: "visual" },
     );
-    expect(p(result, "het アザンティック (TUG) het アザンティック (Lava)")).toBeCloseTo(
-      1,
-    );
-    expect(p(result, "アザンティック (TUG)")).toBe(0);
-    expect(p(result, "アザンティック (Lava)")).toBe(0);
+    expect(
+      p(cross, "ヘテロ アザンティック (TUG)・アザンティック (Lava)"),
+    ).toBeCloseTo(1);
+    expect(p(cross, "アザンティック (TUG)")).toBe(0);
+    expect(p(cross, "アザンティック (Lava)")).toBe(0);
   });
+});
 
-  it("does not treat Soft Scale as a Mendelian locus; Sable keys map onto cappuccino", () => {
-    expect(LOCI.some((locus) => locus.id === "softScale")).toBe(false);
-    expect(LOCI.some((locus) => locus.id === "sable")).toBe(false);
-    const soft = calculatePairing({ softScale: "visual" }, {});
-    expect(p(soft, "ノーマル")).toBe(1);
-    expect(soft.unrecognizedLocusIds).toEqual(["softScale"]);
-    const sable = calculatePairing({ sable: "het" }, {});
-    expect(p(sable, "het セーブル")).toBeCloseTo(0.5);
-    expect(p(sable, "ノーマル")).toBeCloseTo(0.5);
-    expect(sable.unrecognizedLocusIds).toEqual([]);
-  });
-
-  it("maps a parent Sable visual tag onto the cappuccino seat", () => {
-    const result = calculatePairing(
-      { lillyWhite: "het" },
-      {},
-      { visualB: ["sable"] },
-    );
-    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(p(result, "het セーブル")).toBeCloseTo(0.25);
-    expect(p(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(p(result, "リリーセーブル")).toBeCloseTo(0.25);
-    expect(p(result, "ルワック（スーパーカプチーノ）")).toBe(0);
-    expect(result.unrecognizedLocusIds).toEqual([]);
-  });
-
-  it("Super Lilly White × Super Lilly White is 100% super", () => {
-    const result = calculatePairing(
-      { lillyWhite: "visual" },
-      { lillyWhite: "visual" },
-    );
-    expect(p(result, "スーパーリリーホワイト")).toBeCloseTo(1);
-  });
-
-  it("visual Phantom × het Phantom is 1 : 1 visual : het", () => {
-    const result = calculatePairing({ phantom: "visual" }, { phantom: "het" });
-    expect(p(result, "ファントム")).toBeCloseTo(0.5);
-    expect(p(result, "het ファントム")).toBeCloseTo(0.5);
-  });
-
-  it("het Charcoal × het Charcoal is classic recessive 1 : 2 : 1", () => {
-    const result = calculatePairing({ charcoal: "het" }, { charcoal: "het" });
-    expect(p(result, "チャコール")).toBeCloseTo(0.25);
-    expect(p(result, "het チャコール")).toBeCloseTo(0.5);
-    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
-  });
-
-  it("visual Cappuccino × wild is 100% het, never Luwak", () => {
-    const result = calculatePairing({ cappuccino: "visual" }, {});
-    expect(p(result, "het カプチーノ")).toBeCloseTo(1);
-    expect(p(result, "ルワック（スーパーカプチーノ）")).toBe(0);
-  });
-
-  it("Lilly White visual Cappuccino × wild is LW het-capp, not Frappuccino", () => {
-    const result = calculatePairing(
-      { lillyWhite: "het", cappuccino: "visual" },
-      {},
-    );
-    expect(p(result, "リリーホワイト het カプチーノ")).toBeCloseTo(0.5);
-    expect(p(result, "het カプチーノ")).toBeCloseTo(0.5);
-    expect(p(result, "フラプチーノ（リリーホワイト＋ルワック）")).toBe(0);
-  });
-
-  it("Lilly White Luwak × Luwak is 50% Frappuccino : 50% Luwak", () => {
-    const result = calculatePairing(
-      { lillyWhite: "het", cappuccino: "visual" },
-      { cappuccino: "visual" },
-    );
-    expect(p(result, "フラプチーノ（リリーホワイト＋ルワック）")).toBeCloseTo(0.5);
-    expect(p(result, "ルワック（スーパーカプチーノ）")).toBeCloseTo(0.5);
-  });
-
-  it("50% possible het × wild is 25% het expected value", () => {
+describe("possible hets are expected values, not certainties", () => {
+  it("50% possible het × normal is 25% het", () => {
     const result = calculatePairing({ phantom: "possible_50" }, {});
-    expect(p(result, "het ファントム")).toBeCloseTo(0.25);
+    expect(p(result, "ヘテロ ファントム")).toBeCloseTo(0.25);
     expect(p(result, "ノーマル")).toBeCloseTo(0.75);
     expect(p(result, "ファントム")).toBe(0);
   });
 
-  it("66% possible het × wild is 1/3 het expected value", () => {
+  it("66% possible het × normal is 1/3 het", () => {
     const result = calculatePairing({ phantom: "possible_66" }, {});
-    expect(p(result, "het ファントム")).toBeCloseTo(1 / 3);
+    expect(p(result, "ヘテロ ファントム")).toBeCloseTo(1 / 3);
     expect(p(result, "ノーマル")).toBeCloseTo(2 / 3);
   });
+});
 
-  it("independent loci multiply: LW het × Phantom het vs wild", () => {
-    const result = calculatePairing(
-      { lillyWhite: "het", phantom: "het" },
-      {},
+describe("health warnings", () => {
+  it("flags the allelic supers the reference calls out", () => {
+    const luwakPair = calculatePairing(
+      { cappuccino: "cappuccino" },
+      { cappuccino: "sable" },
     );
-    expect(p(result, "リリーホワイト het ファントム")).toBeCloseTo(0.25);
-    expect(p(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(p(result, "het ファントム")).toBeCloseTo(0.25);
-    expect(p(result, "ノーマル")).toBeCloseTo(0.25);
+    const luwak = luwakPair.warnings.find((row) => row.id === "luwak");
+    expect(luwak?.severity).toBe("danger");
+
+    const superCapp = calculatePairing(
+      { cappuccino: "cappuccino" },
+      { cappuccino: "cappuccino" },
+    ).warnings.find((row) => row.id === "superCappuccino");
+    expect(superCapp?.severity).toBe("danger");
+    expect(superCapp?.probability).toBeCloseTo(0.25);
+
+    const superSable = calculatePairing(
+      { cappuccino: "sable" },
+      { cappuccino: "sable" },
+    ).warnings.find((row) => row.id === "superSable");
+    expect(superSable?.severity).toBe("caution");
+  });
+
+  it("does not warn when no risky genotype can appear", () => {
+    const result = calculatePairing(
+      { cappuccino: "sable" },
+      { lillyWhite: "het" },
+    );
+    expect(result.warnings).toEqual([]);
   });
 });

@@ -10,7 +10,6 @@ export type VisualTraitDefinition = {
   confidence: TraitConfidence;
   beginnerDescription: string;
   expertDescription?: string;
-  alleleOf?: string;
   graded?: boolean;
   gradeLabels?: readonly string[];
   /** Short picker/list badge, e.g. モルフ */
@@ -25,49 +24,11 @@ export const TRAIT_CATEGORY_LABEL: Record<VisualTraitCategory, string> = {
   feature: "特徴",
 };
 
+/**
+ * Polygenic and line traits only. Anything with a known inheritance mode lives
+ * in the locus catalog instead, so nothing here reaches the Punnett maths.
+ */
 export const VISUAL_TRAITS: readonly VisualTraitDefinition[] = [
-  {
-    id: "sable",
-    nameJa: "セーブル",
-    nameEn: "Sable",
-    category: "pattern",
-    confidence: "PARTIALLY_ESTABLISHED",
-    alleleOf: "cappuccino",
-    badge: "モルフ",
-    shortNote: "カプチーノ・ハイウェイと遺伝的な関係があります",
-    beginnerDescription:
-      "カプチーノと同じ遺伝子の場所にある別タイプと考えられています。独立した遺伝子としては計算しません。",
-    expertDescription: "Allelic to Cappuccino / Highway (cappuccino locus).",
-  },
-  {
-    id: "highway",
-    nameJa: "ハイウェイ",
-    nameEn: "Highway",
-    category: "reference",
-    confidence: "PARTIALLY_ESTABLISHED",
-    alleleOf: "cappuccino",
-    beginnerDescription:
-      "カプチーノと同じ遺伝子の場所にある別タイプと考えられています。独立した遺伝子としては計算しません。",
-    expertDescription: "Allelic to Cappuccino / Sable (cappuccino locus).",
-  },
-  {
-    id: "chocho",
-    nameJa: "チョチョ",
-    nameEn: "Chocho",
-    category: "reference",
-    confidence: "UNCERTAIN",
-    beginnerDescription:
-      "名前のあるモルフですが、遺伝形式が確立した単一遺伝子としては扱いません。",
-  },
-  {
-    id: "albino",
-    nameJa: "アルビノ",
-    nameEn: "Albino",
-    category: "reference",
-    confidence: "UNCERTAIN",
-    beginnerDescription:
-      "クレステッドゲッコーでは確立した単一遺伝子として扱わない参考項目です。",
-  },
   {
     id: "pied",
     nameJa: "ピエド",
@@ -83,16 +44,6 @@ export const VISUAL_TRAITS: readonly VisualTraitDefinition[] = [
     category: "reference",
     confidence: "POLYGENIC",
     beginnerDescription: "色素が薄く見える傾向です。単一遺伝子としては計算しません。",
-  },
-  {
-    id: "emptyBack",
-    nameJa: "エンプティバック",
-    nameEn: "Empty Back",
-    category: "reference",
-    confidence: "POLYGENIC",
-    beginnerDescription: "背中の模様が少ない見た目です。いくつもの遺伝が関係します。",
-    graded: true,
-    gradeLabels: ["少ない", "ふつう", "多い"],
   },
   {
     id: "pinstripe",
@@ -183,14 +134,6 @@ export const VISUAL_TRAITS: readonly VisualTraitDefinition[] = [
     beginnerDescription: "模様が垂れたように見える系統です。",
   },
   {
-    id: "superStripe",
-    nameJa: "スーパーストライプ",
-    nameEn: "Super Stripe",
-    category: "pattern",
-    confidence: "POLYGENIC",
-    beginnerDescription: "ストライプが強い見た目です。単一遺伝子としては計算しません。",
-  },
-  {
     id: "patternAmount",
     nameJa: "パターン量",
     nameEn: "Pattern amount",
@@ -215,14 +158,6 @@ export const VISUAL_TRAITS: readonly VisualTraitDefinition[] = [
     category: "pattern",
     confidence: "POLYGENIC",
     beginnerDescription: "白い模様の入り方です。",
-  },
-  {
-    id: "redBase",
-    nameJa: "レッドベース",
-    nameEn: "Red base",
-    category: "pattern",
-    confidence: "POLYGENIC",
-    beginnerDescription: "地色が赤みのラインです。",
   },
   {
     id: "fire",
@@ -360,6 +295,23 @@ export const VISUAL_TRAITS: readonly VisualTraitDefinition[] = [
     category: "feature",
     confidence: "POLYGENIC",
     beginnerDescription: "紫みのあるカラーラインです。",
+  },
+  {
+    id: "phantomPinstripe",
+    nameJa: "ファントムピンストライプ",
+    nameEn: "Phantom pinstripe",
+    category: "feature",
+    confidence: "POLYGENIC",
+    beginnerDescription:
+      "ピンストライプの鱗に色が乗らない見た目です。劣性のファントムとは別物です。",
+  },
+  {
+    id: "marbling",
+    nameJa: "マーブリング",
+    nameEn: "Marbling",
+    category: "feature",
+    confidence: "POLYGENIC",
+    beginnerDescription: "大理石のように混ざる模様の呼び方です。",
   },
   {
     id: "whiteColor",
