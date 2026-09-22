@@ -205,11 +205,16 @@ function ParentEditor({
                           patchGenotype(next);
                         }}
                       >
-                        {statusesFor(alleleLocus).map((status) => (
+                        {(id === "sable"
+                          ? INCOMPLETE_STATUSES
+                          : statusesFor(alleleLocus)
+                        ).map((status) => (
                           <option key={status} value={status}>
                             {geneStatusLabelJa(
                               status,
-                              alleleLocus.inheritance,
+                              id === "sable"
+                                ? "incomplete_dominant"
+                                : alleleLocus.inheritance,
                               option.label,
                             )}
                           </option>

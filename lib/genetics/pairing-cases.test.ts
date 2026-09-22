@@ -79,7 +79,7 @@ describe("pairing cases: parent signals must reach offspring", () => {
       { visualB: ["sable"] },
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
     expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
     expectLocusSurvives(result, "lillyWhite");
@@ -87,14 +87,14 @@ describe("pairing cases: parent signals must reach offspring", () => {
     const combo = result.outcomes.find((row) => row.phenotype === "リリーセーブル");
     expect(combo?.copies.lillyWhite).toBe(1);
     expect(combo?.copies.cappuccino).toBe(1);
-    expect(formatCopiesAsGenotype(combo?.copies ?? {})).toMatch(/リリーホワイト/);
-    expect(formatCopiesAsGenotype(combo?.copies ?? {})).toMatch(/カプチーノ|セーブル/);
+    expect(formatCopiesAsGenotype(combo?.copies ?? {}, "sable")).toMatch(/リリーホワイト/);
+    expect(formatCopiesAsGenotype(combo?.copies ?? {}, "sable")).toMatch(/セーブル/);
   });
 
   it("7. セーブル × ノーマル", () => {
     const result = calculatePairing({}, {}, { visualA: ["sable"] });
     expect(prob(result, "ノーマル")).toBeCloseTo(0.5);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
     expectLocusSurvives(result, "cappuccino");
   });
 
@@ -105,7 +105,7 @@ describe("pairing cases: parent signals must reach offspring", () => {
       { visualB: ["sable"] },
     );
     expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "het ファントム het セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "セーブル het ファントム")).toBeCloseTo(0.5);
     expectLocusSurvives(result, "phantom");
     expectLocusSurvives(result, "cappuccino");
   });

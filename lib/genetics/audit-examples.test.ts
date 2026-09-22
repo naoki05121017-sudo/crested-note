@@ -108,7 +108,7 @@ describe("major morph pairing examples", () => {
     expect(p(soft, "ノーマル")).toBe(1);
     expect(soft.unrecognizedLocusIds).toEqual(["softScale"]);
     const sable = calculatePairing({ sable: "het" }, {});
-    expect(p(sable, "het セーブル")).toBeCloseTo(0.5);
+    expect(p(sable, "セーブル")).toBeCloseTo(0.5);
     expect(p(sable, "ノーマル")).toBeCloseTo(0.5);
     expect(sable.unrecognizedLocusIds).toEqual([]);
   });
@@ -120,7 +120,7 @@ describe("major morph pairing examples", () => {
       { visualB: ["sable"] },
     );
     expect(p(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(p(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(p(result, "セーブル")).toBeCloseTo(0.25);
     expect(p(result, "リリーホワイト")).toBeCloseTo(0.25);
     expect(p(result, "リリーセーブル")).toBeCloseTo(0.25);
     expect(p(result, "ルワック（スーパーカプチーノ）")).toBe(0);

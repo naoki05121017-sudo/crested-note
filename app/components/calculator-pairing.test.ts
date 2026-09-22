@@ -51,8 +51,16 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     expect(uiTagsForPairing(a)).toContain("sable");
     expect(a.genotype.cappuccino).toBe("het");
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.5);
-    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "スーパーセーブル")).toBeCloseTo(0.25);
+    const cap = result.loci.find((row) => row.locusId === "cappuccino");
+    expect(cap?.nameJa).toBe("セーブル");
+    expect(cap?.outcomes.map((row) => row.label).sort()).toEqual(
+      ["ノーマル", "セーブル", "スーパーセーブル"].sort(),
+    );
+    expect(result.outcomes.some((row) => row.phenotype.includes("het セーブル"))).toBe(
+      false,
+    );
   });
 
   it("セーブル × セーブル (手入力の選択表示だけでも計算する)", () => {
@@ -68,9 +76,13 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
 
     const result = runCalculatorPairing(displayedOnly, displayedOnly);
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.5);
-    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
-    expect(prob(result, "ノーマル") + prob(result, "het セーブル") + prob(result, "セーブル")).toBeCloseTo(1);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "スーパーセーブル")).toBeCloseTo(0.25);
+    expect(
+      prob(result, "ノーマル") +
+        prob(result, "セーブル") +
+        prob(result, "スーパーセーブル"),
+    ).toBeCloseTo(1);
   });
 
   it("セーブル × セーブル via picker addCalculatorTrait", () => {
@@ -78,8 +90,8 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const mother = addCalculatorTrait(emptyParent(), option("sable"));
     const result = runCalculatorPairing(father, mother);
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.5);
-    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "スーパーセーブル")).toBeCloseTo(0.25);
   });
 
   it("adds Sable as a visual tag on the cappuccino seat, not as a fake locus", () => {
@@ -109,7 +121,7 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const mother = addCalculatorTrait(emptyParent(), option("sable"));
     const result = runCalculatorPairing(emptyParent(), mother);
     expect(prob(result, "ノーマル")).toBeCloseTo(0.5);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
   });
 
   it("実機経路: ギルティ（リリーホワイト）× 仮想セーブル", () => {
@@ -122,10 +134,10 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const result = runCalculatorPairing(guilty, virtualSable);
     const rows = screenRows(result);
     expect(rows.map((row) => row.phenotype).sort()).toEqual(
-      ["het セーブル", "ノーマル", "リリーセーブル", "リリーホワイト"].sort(),
+      ["セーブル", "ノーマル", "リリーセーブル", "リリーホワイト"].sort(),
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
     expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
     const combo = rows.find((row) => row.phenotype === "リリーセーブル");
@@ -138,7 +150,7 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const mother = addCalculatorTrait(emptyParent(), option("lillyWhite"));
     const result = runCalculatorPairing(father, mother);
     expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
   });
 
   it("ファントム（見た目）× リリーホワイト", () => {
@@ -171,7 +183,7 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
       { sable: "het" },
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
     expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
     expect(result.unrecognizedLocusIds).toEqual([]);

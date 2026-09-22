@@ -11,9 +11,18 @@ import type {
 export function describeCopies(
   locus: LocusDefinition,
   copies: AlleleCopies,
+  cappuccinoMorph: CappuccinoMorphDisplay = "cappuccino",
 ): { kind: ZygosityKind; token: string | null } {
   if (copies === 0) {
     return { kind: "wild", token: null };
+  }
+
+  // Same cappuccino seat; sable is shown as incomplete dominant (not het).
+  if (cappuccinoMorph === "sable" && locus.id === "cappuccino") {
+    if (copies === 1) {
+      return { kind: "visual", token: "セーブル" };
+    }
+    return { kind: "super", token: "スーパーセーブル" };
   }
 
   if (locus.inheritance === "recessive") {
@@ -36,8 +45,9 @@ export function describeCopies(
 export function locusOutcomeLabel(
   locus: LocusDefinition,
   copies: AlleleCopies,
+  cappuccinoMorph: CappuccinoMorphDisplay = "cappuccino",
 ): string {
-  const described = describeCopies(locus, copies);
+  const described = describeCopies(locus, copies, cappuccinoMorph);
   return described.token ?? "ノーマル";
 }
 
@@ -52,14 +62,14 @@ export function combinePhenotype(
   const hetTokens: string[] = [];
 
   for (const part of parts) {
-    const described = describeCopies(part.locus, part.copies);
+    const described = describeCopies(part.locus, part.copies, cappuccinoMorph);
     if ((described.kind === "visual" || described.kind === "super") && described.token) {
       visualTokens.push(described.token);
     }
   }
 
   for (const part of parts) {
-    const described = describeCopies(part.locus, part.copies);
+    const described = describeCopies(part.locus, part.copies, cappuccinoMorph);
     if (described.kind === "het" && described.token) {
       hetTokens.push(described.token);
     }
@@ -93,18 +103,19 @@ function applyNamedCombos(
   const cap = ctx.copies.cappuccino ?? 0;
   const lw = ctx.copies.lillyWhite ?? 0;
 
-  if (ctx.morph === "sable" || ctx.morph === "highway") {
-    const morphJa = ctx.morph === "sable" ? "セーブル" : "ハイウェイ";
+  if (ctx.morph === "highway") {
     const capIdx = visualTokens.indexOf("カプチーノ");
-    if (capIdx >= 0) visualTokens[capIdx] = morphJa;
+    if (capIdx >= 0) visualTokens[capIdx] = "ハイウェイ";
     const hetIdx = hetTokens.indexOf("het カプチーノ");
-    if (hetIdx >= 0) hetTokens[hetIdx] = `het ${morphJa}`;
-
-    if (ctx.morph === "sable" && cap >= 1 && lw >= 1) {
+    if (hetIdx >= 0) hetTokens[hetIdx] = "het ハイウェイ";
+  } else if (ctx.morph === "sable") {
+    if (cap >= 1 && lw >= 1) {
       replaceTokens(visualTokens, hetTokens, {
         dropVisual: (token) =>
-          token.includes("リリーホワイト") || token === "セーブル",
-        dropHet: (token) => token === "het セーブル",
+          token.includes("リリーホワイト") ||
+          token === "セーブル" ||
+          token === "スーパーセーブル",
+        dropHet: () => false,
         name:
           lw === 2
             ? "リリーセーブル（スーパーリリーホワイト）"
@@ -196,7 +207,7 @@ export function formatGenotypeLabel(genotype: Genotype): string {
     }
 
     const copies: AlleleCopies = status === "visual" ? 2 : 1;
-    const described = describeCopies(locus, copies);
+    const described = describeCopies(locus, copies, "cappuccino");
     if (described.token) tokens.push(described.token);
   }
 

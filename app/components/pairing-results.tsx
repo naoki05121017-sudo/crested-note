@@ -70,7 +70,10 @@ export function PairingResults({ result }: { result: PairingResult }) {
                   <tr key={outcome.phenotype}>
                     <td className="font-medium">{outcome.phenotype}</td>
                     <td className="text-muted">
-                      {formatCopiesAsGenotype(outcome.copies)}
+                      {formatCopiesAsGenotype(
+                      outcome.copies,
+                      result.cappuccinoMorph,
+                    )}
                     </td>
                     <td className="text-2xl font-semibold tabular-nums">
                       {formatProbability(outcome.probability)}

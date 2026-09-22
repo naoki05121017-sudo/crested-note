@@ -24,7 +24,10 @@ export function geneStatusLabelJa(
       return "ヘテロ（隠れて持つ）";
     case "visual":
       if (inheritance === "incomplete_dominant") {
-        return "スーパーリリー ⚠️";
+        if (!morphName || morphName === "リリーホワイト") {
+          return "スーパーリリー ⚠️";
+        }
+        return `スーパー${morphName}`;
       }
       return morphName ? `${morphName}（見た目に出る）` : "見た目に出る";
     case "possible_50":

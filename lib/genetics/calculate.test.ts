@@ -169,9 +169,30 @@ describe("calculatePairing", () => {
       { visualB: ["sable"] },
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
     expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+  });
+
+  it("labels sable × sable from the same copy counts as the locus breakdown", () => {
+    const result = calculatePairing({}, {}, { visualA: ["sable"], visualB: ["sable"] });
+    expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "スーパーセーブル")).toBeCloseTo(0.25);
+    expect(result.outcomes.some((row) => row.phenotype.includes("het"))).toBe(false);
+    const cap = result.loci.find((row) => row.locusId === "cappuccino");
+    expect(cap?.outcomes.map((row) => [row.copies, row.label])).toEqual(
+      expect.arrayContaining([
+        [0, "ノーマル"],
+        [1, "セーブル"],
+        [2, "スーパーセーブル"],
+      ]),
+    );
+    for (const row of result.outcomes) {
+      const copies = row.copies.cappuccino ?? 0;
+      const locusLabel = cap?.outcomes.find((item) => item.copies === copies)?.label;
+      expect(row.phenotype).toBe(locusLabel);
+    }
   });
 
   it("reports unrecognized locus ids without breaking math", () => {
@@ -199,6 +220,12 @@ describe("geneStatusLabelJa", () => {
     );
     expect(geneStatusLabelJa("visual", "incomplete_dominant", "リリーホワイト")).toBe(
       "スーパーリリー ⚠️",
+    );
+    expect(geneStatusLabelJa("het", "incomplete_dominant", "セーブル")).toBe(
+      "セーブル（見た目に出る）",
+    );
+    expect(geneStatusLabelJa("visual", "incomplete_dominant", "セーブル")).toBe(
+      "スーパーセーブル",
     );
   });
 

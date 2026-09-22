@@ -39,18 +39,19 @@ function calculateLocus(
   locusId: string,
   parentA: GeneStatus,
   parentB: GeneStatus,
+  cappuccinoMorph: CappuccinoMorphDisplay,
 ): LocusResult | null {
   const locus = getLocus(locusId);
   if (!locus) return null;
 
   const distribution = offspringCopyDistribution(parentA, parentB);
   const outcomes = compactCopyDistribution(distribution).map((row) => {
-    const described = describeCopies(locus, row.copies);
+    const described = describeCopies(locus, row.copies, cappuccinoMorph);
     return {
       copies: row.copies,
       probability: row.probability,
       kind: described.kind,
-      label: locusOutcomeLabel(locus, row.copies),
+      label: locusOutcomeLabel(locus, row.copies, cappuccinoMorph),
     };
   });
 
@@ -186,6 +187,7 @@ export function calculatePairing(
       locus.id,
       statusOf(mergedA, locus.id),
       statusOf(mergedB, locus.id),
+      morph,
     ),
   ).filter((row): row is LocusResult => row !== null);
 
@@ -194,10 +196,12 @@ export function calculatePairing(
     for (const locus of loci) {
       if (locus.locusId === "cappuccino") {
         locus.nameJa = morphJa;
-        locus.outcomes = locus.outcomes.map((outcome) => ({
-          ...outcome,
-          label: outcome.label.replaceAll("カプチーノ", morphJa),
-        }));
+        if (morph === "highway") {
+          locus.outcomes = locus.outcomes.map((outcome) => ({
+            ...outcome,
+            label: outcome.label.replaceAll("カプチーノ", morphJa),
+          }));
+        }
       }
     }
   }
@@ -209,6 +213,7 @@ export function calculatePairing(
     outcomes,
     warnings,
     unrecognizedLocusIds,
+    cappuccinoMorph: morph,
   };
 }
 

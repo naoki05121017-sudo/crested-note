@@ -85,4 +85,5 @@ export type PairingResult = {
   outcomes: CombinedOutcome[];
   warnings: PairingWarning[];
   unrecognizedLocusIds: string[];
+  cappuccinoMorph?: "cappuccino" | "sable" | "highway";
 };
