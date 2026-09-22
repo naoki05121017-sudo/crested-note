@@ -46,8 +46,9 @@ export type ComboWarningRule = {
   match: (copies: Record<string, AlleleCopies>) => boolean;
 };
 
-/** Locus id → status. Omitted keys are treated as wild. */
-export type Genotype = Partial<Record<string, GeneStatus>>;
+import type { CshDiplotype } from "./csh";
+
+export type Genotype = Partial<Record<string, GeneStatus | CshDiplotype>>;
 
 export type ZygosityKind = "wild" | "het" | "visual" | "super";
 
@@ -56,6 +57,7 @@ export type LocusCopyOutcome = {
   probability: number;
   kind: ZygosityKind;
   label: string;
+  diplotype?: string;
 };
 
 export type LocusResult = {
@@ -71,6 +73,9 @@ export type CombinedOutcome = {
   phenotype: string;
   probability: number;
   copies: Record<string, AlleleCopies>;
+  csh?: CshDiplotype;
+  visualKeys?: string[];
+  hetKeys?: string[];
 };
 
 export type PairingWarning = {

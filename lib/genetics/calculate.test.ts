@@ -34,10 +34,10 @@ describe("catalog", () => {
     expect(LOCI.some((locus) => locus.id === "softScale")).toBe(false);
   });
 
-  it("does not treat sable, highway, or chocho as independent calculable loci", () => {
+  it("does not treat sable or highway as independent calculable loci", () => {
     expect(LOCI.some((locus) => locus.id === "sable")).toBe(false);
     expect(LOCI.some((locus) => locus.id === "highway")).toBe(false);
-    expect(LOCI.some((locus) => locus.id === "chocho")).toBe(false);
+    expect(LOCI.some((locus) => locus.id === "chocho")).toBe(true);
   });
 
   it("keeps cappuccino as the calculable seat for the allelic series", () => {
@@ -82,9 +82,9 @@ describe("offspringCopyDistribution", () => {
 describe("calculatePairing", () => {
   it("two wild parents yield 100% ノーマル", () => {
     const result = calculatePairing({}, {});
-    expect(result.outcomes).toEqual([
-      { phenotype: "ノーマル", probability: 1, copies: {} },
-    ]);
+    expect(result.outcomes[0]?.phenotype).toBe("ノーマル");
+    expect(result.outcomes[0]?.probability).toBe(1);
+    expect(result.outcomes).toHaveLength(1);
     expect(result.warnings).toEqual([]);
   });
 
@@ -94,7 +94,7 @@ describe("calculatePairing", () => {
       { phantom: "het" },
     );
     expect(prob(result, "ファントム")).toBeCloseTo(0.25);
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
   });
 
@@ -116,10 +116,10 @@ describe("calculatePairing", () => {
       { lillyWhite: "het", phantom: "het" },
       { phantom: "visual" },
     );
-    expect(prob(result, "リリーホワイト ファントム")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.25);
+    expect(prob(result, "ファントム・リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーホワイト（ヘテロ ファントム）")).toBeCloseTo(0.25);
     expect(prob(result, "ファントム")).toBeCloseTo(0.25);
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.25);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.25);
   });
 
   it("warns on super cappuccino and sable", () => {
@@ -134,23 +134,21 @@ describe("calculatePairing", () => {
     expect(superCapp?.severity).toBe("danger");
   });
 
-  it("names luwak from super cappuccino without a new gene", () => {
+  it("names super cappuccino from two Capp alleles, not luwak", () => {
     const result = calculatePairing(
       { cappuccino: "visual" },
       { cappuccino: "visual" },
     );
-    expect(prob(result, "ルワック（スーパーカプチーノ）")).toBeCloseTo(1);
+    expect(prob(result, "スーパーカプチーノ")).toBeCloseTo(1);
   });
 
-  it("names frappuccino from lilly white plus luwak", () => {
+  it("names ソラク from lilly white plus super cappuccino", () => {
     const result = calculatePairing(
       { lillyWhite: "het", cappuccino: "visual" },
       { cappuccino: "visual" },
     );
-    expect(prob(result, "フラプチーノ（リリーホワイト＋ルワック）")).toBeCloseTo(
-      0.5,
-    );
-    expect(prob(result, "ルワック（スーパーカプチーノ）")).toBeCloseTo(0.5);
+    expect(prob(result, "ソラク")).toBeCloseTo(0.5);
+    expect(prob(result, "スーパーカプチーノ")).toBeCloseTo(0.5);
   });
 
   it("names axanthic phantom combo from existing loci", () => {
@@ -158,7 +156,7 @@ describe("calculatePairing", () => {
       { phantom: "visual", axanthicTug: "visual" },
       { phantom: "visual", axanthicTug: "visual" },
     );
-    expect(prob(result, "アザンティックファントム（TUG）")).toBeCloseTo(1);
+    expect(prob(result, "アザンティック・ファントム")).toBeCloseTo(1);
   });
 
   it("maps Sable visual tags onto the cappuccino seat without a new locus", () => {
@@ -171,7 +169,7 @@ describe("calculatePairing", () => {
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
   });
 
   it("labels sable × sable from the same copy counts as the locus breakdown", () => {

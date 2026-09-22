@@ -1,30 +1,13 @@
-import {
-  geneStatusLabelJa,
-  listLoci,
-  type GeneStatus,
-  type Genotype,
-} from "@/lib/genetics";
+import { listLoci, type Genotype } from "@/lib/genetics";
 import type { LocusDefinition } from "@/lib/genetics/types";
 import { Hint } from "@/app/components/ui";
 import { AXANTHIC_LOCUS_IDS } from "@/app/components/calculator-traits";
+import {
+  coerceParentStatus,
+  parentStatusOptions,
+} from "@/app/components/parent-gene-status";
 
 const AXANTHIC_SET = new Set<string>(AXANTHIC_LOCUS_IDS);
-
-const RECESSIVE_STATUSES: GeneStatus[] = [
-  "wild",
-  "het",
-  "visual",
-  "possible_50",
-  "possible_66",
-];
-
-const INCOMPLETE_STATUSES: GeneStatus[] = ["wild", "het", "visual"];
-
-function statusesFor(locus: LocusDefinition): GeneStatus[] {
-  return locus.inheritance === "recessive"
-    ? RECESSIVE_STATUSES
-    : INCOMPLETE_STATUSES;
-}
 
 function LocusSelect({
   locus,
@@ -35,7 +18,7 @@ function LocusSelect({
   genotype: Genotype;
   namePrefix: string;
 }) {
-  const value = genotype[locus.id] ?? "wild";
+  const value = coerceParentStatus(genotype[locus.id], locus.id, locus, "wild");
   return (
     <label className="grid gap-1 text-sm">
       <span className="font-medium">
@@ -49,9 +32,9 @@ function LocusSelect({
         defaultValue={value}
         className="nc-input"
       >
-        {statusesFor(locus).map((status) => (
-          <option key={status} value={status}>
-            {geneStatusLabelJa(status, locus.inheritance, locus.nameJa)}
+        {parentStatusOptions(locus.id, locus).map((row) => (
+          <option key={row.status} value={row.status}>
+            {row.label}
           </option>
         ))}
       </select>

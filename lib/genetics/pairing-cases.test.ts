@@ -33,7 +33,7 @@ describe("pairing cases: parent signals must reach offspring", () => {
     const parentA = { phantom: "visual" as const };
     const result = calculatePairing(parentA, {});
     expect(formatGenotypeLabel(parentA)).toBe("ファントム");
-    expect(prob(result, "het ファントム")).toBeCloseTo(1);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(1);
     expectLocusSurvives(result, "phantom");
     expect(formatCopiesAsGenotype(result.outcomes[0]?.copies ?? {})).toContain(
       "ファントム",
@@ -45,8 +45,8 @@ describe("pairing cases: parent signals must reach offspring", () => {
       { phantom: "visual" },
       { lillyWhite: "het" },
     );
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "リリーホワイト（ヘテロ ファントム）")).toBeCloseTo(0.5);
     expect(prob(result, "リリーホワイト")).toBe(0);
     expectLocusSurvives(result, "phantom");
     expectLocusSurvives(result, "lillyWhite");
@@ -57,8 +57,8 @@ describe("pairing cases: parent signals must reach offspring", () => {
     const result = calculatePairing({ phantom: "het" }, { lillyWhite: "het" });
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.25);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーホワイト（ヘテロ ファントム）")).toBeCloseTo(0.25);
     expectLocusSurvives(result, "phantom");
     expectLocusSurvives(result, "lillyWhite");
   });
@@ -72,7 +72,7 @@ describe("pairing cases: parent signals must reach offspring", () => {
 
   it("6. リリーホワイト × セーブル", () => {
     const mergedB = resolveParentGenotype({}, ["sable"]);
-    expect(mergedB).toEqual({ cappuccino: "het" });
+    expect(mergedB).toEqual({ cappuccino: "het", csh: "N/Sable" });
     const result = calculatePairing(
       { lillyWhite: "het" },
       {},
@@ -81,10 +81,10 @@ describe("pairing cases: parent signals must reach offspring", () => {
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
     expectLocusSurvives(result, "lillyWhite");
     expectLocusSurvives(result, "cappuccino");
-    const combo = result.outcomes.find((row) => row.phenotype === "リリーセーブル");
+    const combo = result.outcomes.find((row) => row.phenotype === "セーブル・リリーホワイト");
     expect(combo?.copies.lillyWhite).toBe(1);
     expect(combo?.copies.cappuccino).toBe(1);
     expect(formatCopiesAsGenotype(combo?.copies ?? {}, "sable")).toMatch(/リリーホワイト/);
@@ -104,8 +104,8 @@ describe("pairing cases: parent signals must reach offspring", () => {
       {},
       { visualB: ["sable"] },
     );
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "セーブル het ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "セーブル（ヘテロ ファントム）")).toBeCloseTo(0.5);
     expectLocusSurvives(result, "phantom");
     expectLocusSurvives(result, "cappuccino");
   });
@@ -113,9 +113,9 @@ describe("pairing cases: parent signals must reach offspring", () => {
   it("9. リリーホワイト × ファントム（見た目） は左右入れ替えても同じ", () => {
     const ab = calculatePairing({ lillyWhite: "het" }, { phantom: "visual" });
     const ba = calculatePairing({ phantom: "visual" }, { lillyWhite: "het" });
-    expect(prob(ab, "het ファントム")).toBeCloseTo(prob(ba, "het ファントム"));
-    expect(prob(ab, "リリーホワイト het ファントム")).toBeCloseTo(
-      prob(ba, "リリーホワイト het ファントム"),
+    expect(prob(ab, "ヘテロ ファントム")).toBeCloseTo(prob(ba, "ヘテロ ファントム"));
+    expect(prob(ab, "リリーホワイト（ヘテロ ファントム）")).toBeCloseTo(
+      prob(ba, "リリーホワイト（ヘテロ ファントム）"),
     );
     expectLocusSurvives(ab, "lillyWhite");
     expectLocusSurvives(ab, "phantom");
@@ -147,7 +147,7 @@ describe("pairing cases: parent signals must reach offspring", () => {
     );
     expect(withAll.length).toBeGreaterThan(0);
     for (const row of withAll) {
-      expect(row.phenotype).not.toBe("het ファントム");
+      expect(row.phenotype).not.toBe("ヘテロ ファントム");
       expect(genotypeFromCopies(row.copies).phantom).toBeTruthy();
       expect(genotypeFromCopies(row.copies).lillyWhite).toBeTruthy();
     }

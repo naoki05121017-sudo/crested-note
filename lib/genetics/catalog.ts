@@ -41,13 +41,14 @@ export const LOCI: readonly LocusDefinition[] = [
     id: "cappuccino",
     nameJa: "カプチーノ",
     nameEn: "Cappuccino",
-    inheritance: "recessive",
+    inheritance: "incomplete_dominant",
     visualNameJa: "カプチーノ",
-    notesJa: "視覚個体（2コピー）はスーパーカプチーノ／ルワックと呼ばれ、健康リスクが報告されています。セーブル・ハイウェイは同座位の別アレルとして記録します。",
+    superNameJa: "スーパーカプチーノ",
+    notesJa: "セーブル・ハイウェイと同一座位のアレルです。1コピーで見た目に出ます。",
     confidence: "ESTABLISHED",
     alleleGroup: "cappuccino",
     beginnerDescription:
-      "劣性です。2つ揃うとルワック（スーパーカプチーノ）になり、健康面の注意があります。セーブル・ハイウェイは同じ座位の別タイプです。",
+      "セーブル・ハイウェイと同じ遺伝子の場所にある不完全優性です。1つでカプチーノ、2つでスーパーカプチーノ（ルアクとは別）になります。",
   },
   {
     id: "axanthicTug",
@@ -97,6 +98,60 @@ export const LOCI: readonly LocusDefinition[] = [
     beginnerDescription:
       "劣性として計算します。カラーラインの「チャコール系」とは別に記録します。",
   },
+  {
+    id: "chocho",
+    nameJa: "チョチョ",
+    nameEn: "Chocho",
+    inheritance: "recessive",
+    visualNameJa: "チョチョ",
+    confidence: "ESTABLISHED",
+    beginnerDescription:
+      "劣性です。両親から1つずつ受け取ると見た目に出ます。1つだけなら隠れて持ちます。",
+  },
+  {
+    id: "albino",
+    nameJa: "アルビノ",
+    nameEn: "Albino",
+    inheritance: "recessive",
+    visualNameJa: "アルビノ",
+    confidence: "UNCERTAIN",
+    notesJa: "研究中。確率は参考値です。",
+    beginnerDescription:
+      "劣性として参考計算します。クレステッドゲッコーでの遺伝機序は研究中です。",
+  },
+  {
+    id: "emptyBack",
+    nameJa: "エンプティバック",
+    nameEn: "Empty Back",
+    inheritance: "incomplete_dominant",
+    visualNameJa: "エンプティバック",
+    superNameJa: "スーパーエンプティバック",
+    confidence: "PARTIALLY_ESTABLISHED",
+    beginnerDescription:
+      "不完全優性です。1つでエンプティバック、2つでスーパーエンプティバックです。",
+  },
+  {
+    id: "redBase",
+    nameJa: "レッドベース",
+    nameEn: "Red Base",
+    inheritance: "recessive",
+    visualNameJa: "レッドベース",
+    confidence: "UNCERTAIN",
+    notesJa: "研究中。確率は参考値です。",
+    beginnerDescription:
+      "劣性として参考計算します。遺伝機序は研究中です。",
+  },
+  {
+    id: "superStripe",
+    nameJa: "スーパーストライプ",
+    nameEn: "Super Stripe",
+    inheritance: "recessive",
+    visualNameJa: "スーパーストライプ",
+    confidence: "UNCERTAIN",
+    notesJa: "研究中。確率は参考値です。",
+    beginnerDescription:
+      "劣性として参考計算します。遺伝機序は研究中です。",
+  },
 ] as const;
 
 export const LOCUS_BY_ID: Readonly<Record<string, LocusDefinition>> =
@@ -118,14 +173,14 @@ export const COMBO_WARNINGS: readonly ComboWarningRule[] = [
     id: "superCappuccino",
     severity: "danger",
     messageJa:
-      "健康リスクの可能性があります。この組み合わせは注意が必要です。ルワック（スーパーカプチーノ）が出る可能性があります。",
+      "健康リスクの可能性があります。この組み合わせは注意が必要です。スーパーカプチーノやルアクなどが出る可能性があります。",
     match: (copies) => copies.cappuccino === 2,
   },
   {
     id: "lillyWhiteCappuccino",
     severity: "danger",
     messageJa:
-      "健康リスクの可能性があります。この組み合わせは注意が必要です。リリーホワイトとルワックが重なるセーブル系の見た目が出る可能性があります。",
+      "健康リスクの可能性があります。この組み合わせは注意が必要です。リリーホワイトとカプチーノ座位が重なる組み合わせ（ソラクなど）が出る可能性があります。",
     match: (copies) =>
       (copies.lillyWhite ?? 0) >= 1 && copies.cappuccino === 2,
   },

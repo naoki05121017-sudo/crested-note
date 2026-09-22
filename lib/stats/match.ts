@@ -3,11 +3,14 @@ import { copiesToStatus, formatGenotypeLabel } from "@/lib/genetics";
 import type { Animal } from "@/lib/db/types";
 
 export function statusToCopies(
-  status: GeneStatus | undefined,
+  status: GeneStatus | undefined | string,
 ): AlleleCopies {
   if (!status || status === "wild" || status === "unknown") return 0;
   if (status === "visual") return 2;
-  return 1;
+  if (status === "het" || status === "possible_50" || status === "possible_66") {
+    return 1;
+  }
+  return 0;
 }
 
 export function phenotypeFromAnimal(animal: Animal): string {

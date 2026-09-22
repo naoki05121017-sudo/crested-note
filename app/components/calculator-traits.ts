@@ -77,6 +77,7 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
     searchText: "アザンティック Axanthic axanthic",
   });
   for (const trait of VISUAL_TRAITS) {
+    if (listLoci().some((locus) => locus.id === trait.id)) continue;
     options.push({
       id: trait.id,
       label: trait.nameJa,

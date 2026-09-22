@@ -73,6 +73,7 @@ export function PairingResults({ result }: { result: PairingResult }) {
                       {formatCopiesAsGenotype(
                       outcome.copies,
                       result.cappuccinoMorph,
+                      outcome.csh,
                     )}
                     </td>
                     <td className="text-2xl font-semibold tabular-nums">
@@ -97,7 +98,7 @@ export function PairingResults({ result }: { result: PairingResult }) {
                     <ul className="flex flex-col gap-2">
                       {locus.outcomes.map((outcome) => (
                         <li
-                          key={outcome.copies}
+                          key={outcome.diplotype ?? `${outcome.copies}-${outcome.label}`}
                           className="flex justify-between gap-4"
                         >
                           <span>{outcome.label}</span>

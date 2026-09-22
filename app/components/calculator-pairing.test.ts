@@ -8,7 +8,8 @@ import {
   type CalculatorParentState,
 } from "@/app/components/calculator-pairing";
 import { calculatorTraitOptions } from "@/app/components/calculator-traits";
-import { calculatePairing } from "@/lib/genetics";
+import { calculatePairing, getLocus } from "@/lib/genetics";
+import { parentStatusOptions } from "@/app/components/parent-gene-status";
 
 function option(id: string) {
   const found = calculatorTraitOptions().find((row) => row.id === id);
@@ -36,6 +37,16 @@ function screenRows(result: ReturnType<typeof runCalculatorPairing>) {
 }
 
 describe("calculator UI pairing path (遺伝を計算する)", () => {
+  it("親入力でセーブルを選ぶと het / 50% / 66% は出さず なし・セーブル・スーパーセーブルだけ", () => {
+    const parent = addCalculatorTrait(emptyParent(), option("sable"));
+    expect(parent.addedTraits).toEqual(["sable"]);
+    const labels = parentStatusOptions("sable", getLocus("cappuccino")).map(
+      (row) => row.label,
+    );
+    expect(labels).toEqual(["なし", "セーブル", "スーパーセーブル"]);
+    expect(labels.join(" ")).not.toMatch(/ヘテロ/);
+  });
+
   it("matches the 遺伝を計算する button: calculatePairing(hydrated.genotype, { visualA/B from ui tags })", () => {
     const displayed: CalculatorParentState = {
       genotype: {},
@@ -134,13 +145,13 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const result = runCalculatorPairing(guilty, virtualSable);
     const rows = screenRows(result);
     expect(rows.map((row) => row.phenotype).sort()).toEqual(
-      ["セーブル", "ノーマル", "リリーセーブル", "リリーホワイト"].sort(),
+      ["セーブル", "ノーマル", "セーブル・リリーホワイト", "リリーホワイト"].sort(),
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
-    const combo = rows.find((row) => row.phenotype === "リリーセーブル");
+    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
+    const combo = rows.find((row) => row.phenotype === "セーブル・リリーホワイト");
     expect(combo?.copies.lillyWhite).toBe(1);
     expect(combo?.copies.cappuccino).toBe(1);
   });
@@ -149,7 +160,7 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     const father = addCalculatorTrait(emptyParent(), option("sable"));
     const mother = addCalculatorTrait(emptyParent(), option("lillyWhite"));
     const result = runCalculatorPairing(father, mother);
-    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
   });
 
@@ -161,8 +172,8 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     };
     const mother = addCalculatorTrait(emptyParent(), option("lillyWhite"));
     const result = runCalculatorPairing(father, mother);
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "リリーホワイト（ヘテロ ファントム）")).toBeCloseTo(0.5);
   });
 
   it("リリーホワイト × ファントム（見た目）", () => {
@@ -173,8 +184,8 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
       genotype: { ...mother.genotype, phantom: "visual" },
     };
     const result = runCalculatorPairing(father, mother);
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "リリーホワイト（ヘテロ ファントム）")).toBeCloseTo(0.5);
   });
 
   it("maps a sable genotype key the way the old UI sent it (no visualTags)", () => {
@@ -185,7 +196,7 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
     expect(result.unrecognizedLocusIds).toEqual([]);
   });
 });

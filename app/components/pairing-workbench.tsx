@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState } from "react";
 import {
   calculatePairing,
-  geneStatusLabelJa,
   getVisualTrait,
   listLoci,
   allelicVisualCoversLocus,
@@ -12,7 +11,6 @@ import {
   type Genotype,
   type PairingResult,
 } from "@/lib/genetics";
-import type { LocusDefinition } from "@/lib/genetics/types";
 import { animalTitle } from "@/lib/db/labels";
 import { PairingResults } from "@/app/components/pairing-results";
 import { MutationForm } from "@/app/components/mutation-form";
@@ -37,21 +35,10 @@ import {
   uiTagsForPairing,
   type CalculatorParentState,
 } from "@/app/components/calculator-pairing";
-
-const RECESSIVE_STATUSES: GeneStatus[] = [
-  "wild",
-  "het",
-  "visual",
-  "possible_50",
-  "possible_66",
-];
-const INCOMPLETE_STATUSES: GeneStatus[] = ["wild", "het", "visual"];
-
-function statusesFor(locus: LocusDefinition): GeneStatus[] {
-  return locus.inheritance === "recessive"
-    ? RECESSIVE_STATUSES
-    : INCOMPLETE_STATUSES;
-}
+import {
+  coerceParentStatus,
+  parentStatusOptions,
+} from "@/app/components/parent-gene-status";
 
 function ParentHeading({ sex }: { sex: "male" | "female" }) {
   const symbol = sex === "male" ? "♂" : "♀";
@@ -196,7 +183,11 @@ function ParentEditor({
                       <span>状態</span>
                       <select
                         className="nc-input"
-                        value={genotype[alleleLocus.id] ?? "het"}
+                        value={coerceParentStatus(
+                          genotype[alleleLocus.id],
+                          id,
+                          alleleLocus,
+                        )}
                         onChange={(event) => {
                           const status = event.target.value as GeneStatus;
                           const next = { ...genotype };
@@ -205,18 +196,9 @@ function ParentEditor({
                           patchGenotype(next);
                         }}
                       >
-                        {(id === "sable"
-                          ? INCOMPLETE_STATUSES
-                          : statusesFor(alleleLocus)
-                        ).map((status) => (
-                          <option key={status} value={status}>
-                            {geneStatusLabelJa(
-                              status,
-                              id === "sable"
-                                ? "incomplete_dominant"
-                                : alleleLocus.inheritance,
-                              option.label,
-                            )}
+                        {parentStatusOptions(id, alleleLocus).map((row) => (
+                          <option key={row.status} value={row.status}>
+                            {row.label}
                           </option>
                         ))}
                       </select>
@@ -259,13 +241,9 @@ function ParentEditor({
                         );
                       }}
                     >
-                      {statusesFor(axanthicLocus).map((status) => (
-                        <option key={status} value={status}>
-                          {geneStatusLabelJa(
-                            status,
-                            axanthicLocus.inheritance,
-                            "アザンティック",
-                          )}
+                      {parentStatusOptions("axanthic", axanthicLocus).map((row) => (
+                        <option key={row.status} value={row.status}>
+                          {row.label}
                         </option>
                       ))}
                     </select>
@@ -301,7 +279,12 @@ function ParentEditor({
               );
             }
             if (option.kind === "locus" && option.locus) {
-              const value = genotype[option.id] ?? "wild";
+              const value = coerceParentStatus(
+                genotype[option.id],
+                option.id,
+                option.locus,
+                "wild",
+              );
               return (
                 <div key={id} className="grid gap-3 rounded-2xl bg-sand px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
@@ -330,13 +313,9 @@ function ParentEditor({
                         patchGenotype(next);
                       }}
                     >
-                      {statusesFor(option.locus).map((status) => (
-                        <option key={status} value={status}>
-                          {geneStatusLabelJa(
-                            status,
-                            option.locus!.inheritance,
-                            option.locus!.nameJa,
-                          )}
+                      {parentStatusOptions(option.id, option.locus).map((row) => (
+                        <option key={row.status} value={row.status}>
+                          {row.label}
                         </option>
                       ))}
                     </select>

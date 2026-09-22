@@ -3,7 +3,7 @@
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import { issueCrestLinkForAnimal } from "@/lib/crest-link/core";
 import { issueAnimalCode } from "@/lib/db/animal-code";
-import { calculatePairing, genotypeFromCopies, type AlleleCopies } from "@/lib/genetics";
+import { calculatePairing, genotypeFromCopies, type AlleleCopies, type GeneStatus } from "@/lib/genetics";
 import {
   nowIso,
   parseEggResult,
@@ -225,8 +225,8 @@ export async function hatchEgg(eggId: string, formData: FormData) {
       db.animals.push(record);
       issueCrestLinkForAnimal(db, animalId);
       for (const [locusId, status] of Object.entries(genotype)) {
-        if (!status || status === "wild") continue;
-        db.genes.push({ animalId, locusId, status });
+        if (!status || status === "wild" || locusId === "csh") continue;
+        db.genes.push({ animalId, locusId, status: status as GeneStatus });
       }
       egg.result = "hatched";
       egg.hatchAnimalId = animalId;

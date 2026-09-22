@@ -6,6 +6,7 @@ import {
   calculatePairing,
   type PairingResult,
 } from "@/lib/genetics";
+import { inferCshDiplotype } from "@/lib/genetics/csh";
 import {
   axanthicFromGenotype,
   calculatorTraitOptions,
@@ -81,6 +82,11 @@ export function hydrateParentForPairing(
       genotype[id] = defaultStatus();
     }
   }
+
+  const tags = [...visualTags];
+  const csh = inferCshDiplotype(genotype, tags);
+  if (csh !== "NN") genotype.csh = csh;
+  else delete genotype.csh;
 
   return {
     genotype,
