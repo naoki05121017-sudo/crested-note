@@ -18,6 +18,7 @@ import {
   uploadAnimalPhoto,
 } from "@/lib/db/animal-photo-storage";
 import { issueCrestLinkForAnimal, retireCrestLinkForAnimal, syncCrestLinkParents } from "@/lib/crest-link/core";
+import { parentSexAssignmentError } from "@/lib/db/parent-sex";
 import { replaceGenes } from "@/lib/db/genes";
 import { getAnimal } from "@/lib/db/queries";
 import { mutateDb, newId, newSlug } from "@/lib/db/store";
@@ -85,6 +86,12 @@ export async function createAnimal(formData: FormData) {
     uploaded = photo.uploaded;
 
     await mutateDb((db) => {
+      const parentError = parentSexAssignmentError(
+        db.animals,
+        parsed.data.sireId,
+        parsed.data.damId,
+      );
+      if (parentError) throw new Error(parentError);
       const record: AnimalRecord = {
         id,
         crestLinkId: "",
@@ -149,6 +156,13 @@ export async function updateAnimal(id: string, formData: FormData) {
     await mutateDb((db) => {
       const record = db.animals.find((animal) => animal.id === id);
       if (!record) return;
+      const parentError = parentSexAssignmentError(
+        db.animals,
+        parsed.data.sireId,
+        parsed.data.damId,
+        { sireId: existing.sireId, damId: existing.damId },
+      );
+      if (parentError) throw new Error(parentError);
       record.name = parsed.data.name;
       record.sex = parsed.data.sex;
       record.hatchDate = parsed.data.hatchDate;

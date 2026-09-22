@@ -22,7 +22,18 @@ export function DeleteAnimalForm({ animalId }: { animalId: string }) {
   }, [leaving, router]);
 
   return (
-    <form action={action}>
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (
+          !window.confirm(
+            "この個体を削除しますか？削除すると元に戻せません。",
+          )
+        ) {
+          event.preventDefault();
+        }
+      }}
+    >
       <input type="hidden" name="animalId" value={animalId} />
       <fieldset disabled={busy} className="contents">
         <PendingSubmitButton

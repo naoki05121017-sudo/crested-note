@@ -11,6 +11,7 @@ import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { GenotypeFields } from "@/app/components/genotype-fields";
 import { AnimalPhotoField } from "@/app/animals/animal-photo-field";
 import { Card, Hint, SectionTitle } from "@/app/components/ui";
+import { parentOptionsForRole } from "@/lib/db/parent-sex";
 import type { VisualTraitCategory } from "@/lib/genetics/visual-traits";
 
 export function AnimalForm({
@@ -24,6 +25,8 @@ export function AnimalForm({
 }) {
   const action = animal ? updateAnimal.bind(null, animal.id) : createAnimal;
   const parentOptions = parents.filter((row) => row.id !== animal?.id);
+  const sires = parentOptionsForRole(parentOptions, "sire", animal?.sireId ?? "");
+  const dams = parentOptionsForRole(parentOptions, "dam", animal?.damId ?? "");
 
   return (
     <MutationForm action={action} className="flex max-w-3xl flex-col gap-6">
@@ -63,7 +66,7 @@ export function AnimalForm({
           <span className="font-medium">父</span>
           <select name="sireId" defaultValue={animal?.sireId ?? ""} className="nc-input">
             <option value="">未登録</option>
-            {parentOptions.map((row) => (
+            {sires.map((row) => (
               <option key={row.id} value={row.id}>
                 {animalTitle(row)}
               </option>
@@ -74,7 +77,7 @@ export function AnimalForm({
           <span className="font-medium">母</span>
           <select name="damId" defaultValue={animal?.damId ?? ""} className="nc-input">
             <option value="">未登録</option>
-            {parentOptions.map((row) => (
+            {dams.map((row) => (
               <option key={row.id} value={row.id}>
                 {animalTitle(row)}
               </option>
