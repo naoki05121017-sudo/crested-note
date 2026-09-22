@@ -1,157 +1,134 @@
 import {
-  getLocus,
-  getVisualTrait,
-  type GeneStatus,
-  type Genotype,
   calculatePairing,
+  getVisualTrait,
+  resolveParentGenotype,
+  type Genotype,
   type PairingResult,
 } from "@/lib/genetics";
 import {
+  AXANTHIC_TRAIT_ID,
   axanthicFromGenotype,
   calculatorTraitOptions,
   clearTraitFromGenotype,
+  rowIdForOption,
   setAxanthicGenotype,
+  visibleTraitsFromParent,
   type CalculatorTraitOption,
 } from "@/app/components/calculator-traits";
 
 export type CalculatorParentState = {
+  /** locus id → state id. The only input the Punnett maths reads. */
   genotype: Genotype;
-  visualTags: string[];
+  /** Polygenic tags. Displayed, never calculated. */
+  traits: string[];
+  /** Rows currently shown: locus ids, `axanthic`, or polygenic trait ids. */
   addedTraits: string[];
 };
-
-function defaultStatus(): GeneStatus {
-  return "het";
-}
 
 function optionById(id: string): CalculatorTraitOption | undefined {
   return calculatorTraitOptions().find((row) => row.id === id);
 }
 
-function isVisualTraitId(id: string, option?: CalculatorTraitOption): boolean {
-  return (
-    option?.kind === "visual" ||
-    Boolean(getVisualTrait(id)) ||
-    id === "sable" ||
-    id === "highway"
-  );
+function optionForRow(rowId: string): CalculatorTraitOption | undefined {
+  return calculatorTraitOptions().find((row) => rowIdForOption(row) === rowId);
 }
 
-function alleleSeat(id: string, option?: CalculatorTraitOption): string | undefined {
-  return getVisualTrait(id)?.alleleOf ?? option?.alleleOf ?? (id === "sable" || id === "highway" ? "cappuccino" : undefined);
+export function emptyParentState(): CalculatorParentState {
+  return { genotype: {}, traits: [], addedTraits: [] };
 }
 
 /**
- * Rebuild pairing input from what the calculator actually displays.
- * Displayed addedTraits are the source of truth so a shown セーブル cannot
- * vanish before Punnett.
+ * Make the parent state self-consistent before it is used.
+ * Legacy keys and trait tags are folded onto their locus, and every displayed
+ * genetic row is guaranteed a state, so a shown セーブル cannot vanish.
  */
 export function hydrateParentForPairing(
   state: CalculatorParentState,
 ): CalculatorParentState {
-  let genotype: Genotype = { ...state.genotype };
-  const visualTags = new Set<string>(state.visualTags);
+  const genotype: Genotype = resolveParentGenotype(state.genotype, state.traits);
+  const traits = state.traits.filter((tag) => Boolean(getVisualTrait(tag)));
 
-  for (const id of state.addedTraits) {
-    const option = optionById(id);
-    if (isVisualTraitId(id, option)) {
-      visualTags.add(id);
-      delete genotype[id];
-      const seat = alleleSeat(id, option);
-      if (seat && getLocus(seat)) {
-        if (!genotype[seat] || genotype[seat] === "wild") {
-          genotype[seat] = defaultStatus();
-        }
+  for (const rowId of state.addedTraits) {
+    if (rowId === AXANTHIC_TRAIT_ID) {
+      const axanthic = axanthicFromGenotype(genotype);
+      if (!axanthic.stateId || axanthic.stateId === "wild") {
+        genotype[axanthic.locusId] = "het";
       }
       continue;
     }
-    if (option?.kind === "axanthic" || id === "axanthic") {
-      const ax = axanthicFromGenotype(genotype);
-      if (!ax.status || ax.status === "wild") {
-        genotype = setAxanthicGenotype(
-          genotype,
-          ax.locusId,
-          ax.locusId,
-          defaultStatus(),
-        );
+    const option = optionForRow(rowId);
+    if (option?.kind === "locus" && option.locus) {
+      if (!genotype[option.locus.id]) {
+        genotype[option.locus.id] = option.defaultStateId ?? "het";
       }
       continue;
     }
-    if (getLocus(id) && (!genotype[id] || genotype[id] === "wild")) {
-      genotype[id] = defaultStatus();
-    }
+    if (getVisualTrait(rowId) && !traits.includes(rowId)) traits.push(rowId);
   }
 
-  return {
-    genotype,
-    visualTags: [...visualTags],
-    addedTraits: state.addedTraits,
-  };
-}
+  const addedTraits = [...state.addedTraits];
+  for (const rowId of visibleTraitsFromParent(genotype, traits)) {
+    if (!addedTraits.includes(rowId)) addedTraits.push(rowId);
+  }
 
-export function collectVisualTagsForPairing(parent: CalculatorParentState): string[] {
-  const hydrated = hydrateParentForPairing(parent);
-  const tags = new Set<string>(hydrated.visualTags);
-  for (const id of hydrated.addedTraits) {
-    if (isVisualTraitId(id, optionById(id))) tags.add(id);
-  }
-  for (const [id, status] of Object.entries(hydrated.genotype)) {
-    if (!status || status === "wild") continue;
-    if (isVisualTraitId(id, optionById(id))) tags.add(id);
-  }
-  return [...tags];
+  return { genotype, traits, addedTraits };
 }
 
 export function addCalculatorTrait(
   state: CalculatorParentState,
   option: CalculatorTraitOption,
 ): CalculatorParentState {
-  const addedTraits = state.addedTraits.includes(option.id)
+  const rowId = rowIdForOption(option);
+  const addedTraits = state.addedTraits.includes(rowId)
     ? state.addedTraits
-    : [...state.addedTraits, option.id];
-  return hydrateParentForPairing({
-    ...state,
-    addedTraits,
-  });
+    : [...state.addedTraits, rowId];
+  let genotype = { ...state.genotype };
+  const traits = [...state.traits];
+
+  if (option.kind === "locus" && option.locus) {
+    genotype[option.locus.id] = option.defaultStateId ?? "het";
+  } else if (option.kind === "axanthic") {
+    const axanthic = axanthicFromGenotype(genotype);
+    genotype = setAxanthicGenotype(
+      genotype,
+      axanthic.locusId,
+      axanthic.locusId,
+      "het",
+    );
+  } else if (!traits.includes(option.id)) {
+    traits.push(option.id);
+  }
+
+  return hydrateParentForPairing({ genotype, traits, addedTraits });
 }
 
 export function removeCalculatorTrait(
   state: CalculatorParentState,
-  option: CalculatorTraitOption | undefined,
-  id: string,
+  _option: CalculatorTraitOption | undefined,
+  rowId: string,
 ): CalculatorParentState {
-  const addedTraits = state.addedTraits.filter((row) => row !== id);
-  const visual = getVisualTrait(id);
-  if (visual || option?.kind === "visual" || isVisualTraitId(id, option)) {
-    const visualTags = state.visualTags.filter((tag) => tag !== id);
-    let genotype = { ...state.genotype };
-    delete genotype[id];
-    const seat = alleleSeat(id, option);
-    if (
-      seat &&
-      !addedTraits.some((other) => alleleSeat(other, optionById(other)) === seat) &&
-      !addedTraits.includes(seat)
-    ) {
-      genotype = clearTraitFromGenotype(genotype, seat);
-    }
-    return hydrateParentForPairing({ genotype, visualTags, addedTraits });
-  }
-  return hydrateParentForPairing({
-    genotype: clearTraitFromGenotype(state.genotype, id),
-    visualTags: state.visualTags,
-    addedTraits,
-  });
+  const addedTraits = state.addedTraits.filter((row) => row !== rowId);
+  const genotype = clearTraitFromGenotype(state.genotype, rowId);
+  const traits = state.traits.filter((tag) => tag !== rowId);
+  return hydrateParentForPairing({ genotype, traits, addedTraits });
 }
 
-export function uiTagsForPairing(state: CalculatorParentState): string[] {
-  const tags = new Set<string>();
-  for (const tag of state.visualTags) tags.add(tag);
-  for (const id of state.addedTraits) tags.add(id);
-  for (const [id, status] of Object.entries(state.genotype)) {
-    if (!status || status === "wild") continue;
-    tags.add(id);
-  }
-  return [...tags];
+export function setLocusState(
+  state: CalculatorParentState,
+  locusId: string,
+  stateId: string,
+): CalculatorParentState {
+  const genotype = { ...state.genotype };
+  if (stateId === "wild") delete genotype[locusId];
+  else genotype[locusId] = stateId;
+  return { ...state, genotype };
+}
+
+/** Polygenic tags carried by a parent. Kept for display and saved predictions. */
+export function collectTraitsForPairing(
+  parent: CalculatorParentState,
+): string[] {
+  return hydrateParentForPairing(parent).traits;
 }
 
 export function runCalculatorPairing(
@@ -161,7 +138,11 @@ export function runCalculatorPairing(
   const a = hydrateParentForPairing(parentA);
   const b = hydrateParentForPairing(parentB);
   return calculatePairing(a.genotype, b.genotype, {
-    visualA: uiTagsForPairing(a),
-    visualB: uiTagsForPairing(b),
+    traitsA: a.traits,
+    traitsB: b.traits,
   });
+}
+
+export function optionForId(id: string): CalculatorTraitOption | undefined {
+  return optionById(id);
 }

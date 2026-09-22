@@ -1,4 +1,4 @@
-import type { GeneStatus, Genotype, PairingResult } from "@/lib/genetics";
+import type { Genotype, PairingResult } from "@/lib/genetics";
 
 export const SEXES = ["male", "female", "unknown"] as const;
 export type Sex = (typeof SEXES)[number];
@@ -117,7 +117,8 @@ export type AnimalRecord = {
 export type AnimalGeneRecord = {
   animalId: string;
   locusId: string;
-  status: GeneStatus;
+  /** Locus state id, e.g. het / visual / sable / superLillyWhite. */
+  status: string;
 };
 
 export type WeightLogRecord = {

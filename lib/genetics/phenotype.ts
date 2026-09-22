@@ -1,204 +1,146 @@
-import { LOCI } from "./catalog";
-import type { CappuccinoMorphDisplay } from "./allelic-visual";
+import { COMBO_NAMES, getLocus, getLocusGenotype, getLocusState, LOCI } from "./catalog";
+import { resolveParentGenotype } from "./normalize";
 import type {
-  AlleleCopies,
-  GeneStatus,
   Genotype,
   LocusDefinition,
-  ZygosityKind,
+  LocusGenotypeDefinition,
+  OffspringGenotype,
 } from "./types";
 
-export function describeCopies(
-  locus: LocusDefinition,
-  copies: AlleleCopies,
-): { kind: ZygosityKind; token: string | null } {
-  if (copies === 0) {
-    return { kind: "wild", token: null };
-  }
+export const NORMAL_PHENOTYPE = "ノーマル";
 
-  if (locus.inheritance === "recessive") {
-    if (copies === 1) {
-      return { kind: "het", token: `het ${locus.nameJa}` };
-    }
-    return { kind: "visual", token: locus.visualNameJa };
-  }
-
-  if (copies === 1) {
-    return { kind: "visual", token: locus.visualNameJa };
-  }
-
-  return {
-    kind: "super",
-    token: locus.superNameJa ?? `スーパー${locus.nameJa}`,
-  };
-}
-
-export function locusOutcomeLabel(
-  locus: LocusDefinition,
-  copies: AlleleCopies,
-): string {
-  const described = describeCopies(locus, copies);
-  return described.token ?? "ノーマル";
-}
-
-export function combinePhenotype(
-  parts: { locus: LocusDefinition; copies: AlleleCopies }[],
-  cappuccinoMorph: CappuccinoMorphDisplay = "cappuccino",
-): string {
-  const copiesById: Record<string, AlleleCopies> = {};
-  for (const part of parts) copiesById[part.locus.id] = part.copies;
-
-  const visualTokens: string[] = [];
-  const hetTokens: string[] = [];
-
-  for (const part of parts) {
-    const described = describeCopies(part.locus, part.copies);
-    if ((described.kind === "visual" || described.kind === "super") && described.token) {
-      visualTokens.push(described.token);
-    }
-  }
-
-  for (const part of parts) {
-    const described = describeCopies(part.locus, part.copies);
-    if (described.kind === "het" && described.token) {
-      hetTokens.push(described.token);
-    }
-  }
-
-  applyNamedCombos(
-    { copies: copiesById, morph: cappuccinoMorph, parts },
-    visualTokens,
-    hetTokens,
-  );
-
-  const tokens = [...visualTokens, ...hetTokens];
-  return tokens.length > 0 ? tokens.join(" ") : "ノーマル";
-}
-
-type ComboContext = {
-  copies: Record<string, AlleleCopies>;
-  morph: CappuccinoMorphDisplay;
-  parts: { locus: LocusDefinition; copies: AlleleCopies }[];
+type Expressed = {
+  locus: LocusDefinition;
+  genotype: LocusGenotypeDefinition;
 };
 
+function orderedLoci(): LocusDefinition[] {
+  return [...LOCI].sort((a, b) => a.phenotypeOrder - b.phenotypeOrder);
+}
+
+/** Loci that express something, in phenotype order. Wild loci are dropped. */
+function expressedLoci(genotype: OffspringGenotype): Expressed[] {
+  const rows: Expressed[] = [];
+  for (const locus of orderedLoci()) {
+    const genotypeId = genotype[locus.id];
+    if (!genotypeId) continue;
+    const definition = getLocusGenotype(locus.id, genotypeId);
+    if (!definition || definition.wild) continue;
+    rows.push({ locus, genotype: definition });
+  }
+  return rows;
+}
+
 /**
- * Display names for already-computed copy combinations.
- * Does not change Punnett math or add loci.
+ * Per-locus display name. Recessive carriers read as ヘテロ ○○;
+ * everything else reads as the genotype's own name, so a single-copy
+ * allelic morph such as セーブル is never labelled as a het.
  */
-function applyNamedCombos(
-  ctx: ComboContext,
-  visualTokens: string[],
-  hetTokens: string[],
-) {
-  const cap = ctx.copies.cappuccino ?? 0;
-  const lw = ctx.copies.lillyWhite ?? 0;
+export function locusGenotypeLabel(
+  locusId: string,
+  genotypeId: string,
+): string {
+  const definition = getLocusGenotype(locusId, genotypeId);
+  if (!definition) return NORMAL_PHENOTYPE;
+  return definition.nameJa;
+}
 
-  if (ctx.morph === "sable" || ctx.morph === "highway") {
-    const morphJa = ctx.morph === "sable" ? "セーブル" : "ハイウェイ";
-    const capIdx = visualTokens.indexOf("カプチーノ");
-    if (capIdx >= 0) visualTokens[capIdx] = morphJa;
-    const hetIdx = hetTokens.indexOf("het カプチーノ");
-    if (hetIdx >= 0) hetTokens[hetIdx] = `het ${morphJa}`;
+type TokenSet = {
+  visual: { order: number; text: string }[];
+  het: { order: number; text: string }[];
+};
 
-    if (ctx.morph === "sable" && cap >= 1 && lw >= 1) {
-      replaceTokens(visualTokens, hetTokens, {
-        dropVisual: (token) =>
-          token.includes("リリーホワイト") || token === "セーブル",
-        dropHet: (token) => token === "het セーブル",
-        name:
-          lw === 2
-            ? "リリーセーブル（スーパーリリーホワイト）"
-            : "リリーセーブル",
-      });
-    }
-  } else {
-    if (cap === 2) {
-      const idx = visualTokens.indexOf("カプチーノ");
-      if (idx >= 0) visualTokens[idx] = "ルワック（スーパーカプチーノ）";
-    }
-    if (cap === 2 && lw >= 1) {
-      replaceTokens(visualTokens, hetTokens, {
-        dropVisual: (token) =>
-          token.includes("リリーホワイト") || token.startsWith("ルワック"),
-        dropHet: () => false,
-        name:
-          lw === 2
-            ? "フラプチーノ（スーパーリリーホワイト＋ルワック）"
-            : "フラプチーノ（リリーホワイト＋ルワック）",
-      });
+function tokensFor(rows: Expressed[]): TokenSet {
+  const consumed = new Set<string>();
+  const visual: { order: number; text: string }[] = [];
+
+  for (const rule of COMBO_NAMES) {
+    const matched = Object.entries(rule.match).every(([locusId, genotypeId]) =>
+      rows.some(
+        (row) =>
+          row.locus.id === locusId &&
+          row.genotype.id === genotypeId &&
+          !consumed.has(locusId),
+      ),
+    );
+    if (!matched) continue;
+    const orders = Object.keys(rule.match)
+      .map((locusId) => getLocus(locusId)?.phenotypeOrder ?? 0)
+      .sort((a, b) => a - b);
+    for (const locusId of Object.keys(rule.match)) consumed.add(locusId);
+    visual.push({ order: orders[0] ?? 0, text: rule.nameJa });
+  }
+
+  const het: { order: number; text: string }[] = [];
+  for (const row of rows) {
+    if (consumed.has(row.locus.id)) continue;
+    if (row.genotype.carrier) {
+      het.push({ order: row.locus.phenotypeOrder, text: row.locus.nameJa });
+    } else {
+      visual.push({ order: row.locus.phenotypeOrder, text: row.genotype.nameJa });
     }
   }
 
-  const axVisual = ctx.parts.find(
-    (part) => part.locus.id.startsWith("axanthic") && part.copies === 2,
+  visual.sort((a, b) => a.order - b.order);
+  het.sort((a, b) => a.order - b.order);
+  return { visual, het };
+}
+
+function assemble(
+  visual: string[],
+  het: string[],
+  possible: string[] = [],
+): string {
+  const parts: string[] = [];
+  if (visual.length > 0) parts.push(visual.join("・"));
+  if (het.length > 0) parts.push(`ヘテロ ${het.join("・")}`);
+  parts.push(...possible);
+  if (parts.length === 0) return NORMAL_PHENOTYPE;
+  return parts.join(" ");
+}
+
+/** Offspring genotype → the one name used by every part of the UI. */
+export function phenotypeName(genotype: OffspringGenotype): string {
+  const { visual, het } = tokensFor(expressedLoci(genotype));
+  return assemble(
+    visual.map((row) => row.text),
+    het.map((row) => row.text),
   );
-  if (axVisual && (ctx.copies.phantom ?? 0) === 2) {
-    const line =
-      axVisual.locus.nameEn.match(/\(([^)]+)\)/)?.[1] ?? axVisual.locus.nameJa;
-    replaceTokens(visualTokens, hetTokens, {
-      dropVisual: (token) =>
-        token === axVisual.locus.visualNameJa || token === "ファントム",
-      dropHet: () => false,
-      name: `アザンティックファントム（${line}）`,
-    });
-  }
 }
 
-function replaceTokens(
-  visualTokens: string[],
-  hetTokens: string[],
-  rule: {
-    dropVisual: (token: string) => boolean;
-    dropHet: (token: string) => boolean;
-    name: string;
-  },
-) {
-  const nextVisual = visualTokens.filter((token) => !rule.dropVisual(token));
-  const nextHet = hetTokens.filter((token) => !rule.dropHet(token));
-  nextVisual.unshift(rule.name);
-  visualTokens.length = 0;
-  visualTokens.push(...nextVisual);
-  hetTokens.length = 0;
-  hetTokens.push(...nextHet);
+/** Visible morphs only; carriers are ignored. Used for cohort matching. */
+export function visualPhenotypeName(genotype: OffspringGenotype): string {
+  const rows = expressedLoci(genotype).filter((row) => !row.genotype.carrier);
+  const { visual } = tokensFor(rows);
+  return assemble(visual.map((row) => row.text), []);
 }
 
-export function copiesToStatus(copies: AlleleCopies): GeneStatus {
-  if (copies === 0) return "wild";
-  if (copies === 1) return "het";
-  return "visual";
-}
+/**
+ * Parent-facing label. Same naming pipeline as offspring, plus possible hets,
+ * which have no single genotype and so cannot be a phenotype on their own.
+ */
+export function formatGenotypeLabel(raw: Genotype): string {
+  const genotype = resolveParentGenotype(raw);
+  const certain: OffspringGenotype = {};
+  const possible: { order: number; text: string }[] = [];
 
-export function genotypeFromCopies(
-  copies: Record<string, AlleleCopies>,
-): Genotype {
-  const genotype: Genotype = {};
-  for (const [locusId, value] of Object.entries(copies)) {
-    const status = copiesToStatus(value);
-    if (status !== "wild") genotype[locusId] = status;
-  }
-  return genotype;
-}
-
-export function formatGenotypeLabel(genotype: Genotype): string {
-  const tokens: string[] = [];
-
-  for (const locus of LOCI) {
-    const status = genotype[locus.id] ?? "wild";
-    if (status === "wild" || status === "unknown") continue;
-
-    if (status === "possible_50") {
-      tokens.push(`50%ヘテロ ${locus.nameJa}`);
+  for (const locus of orderedLoci()) {
+    const stateId = genotype[locus.id];
+    if (!stateId) continue;
+    const state = getLocusState(locus.id, stateId);
+    if (!state) continue;
+    if (getLocusGenotype(locus.id, state.id)) {
+      certain[locus.id] = state.id;
       continue;
     }
-    if (status === "possible_66") {
-      tokens.push(`66%ヘテロ ${locus.nameJa}`);
-      continue;
-    }
-
-    const copies: AlleleCopies = status === "visual" ? 2 : 1;
-    const described = describeCopies(locus, copies);
-    if (described.token) tokens.push(described.token);
+    possible.push({ order: locus.phenotypeOrder, text: state.labelJa });
   }
 
-  return tokens.length > 0 ? tokens.join(" ") : "ノーマル";
+  const { visual, het } = tokensFor(expressedLoci(certain));
+  possible.sort((a, b) => a.order - b.order);
+  return assemble(
+    visual.map((row) => row.text),
+    het.map((row) => row.text),
+    possible.map((row) => row.text),
+  );
 }

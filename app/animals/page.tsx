@@ -5,7 +5,11 @@ import { filterAnimals } from "@/lib/db/queries";
 import { displayAnimalId } from "@/lib/db/animal-code";
 import { ANIMAL_STATUS_LABEL, SEX_LABEL } from "@/lib/db/labels";
 import { ANIMAL_STATUSES, SEXES } from "@/lib/db/types";
-import { formatGenotypeLabel, visualTraitName } from "@/lib/genetics";
+import {
+  displayTraitIds,
+  formatGenotypeLabel,
+  visualTraitName,
+} from "@/lib/genetics";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体" };
@@ -106,9 +110,9 @@ export default async function AnimalsPage({
                   </td>
                   <td className="text-muted">
                     {animal.morphLabel || formatGenotypeLabel(animal.genotype)}
-                    {animal.traits.length > 0 ? (
+                    {displayTraitIds(animal.traits).length > 0 ? (
                       <span className="mt-1 block text-xs">
-                        {animal.traits
+                        {displayTraitIds(animal.traits)
                           .map((id) => visualTraitName(id, animal.traitLevels?.[id]))
                           .join(" / ")}
                       </span>

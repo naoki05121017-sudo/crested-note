@@ -19,7 +19,13 @@ import {
   SEX_LABEL,
   animalTitle,
 } from "@/lib/db/labels";
-import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
+import {
+  displayTraitIds,
+  formatGenotypeLabel,
+  listLoci,
+  locusStateLabel,
+  visualTraitName,
+} from "@/lib/genetics";
 import { growthPoints } from "@/lib/stats/compare";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +56,7 @@ export default async function AnimalDetailPage({
   const tree = await pedigreeOf(animal.id);
   const weights = await listWeights(animal.id);
   const breedings = await breedingsForAnimal(animal.id);
-  const traitLabels = animal.traits.map((tid) =>
+  const traitLabels = displayTraitIds(animal.traits).map((tid) =>
     visualTraitName(tid, animal.traitLevels?.[tid]),
   );
   const genes = listLoci().filter(
@@ -138,10 +144,9 @@ export default async function AnimalDetailPage({
               <li key={locus.id} className="flex justify-between gap-3">
                 <span>{locus.nameJa}</span>
                 <span className="text-muted">
-                  {geneStatusLabelJa(
+                  {locusStateLabel(
+                    locus.id,
                     animal.genotype[locus.id] ?? "wild",
-                    locus.inheritance,
-                    locus.nameJa,
                   )}
                 </span>
               </li>

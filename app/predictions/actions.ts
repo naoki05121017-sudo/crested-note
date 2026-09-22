@@ -29,9 +29,9 @@ export async function savePrediction(formData: FormData) {
   const femaleId = textField(formData, "femaleId");
   const parentA = parseJsonGenotype(textField(formData, "parentA"));
   const parentB = parseJsonGenotype(textField(formData, "parentB"));
-  const visualA = parseJsonStringArray(textField(formData, "visualA"));
-  const visualB = parseJsonStringArray(textField(formData, "visualB"));
-  const pairing = calculatePairing(parentA, parentB, { visualA, visualB });
+  const traitsA = parseJsonStringArray(textField(formData, "traitsA"));
+  const traitsB = parseJsonStringArray(textField(formData, "traitsB"));
+  const pairing = calculatePairing(parentA, parentB, { traitsA, traitsB });
   const male = maleId ? await getAnimal(maleId) : undefined;
   const female = femaleId ? await getAnimal(femaleId) : undefined;
   const name =

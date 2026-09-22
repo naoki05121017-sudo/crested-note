@@ -1,13 +1,14 @@
 import {
   TRAIT_CATEGORY_LABEL,
   VISUAL_TRAITS,
+  getLocus,
+  getLocusState,
   getVisualTrait,
   listLoci,
-  type GeneStatus,
+  selectableStates,
   type Genotype,
+  type LocusDefinition,
 } from "@/lib/genetics";
-import { allelicVisualCoversLocus } from "@/lib/genetics/allelic-visual";
-import type { LocusDefinition } from "@/lib/genetics/types";
 import type { VisualTraitCategory } from "@/lib/genetics/visual-traits";
 
 export const AXANTHIC_TRAIT_ID = "axanthic";
@@ -25,17 +26,17 @@ const AXANTHIC_SET = new Set<string>(AXANTHIC_LOCUS_IDS);
 
 export type CalculatorTraitKind = "locus" | "axanthic" | "visual";
 
-export type CalculatorPickerCategory =
-  | "mendelian"
-  | VisualTraitCategory;
+export type CalculatorPickerCategory = "mendelian" | VisualTraitCategory;
 
 export type CalculatorTraitOption = {
+  /** Picker entry id. Locus aliases such as セーブル keep their own id. */
   id: string;
   label: string;
   kind: CalculatorTraitKind;
   category: CalculatorPickerCategory;
   locus?: LocusDefinition;
-  alleleOf?: string;
+  /** State applied when the entry is picked. */
+  defaultStateId?: string;
   hint?: string;
   badge?: string;
   shortNote?: string;
@@ -54,20 +55,36 @@ export const PICKER_CATEGORY_LABEL: Record<CalculatorPickerCategory, string> = {
   ...TRAIT_CATEGORY_LABEL,
 };
 
+/** The row id a picker entry manages: a locus id, `axanthic`, or a trait id. */
+export function rowIdForOption(option: CalculatorTraitOption): string {
+  if (option.kind === "axanthic") return AXANTHIC_TRAIT_ID;
+  if (option.kind === "locus" && option.locus) return option.locus.id;
+  return option.id;
+}
+
 export function calculatorTraitOptions(): CalculatorTraitOption[] {
   const options: CalculatorTraitOption[] = [];
+
   for (const locus of listLoci()) {
     if (AXANTHIC_SET.has(locus.id)) continue;
-    options.push({
-      id: locus.id,
-      label: locus.nameJa,
-      kind: "locus",
-      category: "mendelian",
-      locus,
-      hint: locus.beginnerDescription,
-      searchText: `${locus.nameJa} ${locus.nameEn} ${locus.id}`,
-    });
+    const entries = locus.pickerEntries ?? [
+      { id: locus.id, labelJa: locus.nameJa, stateId: "het" },
+    ];
+    for (const entry of entries) {
+      options.push({
+        id: entry.id,
+        label: entry.labelJa,
+        kind: "locus",
+        category: "mendelian",
+        locus,
+        defaultStateId: entry.stateId,
+        hint: locus.beginnerDescription,
+        shortNote: entry.shortNoteJa,
+        searchText: `${entry.labelJa} ${locus.nameJa} ${locus.nameEn} ${locus.id} ${entry.id}`,
+      });
+    }
   }
+
   options.push({
     id: AXANTHIC_TRAIT_ID,
     label: "アザンティック",
@@ -76,13 +93,13 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
     hint: "劣性です。系統は別の遺伝子として計算します。",
     searchText: "アザンティック Axanthic axanthic",
   });
+
   for (const trait of VISUAL_TRAITS) {
     options.push({
       id: trait.id,
       label: trait.nameJa,
       kind: "visual",
       category: trait.category,
-      alleleOf: trait.alleleOf,
       hint: trait.beginnerDescription,
       badge: trait.badge
         ? trait.badge
@@ -95,48 +112,55 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
       searchText: `${trait.nameJa} ${trait.nameEn} ${trait.id}`,
     });
   }
+
   return options;
 }
 
 export function traitLabel(id: string): string {
-  return calculatorTraitOptions().find((row) => row.id === id)?.label ?? id;
+  const option = calculatorTraitOptions().find((row) => row.id === id);
+  if (option) return option.label;
+  if (id === AXANTHIC_TRAIT_ID) return "アザンティック";
+  return getLocus(id)?.nameJa ?? getVisualTrait(id)?.nameJa ?? id;
 }
 
+/** Rows to show for a parent: one per active locus, plus polygenic tags. */
 export function visibleTraitsFromParent(
   genotype: Genotype,
-  visualTags: string[],
+  traits: readonly string[],
 ): string[] {
   const ids: string[] = [];
   const seen = new Set<string>();
+
   for (const locus of listLoci()) {
-    const status = genotype[locus.id];
-    if (!status || status === "wild") continue;
-    if (allelicVisualCoversLocus(visualTags, locus.id)) continue;
+    const stateId = genotype[locus.id];
+    if (!stateId || stateId === "wild") continue;
     const id = AXANTHIC_SET.has(locus.id) ? AXANTHIC_TRAIT_ID : locus.id;
     if (seen.has(id)) continue;
     seen.add(id);
     ids.push(id);
   }
-  for (const tag of visualTags) {
+
+  for (const tag of traits) {
     if (seen.has(tag)) continue;
     if (!getVisualTrait(tag)) continue;
     seen.add(tag);
     ids.push(tag);
   }
+
   return ids;
 }
 
 export function axanthicFromGenotype(genotype: Genotype): {
   locusId: string;
-  status: GeneStatus;
+  stateId: string;
 } {
   const active = AXANTHIC_LOCI.find((row) => {
-    const status = genotype[row.id];
-    return status && status !== "wild";
+    const stateId = genotype[row.id];
+    return stateId && stateId !== "wild";
   });
   return {
     locusId: active?.id ?? AXANTHIC_LOCI[0].id,
-    status: active ? (genotype[active.id] as GeneStatus) : "wild",
+    stateId: active ? (genotype[active.id] as string) : "wild",
   };
 }
 
@@ -144,21 +168,36 @@ export function setAxanthicGenotype(
   genotype: Genotype,
   fromLocusId: string,
   toLocusId: string,
-  status: GeneStatus,
+  stateId: string,
 ): Genotype {
   const next = { ...genotype };
   if (fromLocusId !== toLocusId) delete next[fromLocusId];
-  if (status === "wild") delete next[toLocusId];
-  else next[toLocusId] = status;
+  if (stateId === "wild") delete next[toLocusId];
+  else next[toLocusId] = stateId;
   return next;
 }
 
-export function clearTraitFromGenotype(genotype: Genotype, traitId: string): Genotype {
+export function clearTraitFromGenotype(
+  genotype: Genotype,
+  rowId: string,
+): Genotype {
   const next = { ...genotype };
-  if (traitId === AXANTHIC_TRAIT_ID) {
+  if (rowId === AXANTHIC_TRAIT_ID) {
     for (const id of AXANTHIC_LOCUS_IDS) delete next[id];
     return next;
   }
-  delete next[traitId];
+  delete next[rowId];
   return next;
+}
+
+/** Select options for one locus row, honouring the catalog order. */
+export function locusStateOptions(locus: LocusDefinition) {
+  return selectableStates(locus).map((state) => ({
+    value: state.id,
+    label: state.labelJa,
+  }));
+}
+
+export function isValidLocusState(locusId: string, stateId: string): boolean {
+  return Boolean(getLocusState(locusId, stateId));
 }

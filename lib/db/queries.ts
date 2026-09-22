@@ -1,5 +1,9 @@
 import { crestLinkView, getAnimalByCrestLinkId as animalRecordByCrestLink, type CrestLinkView } from "@/lib/crest-link/core";
-import { formatGenotypeLabel, type Genotype } from "@/lib/genetics";
+import {
+  formatGenotypeLabel,
+  resolveParentGenotype,
+  type Genotype,
+} from "@/lib/genetics";
 import { loadDb } from "./store";
 import type {
   Animal,
@@ -24,8 +28,15 @@ function genotypeOf(db: DatabaseFile, animalId: string): Genotype {
   return genotype;
 }
 
+/**
+ * Rows written before the allele model are folded onto their locus here, so
+ * every reader downstream sees one canonical genotype.
+ */
 export function hydrateAnimal(db: DatabaseFile, record: AnimalRecord): Animal {
-  return { ...record, genotype: genotypeOf(db, record.id) };
+  return {
+    ...record,
+    genotype: resolveParentGenotype(genotypeOf(db, record.id), record.traits),
+  };
 }
 
 export async function listAnimals(): Promise<Animal[]> {

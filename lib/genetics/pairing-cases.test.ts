@@ -1,20 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { calculatePairing } from "./calculate";
-import { formatCopiesAsGenotype } from "./display";
-import { resolveParentGenotype } from "./parent-input";
-import { formatGenotypeLabel, genotypeFromCopies } from "./phenotype";
+import { formatGenotypeDetail, formatParentGenotypeDetail } from "./display";
+import { normalizeGenotype, resolveParentGenotype } from "./normalize";
+import { formatGenotypeLabel, visualPhenotypeName } from "./phenotype";
 import type { PairingResult } from "./types";
 
 function prob(result: PairingResult, phenotype: string) {
-  return result.outcomes.find((row) => row.phenotype === phenotype)?.probability ?? 0;
+  return (
+    result.outcomes.find((row) => row.phenotype === phenotype)?.probability ?? 0
+  );
 }
 
 function expectLocusSurvives(result: PairingResult, locusId: string) {
   const locus = result.loci.find((row) => row.locusId === locusId);
   expect(locus, `${locusId} missing from locus breakdown`).toBeTruthy();
-  const inPhenotype = result.outcomes.some((row) => (row.copies[locusId] ?? 0) > 0);
+  const inPhenotype = result.outcomes.some((row) => row.genotype[locusId]);
   const inLocus =
-    locus?.outcomes.some((row) => row.copies > 0 && row.probability > 0) ?? false;
+    locus?.outcomes.some((row) => !row.wild && row.probability > 0) ?? false;
   expect(inPhenotype || inLocus, `${locusId} dropped from offspring`).toBe(true);
 }
 
@@ -22,45 +24,43 @@ function phenotypeSum(result: PairingResult) {
   return result.outcomes.reduce((sum, row) => sum + row.probability, 0);
 }
 
-describe("pairing cases: parent signals must reach offspring", () => {
+describe("parent signals must reach the offspring", () => {
   it("1. ノーマル × ノーマル", () => {
     const result = calculatePairing({}, {});
     expect(prob(result, "ノーマル")).toBe(1);
     expect(phenotypeSum(result)).toBeCloseTo(1);
   });
 
-  it("2. ファントム（見た目） × ノーマル", () => {
-    const parentA = { phantom: "visual" as const };
+  it("2. ファントム（ビジュアル） × ノーマル", () => {
+    const parentA = { phantom: "visual" };
     const result = calculatePairing(parentA, {});
     expect(formatGenotypeLabel(parentA)).toBe("ファントム");
-    expect(prob(result, "het ファントム")).toBeCloseTo(1);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(1);
     expectLocusSurvives(result, "phantom");
-    expect(formatCopiesAsGenotype(result.outcomes[0]?.copies ?? {})).toContain(
-      "ファントム",
+    expect(formatGenotypeDetail(result.outcomes[0].genotype)).toBe(
+      "ヘテロ ファントム（Aa）",
     );
   });
 
-  it("3. ファントム（見た目） × リリーホワイト", () => {
+  it("3. ファントム（ビジュアル） × リリーホワイト", () => {
     const result = calculatePairing(
       { phantom: "visual" },
       { lillyWhite: "het" },
     );
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "リリーホワイト ヘテロ ファントム")).toBeCloseTo(0.5);
     expect(prob(result, "リリーホワイト")).toBe(0);
     expectLocusSurvives(result, "phantom");
     expectLocusSurvives(result, "lillyWhite");
     expect(phenotypeSum(result)).toBeCloseTo(1);
   });
 
-  it("4. hetファントム × リリーホワイト", () => {
+  it("4. ヘテロ ファントム × リリーホワイト", () => {
     const result = calculatePairing({ phantom: "het" }, { lillyWhite: "het" });
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーホワイト het ファントム")).toBeCloseTo(0.25);
-    expectLocusSurvives(result, "phantom");
-    expectLocusSurvives(result, "lillyWhite");
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーホワイト ヘテロ ファントム")).toBeCloseTo(0.25);
   });
 
   it("5. リリーホワイト × ノーマル", () => {
@@ -71,101 +71,151 @@ describe("pairing cases: parent signals must reach offspring", () => {
   });
 
   it("6. リリーホワイト × セーブル", () => {
-    const mergedB = resolveParentGenotype({}, ["sable"]);
-    expect(mergedB).toEqual({ cappuccino: "het" });
+    expect(resolveParentGenotype({}, ["sable"])).toEqual({
+      cappuccino: "sable",
+    });
     const result = calculatePairing(
       { lillyWhite: "het" },
       {},
-      { visualB: ["sable"] },
+      { traitsB: ["sable"] },
     );
     expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
-    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル・リリーホワイト")).toBeCloseTo(0.25);
     expectLocusSurvives(result, "lillyWhite");
     expectLocusSurvives(result, "cappuccino");
-    const combo = result.outcomes.find((row) => row.phenotype === "リリーセーブル");
-    expect(combo?.copies.lillyWhite).toBe(1);
-    expect(combo?.copies.cappuccino).toBe(1);
-    expect(formatCopiesAsGenotype(combo?.copies ?? {})).toMatch(/リリーホワイト/);
-    expect(formatCopiesAsGenotype(combo?.copies ?? {})).toMatch(/カプチーノ|セーブル/);
+
+    const combo = result.outcomes.find(
+      (row) => row.phenotype === "セーブル・リリーホワイト",
+    );
+    expect(combo?.genotype.lillyWhite).toBe("het");
+    expect(combo?.genotype.cappuccino).toBe("sable");
+    expect(combo?.detail).toBe("セーブル（N/Sable）、リリーホワイト（NLW）");
   });
 
   it("7. セーブル × ノーマル", () => {
-    const result = calculatePairing({}, {}, { visualA: ["sable"] });
+    const result = calculatePairing({}, {}, { traitsA: ["sable"] });
     expect(prob(result, "ノーマル")).toBeCloseTo(0.5);
-    expect(prob(result, "het セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.5);
     expectLocusSurvives(result, "cappuccino");
   });
 
-  it("8. ファントム（見た目） × セーブル", () => {
+  it("8. ファントム（ビジュアル） × セーブル", () => {
     const result = calculatePairing(
       { phantom: "visual" },
       {},
-      { visualB: ["sable"] },
+      { traitsB: ["sable"] },
     );
-    expect(prob(result, "het ファントム")).toBeCloseTo(0.5);
-    expect(prob(result, "het ファントム het セーブル")).toBeCloseTo(0.5);
+    expect(prob(result, "ヘテロ ファントム")).toBeCloseTo(0.5);
+    expect(prob(result, "セーブル ヘテロ ファントム")).toBeCloseTo(0.5);
     expectLocusSurvives(result, "phantom");
     expectLocusSurvives(result, "cappuccino");
   });
 
-  it("9. リリーホワイト × ファントム（見た目） は左右入れ替えても同じ", () => {
+  it("9. swapping the parents does not change the result", () => {
     const ab = calculatePairing({ lillyWhite: "het" }, { phantom: "visual" });
     const ba = calculatePairing({ phantom: "visual" }, { lillyWhite: "het" });
-    expect(prob(ab, "het ファントム")).toBeCloseTo(prob(ba, "het ファントム"));
-    expect(prob(ab, "リリーホワイト het ファントム")).toBeCloseTo(
-      prob(ba, "リリーホワイト het ファントム"),
+    expect(ab.outcomes.map((row) => [row.phenotype, row.probability])).toEqual(
+      ba.outcomes.map((row) => [row.phenotype, row.probability]),
     );
-    expectLocusSurvives(ab, "lillyWhite");
-    expectLocusSurvives(ab, "phantom");
   });
 
-  it("10. 2種類以上の遺伝形質を持つ親同士", () => {
-    const parentA = resolveParentGenotype(
-      { lillyWhite: "het", phantom: "visual" },
-      [],
-    );
+  it("10. 複数遺伝形質を持つ親同士", () => {
+    const parentA = resolveParentGenotype({
+      lillyWhite: "het",
+      phantom: "visual",
+    });
     const parentB = resolveParentGenotype({ patternless: "het" }, ["sable"]);
     expect(parentA).toEqual({ lillyWhite: "het", phantom: "visual" });
-    expect(parentB.cappuccino).toBe("het");
-    expect(parentB.patternless).toBe("het");
+    expect(parentB).toEqual({ patternless: "het", cappuccino: "sable" });
 
-    const result = calculatePairing(parentA, parentB, { visualB: ["sable"] });
-    expectLocusSurvives(result, "lillyWhite");
-    expectLocusSurvives(result, "phantom");
-    expectLocusSurvives(result, "cappuccino");
-    expectLocusSurvives(result, "patternless");
+    const result = calculatePairing(parentA, parentB);
+    for (const locusId of [
+      "lillyWhite",
+      "phantom",
+      "cappuccino",
+      "patternless",
+    ]) {
+      expectLocusSurvives(result, locusId);
+    }
     expect(phenotypeSum(result)).toBeCloseTo(1);
 
     const withAll = result.outcomes.filter(
       (row) =>
-        (row.copies.lillyWhite ?? 0) > 0 &&
-        (row.copies.phantom ?? 0) > 0 &&
-        (row.copies.cappuccino ?? 0) > 0 &&
-        (row.copies.patternless ?? 0) > 0,
+        row.genotype.lillyWhite &&
+        row.genotype.phantom &&
+        row.genotype.cappuccino &&
+        row.genotype.patternless,
     );
     expect(withAll.length).toBeGreaterThan(0);
     for (const row of withAll) {
-      expect(row.phenotype).not.toBe("het ファントム");
-      expect(genotypeFromCopies(row.copies).phantom).toBeTruthy();
-      expect(genotypeFromCopies(row.copies).lillyWhite).toBeTruthy();
+      expect(row.phenotype).not.toBe("ヘテロ ファントム");
+      expect(row.detail).toContain("リリーホワイト");
+      expect(row.detail).toContain("セーブル");
     }
   });
 
-  it("does not let a later locus overwrite an earlier locus in cartesian expansion", () => {
+  it("does not let a later locus overwrite an earlier one", () => {
     const result = calculatePairing(
       { phantom: "visual", lillyWhite: "het", patternless: "het" },
       {},
     );
-    expect(result.outcomes.every((row) => (row.copies.phantom ?? 0) === 1)).toBe(
-      true,
-    );
-    expect(result.outcomes.some((row) => (row.copies.lillyWhite ?? 0) === 1)).toBe(
-      true,
-    );
-    expect(result.outcomes.some((row) => (row.copies.patternless ?? 0) === 1)).toBe(
-      true,
-    );
+    expect(
+      result.outcomes.every((row) => row.genotype.phantom === "het"),
+    ).toBe(true);
+    expect(
+      result.outcomes.some((row) => row.genotype.lillyWhite === "het"),
+    ).toBe(true);
+    expect(
+      result.outcomes.some((row) => row.genotype.patternless === "het"),
+    ).toBe(true);
+  });
+});
+
+describe("normalisation of stored parents", () => {
+  it("folds the sable trait tag onto the allelic seat", () => {
+    expect(normalizeGenotype({}, ["sable"])).toEqual({
+      genotype: { cappuccino: "sable" },
+      unrecognizedLocusIds: [],
+    });
+  });
+
+  it("promotes trait tags that the reference treats as genes", () => {
+    expect(resolveParentGenotype({}, ["albino"])).toEqual({ albino: "visual" });
+    expect(resolveParentGenotype({}, ["chocho"])).toEqual({ chocho: "visual" });
+    expect(resolveParentGenotype({}, ["emptyBack"])).toEqual({
+      emptyBack: "het",
+    });
+    expect(resolveParentGenotype({}, ["superStripe"])).toEqual({
+      superStripe: "visual",
+    });
+    expect(resolveParentGenotype({}, ["redBase"])).toEqual({
+      redBase: "visual",
+    });
+  });
+
+  it("leaves polygenic tags out of the genotype", () => {
+    expect(resolveParentGenotype({}, ["pinstripe", "lavender"])).toEqual({});
+  });
+
+  it("keeps an explicit state over a trait tag", () => {
+    expect(resolveParentGenotype({ cappuccino: "luwak" }, ["sable"])).toEqual({
+      cappuccino: "luwak",
+    });
+  });
+
+  it("describes a stored parent from the same catalog", () => {
+    expect(
+      formatParentGenotypeDetail({ cappuccino: "sable", phantom: "possible_50" }),
+    ).toBe("50%ヘテロ ファントム、セーブル（N/Sable）");
+  });
+
+  it("reports only the visible morphs for cohort matching", () => {
+    expect(
+      visualPhenotypeName(
+        resolveParentGenotype({ cappuccino: "sable", phantom: "het" }),
+      ),
+    ).toBe("セーブル");
   });
 });

@@ -5,6 +5,7 @@ import {
   pickerGroupFor,
   sortPickerOptions,
   traitMatchesQuery,
+  traitMetaLabel,
 } from "@/app/components/trait-picker-groups";
 
 describe("trait picker grouping (UI only)", () => {
@@ -30,6 +31,18 @@ describe("trait picker grouping (UI only)", () => {
   it("keeps a single axanthic picker item, not four loci", () => {
     const ax = options.filter((row) => row.label.includes("アザンティック"));
     expect(ax.map((row) => row.id)).toEqual(["axanthic"]);
+  });
+
+  it("offers the three allelic morphs as separate picker entries", () => {
+    const allelic = options.filter((row) => row.locus?.id === "cappuccino");
+    expect(allelic.map((row) => row.id)).toEqual([
+      "cappuccino",
+      "sable",
+      "highway",
+    ]);
+    expect(allelic.every((row) => traitMetaLabel(row) === "アレリック")).toBe(
+      true,
+    );
   });
 
   it("matches Japanese and English search", () => {

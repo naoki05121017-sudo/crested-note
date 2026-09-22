@@ -1,30 +1,9 @@
-import {
-  geneStatusLabelJa,
-  listLoci,
-  type GeneStatus,
-  type Genotype,
-} from "@/lib/genetics";
+import { listLoci, selectableStates, type Genotype } from "@/lib/genetics";
 import type { LocusDefinition } from "@/lib/genetics/types";
 import { Hint } from "@/app/components/ui";
 import { AXANTHIC_LOCUS_IDS } from "@/app/components/calculator-traits";
 
 const AXANTHIC_SET = new Set<string>(AXANTHIC_LOCUS_IDS);
-
-const RECESSIVE_STATUSES: GeneStatus[] = [
-  "wild",
-  "het",
-  "visual",
-  "possible_50",
-  "possible_66",
-];
-
-const INCOMPLETE_STATUSES: GeneStatus[] = ["wild", "het", "visual"];
-
-function statusesFor(locus: LocusDefinition): GeneStatus[] {
-  return locus.inheritance === "recessive"
-    ? RECESSIVE_STATUSES
-    : INCOMPLETE_STATUSES;
-}
 
 function LocusSelect({
   locus,
@@ -49,9 +28,9 @@ function LocusSelect({
         defaultValue={value}
         className="nc-input"
       >
-        {statusesFor(locus).map((status) => (
-          <option key={status} value={status}>
-            {geneStatusLabelJa(status, locus.inheritance, locus.nameJa)}
+        {selectableStates(locus).map((state) => (
+          <option key={state.id} value={state.id}>
+            {state.labelJa}
           </option>
         ))}
       </select>

@@ -1,4 +1,4 @@
-import { GENE_STATUSES, LOCI, type GeneStatus, type Genotype } from "@/lib/genetics";
+import { LOCI, getLocusState, type Genotype } from "@/lib/genetics";
 import { POLYGENIC_TRAITS } from "@/lib/genetics/catalog";
 import {
   ANIMAL_STATUSES,
@@ -66,8 +66,9 @@ export function parseGenotype(formData: FormData): Genotype {
   for (const locus of LOCI) {
     const raw = textField(formData, `gene:${locus.id}`);
     if (!raw || raw === "wild") continue;
-    if (GENE_STATUSES.includes(raw as GeneStatus)) {
-      genotype[locus.id] = raw as GeneStatus;
+    const state = getLocusState(locus.id, raw);
+    if (state && state.id !== "wild" && state.id !== "unknown") {
+      genotype[locus.id] = state.id;
     }
   }
   return genotype;

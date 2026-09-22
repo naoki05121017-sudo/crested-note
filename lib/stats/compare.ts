@@ -1,5 +1,5 @@
 import { PREFECTURES } from "@/lib/db/labels";
-import { combinePhenotype, LOCI } from "@/lib/genetics";
+import { resolveParentGenotype, visualPhenotypeName } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 import { ageInMonths, mean, todayIso, weightTone } from "./math";
 
@@ -15,18 +15,8 @@ export function visualMorphKey(animal: Animal): string {
   const labeled = animal.morphLabel.trim().toLowerCase();
   if (labeled) return labeled;
 
-  const copies: Record<string, 0 | 1 | 2> = {};
-  for (const locus of LOCI) {
-    const status = animal.genotype[locus.id] ?? "wild";
-    if (status === "visual") copies[locus.id] = 2;
-    else if (status === "het" && locus.inheritance === "incomplete_dominant") {
-      copies[locus.id] = 1;
-    } else {
-      copies[locus.id] = 0;
-    }
-  }
-  const phenotype = combinePhenotype(
-    LOCI.map((locus) => ({ locus, copies: copies[locus.id] ?? 0 })),
+  const phenotype = visualPhenotypeName(
+    resolveParentGenotype(animal.genotype, animal.traits),
   );
   const traits = [...animal.traits].sort().join("+");
   return traits ? `${phenotype.toLowerCase()}|${traits}` : phenotype.toLowerCase();
