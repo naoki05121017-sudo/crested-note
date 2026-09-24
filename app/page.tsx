@@ -1,93 +1,74 @@
-import Link from "next/link";
-import { Card, PageHeader, SectionTitle, Stat } from "@/app/components/ui";
-import { dashboardStats, getSettings } from "@/lib/db/queries";
+import { HomeDashboard } from "@/app/components/home-dashboard";
+import {
+  dashboardStats,
+  getSettings,
+  listAnimals,
+  listPublicAnimals,
+  publicWeightsByAnimal,
+  weightsByAnimal,
+} from "@/lib/db/queries";
+import { compareAnimal } from "@/lib/stats/compare";
+import { japanStats } from "@/lib/stats/japan";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const stats = await dashboardStats();
   const settings = await getSettings();
+  const animals = await listAnimals();
+  const byWeights = await weightsByAnimal();
+  const publicAnimals = await listPublicAnimals();
+  const publicWeights = await publicWeightsByAnimal();
+  const japan = japanStats(publicAnimals, publicWeights);
+
+  const recentWeights = animals
+    .flatMap((animal) =>
+      (byWeights.get(animal.id) ?? []).map((log) => ({ animal, log })),
+    )
+    .sort((a, b) => b.log.weighedOn.localeCompare(a.log.weighedOn))
+    .slice(0, 6);
+
+  const photoAnimals = animals.filter((animal) => animal.photoUrl).slice(0, 8);
+
+  const compareSource = animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
+  const comparison = compareSource
+    ? compareAnimal({
+        animal: compareSource,
+        logs: byWeights.get(compareSource.id) ?? [],
+        others: publicAnimals.map((row) => ({
+          animal: row,
+          logs: publicWeights.get(row.id) ?? [],
+        })),
+      })
+    : null;
 
   return (
-    <div className="flex flex-col gap-10">
-      <PageHeader
-        kicker="by N.crest"
-        title={settings.collectionName || "クレスノート"}
-        description="クレスとともに、もっと楽しく、もっと深く。"
-        actions={
-          <>
-            <Link href="/animals/new" className="nc-btn">
-              個体を登録
-            </Link>
-            <Link href="/calculator" className="nc-btn-ghost">
-              遺伝計算
-            </Link>
-          </>
-        }
-      />
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="飼育中の個体" value={stats.animalCount} href="/animals" />
-        <Stat label="進行中のペア" value={stats.activeBreedings} href="/breedings" />
-        <Stat label="孵化待ちの卵" value={stats.incubatingEggs} href="/breedings" />
-        <Stat label="進行中のプロジェクト" value={stats.projectCount} href="/projects" />
-      </div>
-
-      <Card>
-        <SectionTitle>近日の孵化予定</SectionTitle>
-        {stats.upcomingHatches.length === 0 ? (
-          <p className="text-sm text-muted">予定日が入っている卵はありません。</p>
-        ) : (
-          <ul className="divide-y divide-line">
-            {stats.upcomingHatches.map(({ egg, breedingId }) => (
-              <li
-                key={egg.id}
-                className="flex min-h-14 flex-wrap items-center justify-between gap-2 py-3 text-sm"
-              >
-                <span className="text-lg font-semibold tabular-nums">
-                  {egg.expectedHatchOn}
-                </span>
-                <Link href={`/breedings/${breedingId}`} className="nc-btn-ghost">
-                  ペアを見る
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          {
-            href: "/simulate",
-            title: "シミュレーション",
-            body: "仮想ペアで子の出方を試して保存します。",
-            tone: "bg-accent",
-          },
-          {
-            href: "/compare",
-            title: "全国個体比較",
-            body: "自分の1個体を、日本国内の近い条件の平均と比べます。",
-            tone: "bg-mist",
-          },
-          {
-            href: "/stats",
-            title: "日本のクレス統計",
-            body: "クレスノートに蓄積された日本国内データの傾向です。全頭数ではありません。",
-            tone: "bg-blush",
-          },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="rounded-[1.5rem] border border-line bg-surface p-6 shadow-[0_12px_32px_rgba(28,25,23,0.04)] transition hover:-translate-y-0.5"
-          >
-            <span className={`mb-4 inline-block h-2 w-10 rounded-full ${item.tone}`} />
-            <h2 className="text-lg font-semibold">{item.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted">{item.body}</p>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <HomeDashboard
+      collectionName={settings.collectionName || "クレスノート"}
+      animalCount={stats.animalCount}
+      activeBreedings={stats.activeBreedings}
+      incubatingEggs={stats.incubatingEggs}
+      projectCount={stats.projectCount}
+      upcomingHatches={stats.upcomingHatches}
+      animals={animals}
+      recentWeights={recentWeights}
+      photoAnimals={photoAnimals}
+      japanRegistered={japan.registered}
+      japanLiving={japan.living}
+      japanMeanWeight={japan.meanLatestWeight}
+      japanWeightSample={japan.weightSample}
+      compare={
+        compareSource && comparison
+          ? {
+              name: compareSource.name,
+              href: `/compare?animalId=${compareSource.id}`,
+              mineWeight: comparison.mineWeight,
+              average: comparison.average,
+              sampleSize: comparison.sampleSize,
+              tone: comparison.tone,
+            }
+          : null
+      }
+    />
   );
 }

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f4ef;
+  --background: #fbfafc;
   --foreground: #1c1917;
   --surface: #ffffff;
   --muted: #6d675f;
@@ -46,9 +46,9 @@ a:active {
 html,
 body {
   background:
-    radial-gradient(1200px 420px at 10% -10%, rgba(217, 239, 230, 0.7), transparent 55%),
-    radial-gradient(900px 380px at 110% 0%, rgba(246, 223, 216, 0.55), transparent 50%),
-    var(--background);
+    radial-gradient(900px 380px at 12% -8%, rgba(253, 232, 239, 0.7), transparent 52%),
+    radial-gradient(800px 360px at 100% 0%, rgba(231, 243, 251, 0.65), transparent 48%),
+    #fbfafc;
   color: var(--foreground);
 }
 

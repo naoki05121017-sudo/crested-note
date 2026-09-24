@@ -6,21 +6,31 @@ import { useEffect, useState } from "react";
 import { signOut } from "@/app/auth/actions";
 import {
   BrandMark,
+  IconBell,
   IconChart,
   IconDna,
   IconEgg,
   IconGear,
   IconGecko,
   IconHome,
+  IconSearch,
 } from "@/app/components/icons";
 import { LegalNav } from "@/app/components/legal-nav";
 
 const groups = [
   {
-    label: "飼育",
+    label: "ホーム",
+    items: [{ href: "/", label: "ホーム", icon: IconHome }],
+  },
+  {
+    label: "個体",
+    items: [{ href: "/animals", label: "マイ個体", icon: IconGecko }],
+  },
+  {
+    label: "データ",
     items: [
-      { href: "/", label: "ホーム", icon: IconHome },
-      { href: "/animals", label: "個体", icon: IconGecko },
+      { href: "/compare", label: "全国個体比較", icon: IconChart },
+      { href: "/stats", label: "日本のクレス統計", icon: IconChart },
     ],
   },
   {
@@ -34,12 +44,8 @@ const groups = [
     ],
   },
   {
-    label: "データ",
-    items: [
-      { href: "/compare", label: "全国個体比較", icon: IconChart },
-      { href: "/stats", label: "日本のクレス統計", icon: IconChart },
-      { href: "/settings", label: "設定", icon: IconGear },
-    ],
+    label: "設定",
+    items: [{ href: "/settings", label: "設定", icon: IconGear }],
   },
 ] as const;
 
@@ -68,10 +74,10 @@ function NavLinks() {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {groups.map((group) => (
         <div key={group.label}>
-          <p className="px-3 text-[11px] tracking-[0.2em] text-muted uppercase">
+          <p className="px-3 text-[10px] tracking-[0.2em] text-white/35 uppercase">
             {group.label}
           </p>
           <div className="mt-2 flex flex-col gap-1">
@@ -81,10 +87,10 @@ function NavLinks() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex min-h-12 items-center gap-2 rounded-2xl px-3 text-sm ${
+                  className={`flex min-h-11 items-center gap-2 rounded-2xl px-3 text-sm ${
                     active
-                      ? "bg-accent text-ink"
-                      : "text-muted hover:bg-white hover:text-ink"
+                      ? "bg-white/12 text-white"
+                      : "text-white/70 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   <NavItemLabel label={item.label} Icon={item.icon} />
@@ -102,7 +108,7 @@ function AuthFooter({ email }: { email: string | null }) {
   if (!email) {
     return (
       <div className="mt-8 px-3 text-sm">
-        <Link href="/login" className="nc-btn-ghost w-full">
+        <Link href="/login" className="nc-btn-ghost w-full border-white/15 bg-white/8 text-white hover:bg-white/14">
           ログイン
         </Link>
       </div>
@@ -110,12 +116,50 @@ function AuthFooter({ email }: { email: string | null }) {
   }
   return (
     <div className="mt-8 px-3">
-      <p className="truncate text-xs text-muted">{email}</p>
+      <p className="truncate text-xs text-white/45">{email}</p>
       <form action={signOut} className="mt-2">
-        <button type="submit" className="nc-btn-ghost w-full">
+        <button
+          type="submit"
+          className="nc-btn-ghost w-full border-white/15 bg-transparent text-white/80 hover:bg-white/10"
+        >
           ログアウト
         </button>
       </form>
+    </div>
+  );
+}
+
+function TopBar({ email }: { email: string | null }) {
+  const initial = email?.trim().charAt(0).toUpperCase() || "?";
+  return (
+    <div className="flex min-h-14 flex-1 items-center gap-2 sm:gap-3">
+      <form action="/animals" className="relative min-w-0 flex-1">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+          <IconSearch />
+        </span>
+        <input
+          name="q"
+          type="search"
+          placeholder="個体名・モルフ・ID"
+          className="nc-input h-11 rounded-full border-line bg-white pl-10"
+          aria-label="個体名・モルフ・IDを検索"
+        />
+      </form>
+      <Link
+        href="/settings"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink"
+        aria-label="設定・お知らせ"
+      >
+        <IconBell />
+      </Link>
+      <Link
+        href="/settings"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1c1917] text-sm font-semibold text-white"
+        aria-label={email ? `アカウント ${email}` : "設定"}
+        title={email ?? "設定"}
+      >
+        {initial}
+      </Link>
     </div>
   );
 }
@@ -162,54 +206,53 @@ export function AppShell({
 
   return (
     <div className="min-h-full bg-background text-ink">
-      <div className="mx-auto flex min-h-full max-w-7xl">
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-line bg-surface/80 px-4 py-6 lg:block">
+      <div className="mx-auto flex min-h-full max-w-[92rem]">
+        <aside className="sticky top-0 hidden h-screen w-[17.5rem] shrink-0 bg-[#17141c] px-4 py-6 text-white lg:block">
           <Link href="/" className="flex min-h-12 items-center gap-3 px-2">
             <BrandMark />
             <span>
               <span className="block text-lg font-semibold tracking-tight">
                 クレスノート
               </span>
-              <span className="mt-0.5 block text-[10px] tracking-[0.16em] text-muted">
+              <span className="mt-0.5 block text-[10px] tracking-[0.16em] text-white/40">
                 by N.crest
               </span>
             </span>
           </Link>
-          <div className="mt-8 overflow-y-auto pb-8">
+          <div className="mt-8 h-[calc(100vh-8rem)] overflow-y-auto pb-8">
             <NavLinks />
             <AuthFooter email={email} />
-            <LegalNav className="mt-6 px-3 justify-start text-muted" />
+            <LegalNav className="mt-6 justify-start px-3 text-white/40" />
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/95 px-4 py-3 backdrop-blur lg:hidden">
-            <Link href="/" className="flex min-h-12 items-center gap-2 font-semibold tracking-tight">
-              <BrandMark size={28} />
-              <span>
-                <span className="block">クレスノート</span>
-                <span className="block text-[10px] font-normal tracking-[0.16em] text-muted">
-                  by N.crest
-                </span>
-              </span>
-            </Link>
-            <button
-              type="button"
-              className="nc-btn-ghost px-4"
-              aria-expanded={open}
-              onClick={() => setOpen((value) => !value)}
-            >
-              {open ? "閉じる" : "メニュー"}
-            </button>
+          <header className="sticky top-0 z-20 border-b border-line bg-white/90 px-4 py-3 backdrop-blur sm:px-8">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="flex min-h-11 shrink-0 items-center gap-2 font-semibold tracking-tight lg:hidden"
+              >
+                <BrandMark size={28} />
+                <span className="hidden sm:block">クレスノート</span>
+              </Link>
+              <TopBar email={email} />
+              <button
+                type="button"
+                className="nc-btn-ghost shrink-0 px-4 lg:hidden"
+                aria-expanded={open}
+                onClick={() => setOpen((value) => !value)}
+              >
+                {open ? "閉じる" : "メニュー"}
+              </button>
+            </div>
           </header>
           {open ? (
-            <div className="border-b border-line bg-surface px-4 py-4 lg:hidden">
+            <div className="border-b border-line bg-[#17141c] px-4 py-4 text-white lg:hidden">
               <NavLinks />
               <AuthFooter email={email} />
             </div>
           ) : null}
-          <main className="flex-1 px-4 py-8 sm:px-8">
-            {children}
-          </main>
+          <main className="flex-1 px-4 py-8 sm:px-8">{children}</main>
           <footer className="px-4 pb-10 text-center text-xs leading-5 text-muted sm:px-8">
             クレスノート
             <br />
