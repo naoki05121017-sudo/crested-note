@@ -6,7 +6,7 @@ import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { AnimalPhoto } from "@/app/components/animal-photo";
-import { Card, PageHeader, Badge, SectionTitle, Stat } from "@/app/components/ui";
+import { Badge } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
 import {
   breedingsForAnimal,
@@ -14,6 +14,7 @@ import {
   listWeights,
   pedigreeOf,
 } from "@/lib/db/queries";
+import { displayAnimalId } from "@/lib/db/animal-code";
 import {
   ANIMAL_STATUS_LABEL,
   BREEDING_STATUS_LABEL,
@@ -26,6 +27,9 @@ import { growthPoints } from "@/lib/stats/compare";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
 
+const card =
+  "rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6";
+
 function PedigreeLink({
   animal,
 }: {
@@ -33,7 +37,7 @@ function PedigreeLink({
 }) {
   if (!animal) return <span className="text-muted">未登録</span>;
   return (
-    <Link href={`/animals/${animal.id}`} className="hover:underline">
+    <Link href={`/animals/${animal.id}`} className="font-medium hover:underline">
       {animalTitle(animal)}
     </Link>
   );
@@ -62,150 +66,118 @@ export default async function AnimalDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        kicker={SEX_LABEL[animal.sex]}
-        title={animal.name}
-        description={`${animal.hatchDate ? `孵化 ${animal.hatchDate}` : "孵化日未登録"}`}
-        actions={
-          <>
-            <Link href={`/calculator?a=${animal.id}`} className="nc-btn-ghost">
-              この個体で計算
-            </Link>
-            <Link href={`/compare?animalId=${animal.id}`} className="nc-btn-ghost">
-              全国個体比較
-            </Link>
-            <Link href={`/animals/${animal.id}/edit`} className="nc-btn">
-              編集
-            </Link>
-          </>
-        }
+      <section className={`${card} overflow-hidden p-0 sm:p-0`}>
+        {animal.photoUrl ? (
+          <div className="aspect-[4/3] bg-[#f6f3f8] sm:aspect-[16/9]">
+            <AnimalPhoto
+              src={animal.photoUrl}
+              alt={animal.name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : null}
+        <div className="p-5 sm:p-6">
+          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Profile</p>
+          <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+            {animal.name}
+          </h1>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge
+              tone={
+                animal.sex === "female" ? "blush" : animal.sex === "male" ? "mist" : "sand"
+              }
+            >
+              {SEX_LABEL[animal.sex]}
+            </Badge>
+            <Badge tone={animal.status === "breeding" ? "sage" : "sand"}>
+              {ANIMAL_STATUS_LABEL[animal.status]}
+            </Badge>
+            <Badge tone={animal.isPublic ? "sage" : "sand"}>
+              {animal.isPublic ? "公開中" : "非公開"}
+            </Badge>
+          </div>
+          <p className="mt-4 font-mono text-sm font-semibold tracking-wide text-ink/70">
+            {displayAnimalId(animal)}
+          </p>
+          <p className="mt-2 text-sm leading-7 text-ink/70">
+            {animal.morphLabel || formatGenotypeLabel(animal.genotype)}
+          </p>
+          {traitLabels.length > 0 ? (
+            <p className="mt-1 text-xs leading-5 text-muted">{traitLabels.join(" / ")}</p>
+          ) : null}
+          <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-xs text-muted">孵化日</dt>
+              <dd className="mt-1 font-medium">
+                {animal.hatchDate ? animal.hatchDate : "孵化日未登録"}
+              </dd>
+            </div>
+            {animal.prefecture ? (
+              <div>
+                <dt className="text-xs text-muted">都道府県</dt>
+                <dd className="mt-1 font-medium">{animal.prefecture}</dd>
+              </div>
+            ) : null}
+            {animal.isPublic && animal.shareSlug ? (
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-muted">公開ページ</dt>
+                <dd className="mt-1">
+                  <Link href={`/p/${animal.shareSlug}`} className="underline underline-offset-2">
+                    公開ページを開く
+                  </Link>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+        </div>
+      </section>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link href={`/calculator?a=${animal.id}`} className="nc-btn-ghost w-full sm:w-auto">
+          この個体で計算
+        </Link>
+        <Link href={`/compare?animalId=${animal.id}`} className="nc-btn-ghost w-full sm:w-auto">
+          全国個体比較
+        </Link>
+        <Link href={`/animals/${animal.id}/edit`} className="nc-btn w-full sm:w-auto">
+          編集
+        </Link>
+      </div>
+
+      <AnimalCodeBlock
+        code={animal.code}
+        className={`${card} bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb]`}
+        codeClassName="mt-2 font-mono text-3xl font-semibold tracking-wide text-ink sm:text-5xl"
       />
 
-      <AnimalCodeBlock code={animal.code} />
-
-      <div className="flex flex-wrap gap-2">
-        <Badge tone={animal.sex === "female" ? "blush" : animal.sex === "male" ? "mist" : "sand"}>
-          {SEX_LABEL[animal.sex]}
-        </Badge>
-        <Badge tone={animal.status === "breeding" ? "sage" : "sand"}>
-          {ANIMAL_STATUS_LABEL[animal.status]}
-        </Badge>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Stat
-          label="最新体重"
-          value={latest ? `${latest.weightG.toFixed(1)}g` : "—"}
-        />
-        <Stat
-          label="全国個体比較"
-          value="見る"
-          hint="日本国内の近い条件の平均"
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-[1.75rem] bg-[#eef6f1] p-5 sm:p-6">
+          <p className="text-sm text-ink/60">最新体重</p>
+          <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
+            {latest ? `${latest.weightG.toFixed(1)}g` : "—"}
+          </p>
+          {latest ? (
+            <p className="mt-2 text-sm text-muted">{latest.weighedOn}</p>
+          ) : (
+            <p className="mt-2 text-sm text-muted">記録がありません</p>
+          )}
+        </div>
+        <Link
           href={`/compare?animalId=${animal.id}`}
-        />
-        <div className="rounded-[1.5rem] border border-line bg-accent p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)]">
-          <p className="text-sm text-muted">公開</p>
-          <p className="mt-3 text-2xl font-semibold">
-            {animal.isPublic ? "公開中" : "非公開"}
-          </p>
-          {animal.isPublic && animal.shareSlug ? (
-            <Link href={`/p/${animal.shareSlug}`} className="mt-3 inline-block text-sm underline">
-              公開ページ
-            </Link>
-          ) : null}
-        </div>
+          className="rounded-[1.75rem] bg-[#e7f3fb] p-5 sm:p-6"
+        >
+          <p className="text-sm text-ink/60">全国個体比較</p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">見る</p>
+          <p className="mt-2 text-sm text-muted">日本国内の近い条件の平均</p>
+        </Link>
       </div>
 
-      {animal.photoUrl ? (
-        <AnimalPhoto
-          src={animal.photoUrl}
-          alt={animal.name}
-          className="max-h-80 w-full rounded-[1.5rem] object-cover"
-        />
-      ) : null}
-
-      <Card>
-        <SectionTitle>モルフ・遺伝情報</SectionTitle>
-        <p>{animal.morphLabel || formatGenotypeLabel(animal.genotype)}</p>
-        {traitLabels.length > 0 ? (
-          <p className="mt-2 text-sm text-muted">
-            {traitLabels.join(" / ")}
-          </p>
-        ) : null}
-        {genes.length > 0 ? (
-          <ul className="mt-4 grid gap-1 text-sm sm:grid-cols-2">
-            {genes.map((locus) => (
-              <li key={locus.id} className="flex justify-between gap-3">
-                <span>{locus.nameJa}</span>
-                <span className="text-muted">
-                  {geneStatusLabelJa(
-                    animal.genotype[locus.id] ?? "wild",
-                    locus.inheritance,
-                    locus.nameJa,
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-sm text-muted">遺伝子座の登録はありません。</p>
-        )}
-      </Card>
-
-      <Card>
-        <SectionTitle>血統</SectionTitle>
-        <div className="grid gap-4 text-sm md:grid-cols-3">
-          <div>
-            <p className="text-muted">個体</p>
-            <p className="mt-1 font-medium">{animalTitle(animal)}</p>
-          </div>
-          <div>
-            <p className="text-muted">父 / 父方</p>
-            <p className="mt-1">
-              <PedigreeLink animal={tree?.sire} />
-            </p>
-            <p className="mt-1 text-muted">
-              <PedigreeLink animal={tree?.sireSire} /> / <PedigreeLink animal={tree?.sireDam} />
-            </p>
-          </div>
-          <div>
-            <p className="text-muted">母 / 母方</p>
-            <p className="mt-1">
-              <PedigreeLink animal={tree?.dam} />
-            </p>
-            <p className="mt-1 text-muted">
-              <PedigreeLink animal={tree?.damSire} /> / <PedigreeLink animal={tree?.damDam} />
-            </p>
-          </div>
+      <section className={card}>
+        <h2 className="text-lg font-semibold tracking-tight">体重・成長</h2>
+        <div className="mt-4">
+          <GrowthChart mine={growthPoints(animal, weights)} average={[]} />
         </div>
-        {tree?.sire && tree.dam ? (
-          <Link
-            href={`/calculator?a=${tree.sire.id}&b=${tree.dam.id}`}
-            className="mt-4 inline-flex nc-btn-ghost"
-          >
-            父母の組み合わせを計算
-          </Link>
-        ) : null}
-        {tree?.children.length ? (
-          <div className="mt-4">
-            <p className="text-sm text-muted">子</p>
-            <ul className="mt-1 text-sm">
-              {tree.children.map((child) => (
-                <li key={child.id}>
-                  <Link href={`/animals/${child.id}`} className="hover:underline">
-                    {animalTitle(child)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </Card>
-
-      <Card>
-        <SectionTitle>体重・成長</SectionTitle>
-        <GrowthChart mine={growthPoints(animal, weights)} average={[]} />
-        <MutationForm action={addWeightAction} className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
+        <MutationForm action={addWeightAction} className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
           <input
             type="date"
             name="weighedOn"
@@ -230,15 +202,12 @@ export default async function AnimalDetailPage({
             {[...weights].reverse().map((row) => {
               const remove = deleteWeight.bind(null, animal.id, row.id);
               return (
-                <li key={row.id} className="flex items-center justify-between py-2">
+                <li key={row.id} className="flex items-center justify-between gap-3 py-3">
                   <span>
                     {row.weighedOn} / {row.weightG.toFixed(1)}g
                   </span>
                   <MutationForm action={remove}>
-                    <PendingSubmitButton
-                      pendingLabel="削除中…"
-                      className="nc-btn-danger"
-                    >
+                    <PendingSubmitButton pendingLabel="削除中…" className="nc-btn-danger">
                       削除
                     </PendingSubmitButton>
                   </MutationForm>
@@ -247,18 +216,92 @@ export default async function AnimalDetailPage({
             })}
           </ul>
         ) : null}
-      </Card>
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-lg font-semibold tracking-tight">血統</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className={`${card} bg-[#e7f3fb]/60`}>
+            <p className="text-xs tracking-[0.16em] text-ink/40 uppercase">Sire</p>
+            <p className="mt-2 text-sm text-muted">父 / 父方</p>
+            <p className="mt-2">
+              <PedigreeLink animal={tree?.sire} />
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              <PedigreeLink animal={tree?.sireSire} /> / <PedigreeLink animal={tree?.sireDam} />
+            </p>
+          </div>
+          <div className={`${card} bg-[#fde8ef]/70`}>
+            <p className="text-xs tracking-[0.16em] text-ink/40 uppercase">Dam</p>
+            <p className="mt-2 text-sm text-muted">母 / 母方</p>
+            <p className="mt-2">
+              <PedigreeLink animal={tree?.dam} />
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              <PedigreeLink animal={tree?.damSire} /> / <PedigreeLink animal={tree?.damDam} />
+            </p>
+          </div>
+        </div>
+        {tree?.sire && tree.dam ? (
+          <Link
+            href={`/calculator?a=${tree.sire.id}&b=${tree.dam.id}`}
+            className="nc-btn-ghost mt-4 inline-flex"
+          >
+            父母の組み合わせを計算
+          </Link>
+        ) : null}
+        {tree?.children.length ? (
+          <div className={`${card} mt-4`}>
+            <p className="text-sm text-muted">子</p>
+            <ul className="mt-2 text-sm">
+              {tree.children.map((child) => (
+                <li key={child.id}>
+                  <Link href={`/animals/${child.id}`} className="hover:underline">
+                    {animalTitle(child)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </section>
+
+      <section className={card}>
+        <h2 className="text-lg font-semibold tracking-tight">モルフ・遺伝情報</h2>
+        <p className="mt-3">{animal.morphLabel || formatGenotypeLabel(animal.genotype)}</p>
+        {traitLabels.length > 0 ? (
+          <p className="mt-2 text-sm text-muted">{traitLabels.join(" / ")}</p>
+        ) : null}
+        {genes.length > 0 ? (
+          <ul className="mt-4 grid gap-1 text-sm sm:grid-cols-2">
+            {genes.map((locus) => (
+              <li key={locus.id} className="flex justify-between gap-3">
+                <span>{locus.nameJa}</span>
+                <span className="text-muted">
+                  {geneStatusLabelJa(
+                    animal.genotype[locus.id] ?? "wild",
+                    locus.inheritance,
+                    locus.nameJa,
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-2 text-sm text-muted">遺伝子座の登録はありません。</p>
+        )}
+      </section>
 
       {animal.notes ? (
-        <Card>
-          <h2 className="mb-2 text-lg font-semibold">メモ</h2>
-          <p className="whitespace-pre-wrap text-sm">{animal.notes}</p>
-        </Card>
+        <section className={card}>
+          <h2 className="mb-2 text-lg font-semibold tracking-tight">メモ</h2>
+          <p className="whitespace-pre-wrap text-sm leading-7">{animal.notes}</p>
+        </section>
       ) : null}
 
       {breedings.length > 0 ? (
-        <Card>
-          <h2 className="mb-2 text-lg font-semibold">繁殖履歴</h2>
+        <section className={card}>
+          <h2 className="mb-2 text-lg font-semibold tracking-tight">繁殖履歴</h2>
           <ul className="text-sm">
             {breedings.map((breeding) => (
               <li key={breeding.id}>
@@ -268,10 +311,31 @@ export default async function AnimalDetailPage({
               </li>
             ))}
           </ul>
-        </Card>
+        </section>
       ) : null}
 
-      <DeleteAnimalForm animalId={animal.id} />
+      <Link
+        href={`/compare?animalId=${animal.id}`}
+        className={`${card} block bg-gradient-to-br from-white to-[#eef6f1]`}
+      >
+        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Compare</p>
+        <h2 className="mt-2 text-lg font-semibold tracking-tight">全国個体比較</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          この個体の体重を、日本国内の近い条件の平均と比べます。
+        </p>
+        <span className="nc-btn-ghost mt-4 inline-flex">比較を見る</span>
+      </Link>
+
+      <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 sm:px-6">
+        <p className="text-sm text-ink/70">この個体を削除</p>
+        <p className="mt-1 text-xs leading-5 text-muted">削除すると元に戻せません。</p>
+        <div className="mt-3">
+          <DeleteAnimalForm
+            animalId={animal.id}
+            className="nc-btn-danger px-0 text-sm text-red-700/80"
+          />
+        </div>
+      </section>
     </div>
   );
 }

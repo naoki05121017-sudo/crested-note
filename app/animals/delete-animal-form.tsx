@@ -6,7 +6,13 @@ import { deleteAnimalForm } from "@/app/animals/actions";
 import { navigateAfterMutation } from "@/app/components/navigate-after-mutation";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 
-export function DeleteAnimalForm({ animalId }: { animalId: string }) {
+export function DeleteAnimalForm({
+  animalId,
+  className = "nc-btn-danger",
+}: {
+  animalId: string;
+  className?: string;
+}) {
   const router = useRouter();
   const [state, action, pending] = useActionState(deleteAnimalForm, {
     error: null,
@@ -38,7 +44,7 @@ export function DeleteAnimalForm({ animalId }: { animalId: string }) {
       <fieldset disabled={busy} className="contents">
         <PendingSubmitButton
           pendingLabel={leaving ? "一覧へ移動しています…" : "削除しています…"}
-          className="nc-btn-danger"
+          className={className}
           disabled={busy}
         >
           この個体を削除

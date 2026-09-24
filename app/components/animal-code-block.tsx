@@ -3,14 +3,18 @@ import { displayAnimalId, formatAnimalCode } from "@/lib/db/animal-code";
 export function AnimalCodeBlock({
   code,
   pending = false,
+  className = "rounded-[1.5rem] border border-line bg-sand/70 px-4 py-4",
+  codeClassName = "mt-1 font-mono text-2xl font-semibold tracking-wide text-ink sm:text-3xl",
 }: {
   code?: string;
   pending?: boolean;
+  className?: string;
+  codeClassName?: string;
 }) {
   return (
-    <div className="rounded-[1.5rem] border border-line bg-sand/70 px-4 py-4">
+    <div className={className}>
       <p className="text-sm text-muted">個体ID</p>
-      <p className="mt-1 font-mono text-2xl font-semibold tracking-wide text-ink sm:text-3xl">
+      <p className={codeClassName}>
         {pending ? "登録後に自動発行" : displayAnimalId(code)}
       </p>
       <p className="mt-1 text-xs leading-5 text-muted">
