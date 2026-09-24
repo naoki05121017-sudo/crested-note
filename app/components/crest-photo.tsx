@@ -10,6 +10,7 @@ export function CrestPhoto() {
         fill
         sizes="(max-width: 640px) 80vw, 50vw"
         priority
+        unoptimized
         className="nc-crest-photo-img"
       />
     </div>

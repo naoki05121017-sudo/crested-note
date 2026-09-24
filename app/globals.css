@@ -199,18 +199,11 @@ body {
 }
 
 .nc-crest-photo-img {
-  object-fit: cover !important;
-  object-position: 74% 22% !important;
-  opacity: 0.78;
-  filter: saturate(0.92) brightness(0.9) contrast(1.02);
-  -webkit-mask-image:
-    linear-gradient(to left, rgba(0, 0, 0, 0.98) 14%, rgba(0, 0, 0, 0.55) 50%, transparent 90%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 14%, rgba(0, 0, 0, 0.88) 72%, transparent 100%);
-  mask-image:
-    linear-gradient(to left, rgba(0, 0, 0, 0.98) 14%, rgba(0, 0, 0, 0.55) 50%, transparent 90%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 14%, rgba(0, 0, 0, 0.88) 72%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
+  object-fit: contain !important;
+  object-position: 80% 38% !important;
+  opacity: 0.82;
+  -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.95) 28%, transparent 92%);
+  mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.95) 28%, transparent 92%);
 }
 
 .nc-crest-stage-copy,
@@ -279,8 +272,8 @@ body {
 }
 
 .nc-login-stage .nc-crest-photo-img {
-  opacity: 0.38;
-  object-position: 76% 20% !important;
+  opacity: 0.48;
+  object-position: 82% 36% !important;
 }
 
 @media (min-width: 640px) {
