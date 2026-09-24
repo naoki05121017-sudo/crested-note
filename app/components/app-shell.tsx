@@ -118,29 +118,29 @@ function AuthFooter({ email }: { email: string | null }) {
 function TopBar({ email }: { email: string | null }) {
   const initial = email?.trim().charAt(0).toUpperCase() || "?";
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
-      <form action="/animals" className="relative min-w-0 flex-1">
-        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted sm:left-3">
+    <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
+      <form action="/animals" className="relative min-w-0 flex-[1_1_0]">
+        <span className="pointer-events-none absolute left-2.5 top-1/2 hidden -translate-y-1/2 text-muted sm:left-3 sm:block">
           <IconSearch />
         </span>
         <input
           name="q"
           type="search"
           placeholder="個体名・モルフ・ID"
-          className="nc-input min-h-10 h-10 rounded-full border-line bg-white pl-9 text-[13px] sm:h-11 sm:min-h-11 sm:pl-10 sm:text-base"
+          className="nc-input h-10 min-h-10 min-w-0 rounded-full border-line bg-white px-3 text-[12px] leading-normal placeholder:text-[12px] placeholder:text-muted [appearance:none] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden sm:h-11 sm:min-h-11 sm:px-10 sm:text-base sm:placeholder:text-base"
           aria-label="個体名・モルフ・IDを検索"
         />
       </form>
       <Link
         href="/settings"
-        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink sm:h-11 sm:w-11"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink sm:h-11 sm:w-11"
         aria-label="設定・お知らせ"
       >
         <IconBell />
       </Link>
       <Link
         href="/settings"
-        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1c1917] text-sm font-semibold text-white sm:h-11 sm:w-11"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1c1917] text-sm font-semibold text-white sm:h-11 sm:w-11"
         aria-label={email ? `アカウント ${email}` : "設定"}
         title={email ?? "設定"}
       >
@@ -212,16 +212,20 @@ export function AppShell({
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-line bg-white/90 px-4 py-3 backdrop-blur sm:px-8">
-            <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+          <header className="sticky top-0 z-20 border-b border-line bg-white/90 px-3 py-3 backdrop-blur sm:px-8">
+            <div className="flex min-w-0 items-center gap-1 sm:gap-3">
               <TopBar email={email} />
               <button
                 type="button"
-                className="nc-btn-ghost h-10 shrink-0 px-3 text-sm sm:h-11 sm:px-4 lg:hidden"
+                className="nc-btn-ghost h-9 w-9 shrink-0 px-0 text-sm sm:h-11 sm:w-auto sm:px-4 lg:hidden"
                 aria-expanded={open}
+                aria-label={open ? "メニューを閉じる" : "メニュー"}
                 onClick={() => setOpen((value) => !value)}
               >
-                {open ? "閉じる" : "メニュー"}
+                <span className="sm:hidden" aria-hidden="true">
+                  {open ? "×" : "≡"}
+                </span>
+                <span className="hidden sm:inline">{open ? "閉じる" : "メニュー"}</span>
               </button>
             </div>
           </header>
