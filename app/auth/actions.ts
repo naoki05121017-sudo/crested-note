@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { actionError, actionOk } from "@/app/components/action-result";
 import { textField } from "@/lib/db/form";
+import { appOriginFromRequest } from "@/lib/auth/request-origin";
+import { authEmailRedirectTo } from "@/lib/auth/app-origin";
 import { ensureProfile } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -37,7 +39,13 @@ export async function signUp(formData: FormData) {
     return actionError("パスワードは8文字以上にしてください。");
   }
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: authEmailRedirectTo(await appOriginFromRequest()),
+    },
+  });
   if (error) {
     return actionError(error.message);
   }
