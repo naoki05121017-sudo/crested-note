@@ -4,6 +4,9 @@ import type { Animal, WeightLogRecord } from "@/lib/db/types";
 import { visualMorphKey, latestWeight } from "./compare";
 import { AGE_BUCKETS, ageInMonths, mean, todayIso } from "./math";
 
+export const MIN_STATS_FOR_AVERAGE = 5;
+export const MIN_MORPH_COUNT = 3;
+
 export function japanStats(
   animals: Animal[],
   weightsByAnimal: Map<string, WeightLogRecord[]>,
@@ -40,7 +43,8 @@ export function japanStats(
       id: bucket.id,
       label: bucket.label,
       n: values.length,
-      average: mean(values),
+      average:
+        values.length >= MIN_STATS_FOR_AVERAGE ? mean(values) : null,
     };
   });
 
@@ -58,9 +62,13 @@ export function japanStats(
     bySex,
     morphs: [...morphCounts.entries()]
       .map(([label, count]) => ({ label, count }))
+      .filter((row) => row.count >= MIN_MORPH_COUNT)
       .sort((a, b) => b.count - a.count)
       .slice(0, 12),
-    meanLatestWeight: mean(latestWeights.map((row) => row.weightG)),
+    meanLatestWeight:
+      latestWeights.length >= MIN_STATS_FOR_AVERAGE
+        ? mean(latestWeights.map((row) => row.weightG))
+        : null,
     weightSample: latestWeights.length,
     buckets,
     hatchYears: [...hatchYears.entries()]
@@ -69,7 +77,7 @@ export function japanStats(
     sexLabels: SEX_LABEL,
     asOf,
     sampleNote:
-      "日本国内のクレスノートに蓄積されたデータを、モルフ・性別・月齢・体重などの傾向として見ます。全国の全頭数や全飼育者のデータではありません。件数が少ない項目は参考値です。",
+      "日本国内のクレスノートに蓄積された、匿名の集計です。個人の個体名・写真・連絡先は出しません。件数が少ない項目は平均を出さず、データが増えるほど参考にしやすくなります。全国の全頭数ではありません。",
   };
 }
 

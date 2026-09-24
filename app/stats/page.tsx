@@ -26,7 +26,11 @@ export default async function StatsPage() {
               ? "—"
               : `${stats.meanLatestWeight.toFixed(1)}g`
           }
-          hint={`n=${stats.weightSample}`}
+          hint={
+            stats.meanLatestWeight === null
+              ? `件数が足りないため平均は出していません（n=${stats.weightSample}）`
+              : `n=${stats.weightSample}`
+          }
           tone="mist"
         />
       </div>
@@ -57,7 +61,11 @@ export default async function StatsPage() {
               <span>{bucket.label}</span>
               <span className="text-2xl font-semibold tabular-nums">
                 {bucket.average === null ? "—" : `${bucket.average.toFixed(1)}g`}
-                <span className="ml-2 text-sm font-normal text-muted">n={bucket.n}</span>
+                <span className="ml-2 text-sm font-normal text-muted">
+                  {bucket.average === null
+                    ? `件数不足 n=${bucket.n}`
+                    : `n=${bucket.n}`}
+                </span>
               </span>
             </li>
           ))}
@@ -67,7 +75,9 @@ export default async function StatsPage() {
       <Card tone="lilac">
         <SectionTitle>モルフの内訳</SectionTitle>
         {stats.morphs.length === 0 ? (
-          <p className="text-sm text-muted">まだ集計できる個体がありません。</p>
+          <p className="text-sm text-muted">
+            匿名集計できる件数がまだありません。少数のモルフ名は出しません。
+          </p>
         ) : (
           <ul className="divide-y divide-line text-sm">
             {stats.morphs.map((row) => (

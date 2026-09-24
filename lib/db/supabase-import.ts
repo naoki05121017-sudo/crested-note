@@ -33,7 +33,16 @@ async function upsert(
   onConflict: string,
 ) {
   if (rows.length === 0) return;
-  const { error } = await client.from(table).upsert(rows, { onConflict });
+  const { error: firstError } = await client.from(table).upsert(rows, { onConflict });
+  let error = firstError;
+  if (error && table === "animals" && /check_every_days/i.test(error.message)) {
+    const stripped = rows.map((row) => {
+      const { check_every_days: _omit, ...rest } = row;
+      return rest;
+    });
+    const retry = await client.from(table).upsert(stripped, { onConflict });
+    error = retry.error;
+  }
   if (error) {
     throw new Error(`${table} の取り込みに失敗しました: ${error.message}`);
   }
@@ -178,6 +187,7 @@ export async function importLocalJsonToSupabase(client: SupabaseClient) {
       is_public: Boolean(row.isPublic),
       share_slug: row.shareSlug ?? "",
       prefecture: row.prefecture ?? "",
+      check_every_days: row.checkEveryDays ?? null,
       created_at: timestampOrNow(row.createdAt),
       updated_at: timestampOrNow(row.updatedAt),
     })),

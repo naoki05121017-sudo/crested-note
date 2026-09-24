@@ -5,6 +5,7 @@ import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, Notice, PageHeader } from "@/app/components/ui";
 import { LegalNav } from "@/app/components/legal-nav";
+import { IncludedFeatures } from "@/app/components/included-features";
 import { getSettings } from "@/lib/db/queries";
 import { PREFECTURES } from "@/lib/db/labels";
 
@@ -85,6 +86,10 @@ export default async function SettingsPage({
         <div className={sent ? "mt-4" : ""}>
           <FeedbackForm />
         </div>
+      </Card>
+
+      <Card>
+        <IncludedFeatures />
       </Card>
 
       <Card>

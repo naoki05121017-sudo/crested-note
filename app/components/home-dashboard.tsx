@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Dela_Gothic_One } from "next/font/google";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
+import { IncludedFeatures } from "@/app/components/included-features";
 import { displayAnimalId } from "@/lib/db/animal-code";
 import { formatGenotypeLabel } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
@@ -71,6 +72,7 @@ export function HomeDashboard({
   japanLiving,
   japanMeanWeight,
   japanWeightSample,
+  checks,
   compare,
 }: {
   collectionName: string;
@@ -86,12 +88,21 @@ export function HomeDashboard({
   japanLiving: number;
   japanMeanWeight: number | null;
   japanWeightSample: number;
+  checks: {
+    id: string;
+    name: string;
+    due: boolean;
+    headline: string;
+    body: string;
+  }[];
   compare: {
     name: string;
     href: string;
     mineWeight: number | null;
     average: number | null;
     sampleSize: number;
+    comparable: boolean;
+    vsAverage: string | null;
     tone: string;
   } | null;
 }) {
@@ -122,6 +133,23 @@ export function HomeDashboard({
           </div>
         </div>
       </section>
+
+      {checks.length > 0 ? (
+        <HomeCard className="border-transparent bg-[#fff6e8]">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight">クレスチェック</h2>
+          <ul className="divide-y divide-line">
+            {checks.map((item) => (
+              <li key={item.id} className="py-3">
+                <Link href={`/animals/${item.id}`} className="block">
+                  <p className="font-semibold">{item.name}</p>
+                  <p className="mt-1 text-sm text-ink/80">{item.headline}</p>
+                  <p className="mt-1 text-sm text-muted">{item.body}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </HomeCard>
+      ) : null}
 
       <div>
         <div className="mb-4 flex items-end justify-between gap-3">
@@ -193,13 +221,22 @@ export function HomeDashboard({
                 </div>
                 <div>
                   <p className="text-sm text-ink/50">同条件の平均</p>
-                  <p className="mt-1 text-3xl font-semibold tabular-nums">
-                    {compare.average === null ? "—" : `${compare.average.toFixed(1)}g`}
-                  </p>
-                  <p className="mt-1 text-xs text-muted">n={compare.sampleSize}</p>
+                  {compare.comparable ? (
+                    <>
+                      <p className="mt-1 text-3xl font-semibold tabular-nums">
+                        {compare.average === null ? "—" : `${compare.average.toFixed(1)}g`}
+                      </p>
+                      <p className="mt-1 text-sm text-ink/80">{compare.vsAverage}</p>
+                      <p className="mt-1 text-xs text-muted">n={compare.sampleSize}</p>
+                    </>
+                  ) : (
+                    <p className="mt-2 text-sm leading-6 text-muted">{compare.tone}</p>
+                  )}
                 </div>
               </div>
-              <p className="mt-3 text-sm text-muted">{compare.tone}</p>
+              <p className="mt-3 text-sm text-muted">
+                {compare.comparable ? compare.tone : null}
+              </p>
               <Link href={compare.href} className="nc-btn mt-4">
                 この個体で比較
               </Link>
@@ -227,10 +264,21 @@ export function HomeDashboard({
             </div>
           </div>
           <p className="mt-4 text-sm text-ink/50">最新体重の平均</p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums">
-            {japanMeanWeight === null ? "—" : `${japanMeanWeight.toFixed(1)}g`}
-          </p>
-          <p className="mt-1 text-xs text-muted">n={japanWeightSample}</p>
+          {japanMeanWeight === null ? (
+            <>
+              <p className="mt-1 text-lg font-semibold">まだ平均は出していません</p>
+              <p className="mt-1 text-xs text-muted">
+                公開の体重データが揃うまで、断定的な数字は出しません（n={japanWeightSample}）
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-3xl font-semibold tabular-nums">
+                {`${japanMeanWeight.toFixed(1)}g`}
+              </p>
+              <p className="mt-1 text-xs text-muted">n={japanWeightSample}</p>
+            </>
+          )}
         </HomeCard>
       </div>
 
@@ -308,6 +356,10 @@ export function HomeDashboard({
           </ul>
         )}
       </div>
+
+      <HomeCard>
+        <IncludedFeatures compact />
+      </HomeCard>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Link href="/calculator" className="block rounded-[1.75rem] bg-[#ece6fb] p-6 text-ink">

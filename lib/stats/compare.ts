@@ -1,7 +1,11 @@
 import { PREFECTURES } from "@/lib/db/labels";
 import { combinePhenotype, LOCI } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
+import { formatDeltaGrams } from "@/lib/care/weight-growth";
 import { ageInMonths, mean, todayIso, weightTone } from "./math";
+
+/** Hide averages until the cohort is large enough to not look like a census. */
+export const MIN_COHORT_FOR_AVERAGE = 5;
 
 export function isJapanDomesticAnimal(animal: {
   prefecture?: string;
@@ -101,7 +105,9 @@ export function compareAnimal(options: {
   const cohortWeights = cohort
     .map(({ logs }) => latestWeight(logs)?.weightG)
     .filter((value): value is number => typeof value === "number");
-  const average = mean(cohortWeights);
+  const sampleSize = cohortWeights.length;
+  const comparable = sampleSize >= MIN_COHORT_FOR_AVERAGE;
+  const average = comparable ? mean(cohortWeights) : null;
   const mineWeight = mine?.weightG ?? null;
   const diff =
     mineWeight !== null && average !== null ? mineWeight - average : null;
@@ -112,12 +118,21 @@ export function compareAnimal(options: {
     mineWeight,
     average,
     diff,
-    sampleSize: cohortWeights.length,
+    sampleSize,
+    comparable,
+    vsAverage:
+      diff === null ? null : `平均より${formatDeltaGrams(diff)}`,
     tone:
-      diff !== null && average !== null ? weightTone(diff, average) : "比較できません",
+      diff !== null && average !== null
+        ? weightTone(diff, average)
+        : comparable
+          ? "比較できません"
+          : "近い条件の公開データがまだ少ないので、平均は出していません。",
     mineCurve: growthPoints(options.animal, options.logs),
-    averageCurve: averageCurve(
-      cohort.map(({ animal, logs }) => growthPoints(animal, logs)),
-    ),
+    averageCurve: comparable
+      ? averageCurve(
+          cohort.map(({ animal, logs }) => growthPoints(animal, logs)),
+        )
+      : [],
   };
 }

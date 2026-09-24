@@ -88,6 +88,7 @@ create table if not exists public.animals (
   is_public boolean not null default false,
   share_slug text not null default '',
   prefecture text not null default '',
+  check_every_days integer,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

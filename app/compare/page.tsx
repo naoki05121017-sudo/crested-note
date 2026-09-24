@@ -82,27 +82,27 @@ export default async function ComparePage({
             <Stat
               label="同条件の平均"
               value={
-                comparison.average === null
-                  ? "—"
-                  : `${comparison.average.toFixed(1)}g`
+                comparison.comparable && comparison.average !== null
+                  ? `${comparison.average.toFixed(1)}g`
+                  : "—"
               }
-              hint={`n=${comparison.sampleSize}`}
+              hint={
+                comparison.comparable
+                  ? `n=${comparison.sampleSize}`
+                  : comparison.tone
+              }
               tone="mist"
             />
             <Stat
               label="平均との差"
-              value={
-                comparison.diff === null
-                  ? "—"
-                  : `${comparison.diff > 0 ? "+" : ""}${comparison.diff.toFixed(1)}g`
-              }
-              hint={comparison.tone}
+              value={comparison.vsAverage ?? "—"}
+              hint={comparison.comparable ? comparison.tone : "件数不足"}
               tone="sage"
             />
           </div>
           <p className="text-sm text-white/55">
             条件：日本国内 / {comparison.morph} / 月齢 {comparison.ageMonths ?? "不明"}ヶ月前後
-            （±3ヶ月）。比較相手が少ないときは「比較できません」と出ます。順位は表示しません。
+            （近い月齢・同じ性別・同じモルフ）。順位は表示しません。データが少ないときは平均を出しません。
           </p>
           <Card>
             <div className="mb-3 flex flex-wrap gap-4 text-sm">

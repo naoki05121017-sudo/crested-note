@@ -10,6 +10,7 @@ import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { GenotypeFields } from "@/app/components/genotype-fields";
 import { AnimalPhotoField } from "@/app/animals/animal-photo-field";
+import { CheckCadenceFields } from "@/app/animals/check-cadence-fields";
 import { Card, Hint, SectionTitle } from "@/app/components/ui";
 import { parentOptionsForRole } from "@/lib/db/parent-sex";
 import type { VisualTraitCategory } from "@/lib/genetics/visual-traits";
@@ -93,6 +94,7 @@ export function AnimalForm({
             className="nc-input"
           />
         </label>
+        <CheckCadenceFields defaultDays={animal?.checkEveryDays} />
         <AnimalPhotoField currentUrl={animal?.photoUrl} alt={animal?.name ?? ""} />
         <label className="grid gap-1 text-sm">
           <span className="font-medium">都道府県</span>

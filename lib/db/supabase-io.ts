@@ -20,6 +20,12 @@ import { idsToDelete } from "@/lib/auth/paths";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 
+function optionalPositiveInt(value: unknown): number | undefined {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  return Math.floor(n);
+}
+
 function iso(value: unknown, fallback = ""): string {
   if (value == null || value === "") return fallback;
   return String(value);
@@ -62,9 +68,24 @@ async function upsert(
   onConflict: string,
 ) {
   if (rows.length === 0) return;
-  const { error } = await retryOnJwtIssuedAtFuture(() =>
+  const first = await retryOnJwtIssuedAtFuture(() =>
     client.from(table).upsert(rows, { onConflict }),
   );
+  let error = first.error;
+  if (
+    error &&
+    table === "animals" &&
+    /check_every_days/i.test(error.message)
+  ) {
+    const stripped = rows.map((row) => {
+      const { check_every_days: _omit, ...rest } = row;
+      return rest;
+    });
+    const retry = await retryOnJwtIssuedAtFuture(() =>
+      client.from(table).upsert(stripped, { onConflict }),
+    );
+    error = retry.error;
+  }
   if (error) {
     throw new Error(`${table} を保存できません: ${error.message}`);
   }
@@ -220,6 +241,7 @@ export async function loadDatabaseFromSupabase(userId: string): Promise<Database
       isPublic: Boolean(row.is_public),
       shareSlug: String(row.share_slug ?? ""),
       prefecture: String(row.prefecture ?? ""),
+      checkEveryDays: optionalPositiveInt(row.check_every_days),
       createdAt: iso(row.created_at),
       updatedAt: iso(row.updated_at),
     })),
@@ -464,6 +486,7 @@ export async function saveDatabaseToSupabase(db: DatabaseFile, userId: string) {
       is_public: Boolean(row.isPublic),
       share_slug: row.shareSlug ?? "",
       prefecture: row.prefecture ?? "",
+      check_every_days: row.checkEveryDays ?? null,
       created_at: timestampOrNow(row.createdAt),
       updated_at: timestampOrNow(row.updatedAt),
     })),
@@ -742,6 +765,7 @@ function asAnimalRecord(row: Record<string, unknown>): AnimalRecord {
     isPublic: Boolean(row.is_public),
     shareSlug: String(row.share_slug ?? ""),
     prefecture: String(row.prefecture ?? ""),
+    checkEveryDays: optionalPositiveInt(row.check_every_days),
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at),
   };

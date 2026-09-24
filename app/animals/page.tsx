@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CrestLinkRedeemCard } from "@/app/animals/crest-link-redeem";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Badge } from "@/app/components/ui";
+import { cadenceLabel } from "@/lib/care/check-cadence";
 import { displayAnimalId } from "@/lib/db/animal-code";
 import { filterAnimals, weightsByAnimal } from "@/lib/db/queries";
 import { ANIMAL_STATUS_LABEL, SEX_LABEL } from "@/lib/db/labels";
@@ -123,6 +124,11 @@ export default async function AnimalsPage({
                         {animal.traits
                           .map((id) => visualTraitName(id, animal.traitLevels?.[id]))
                           .join(" / ")}
+                      </p>
+                    ) : null}
+                    {cadenceLabel(animal.checkEveryDays) ? (
+                      <p className="mt-1 text-xs text-muted">
+                        チェック：{cadenceLabel(animal.checkEveryDays)}
                       </p>
                     ) : null}
                     <div className="mt-4 flex items-end justify-between gap-3 rounded-[1.15rem] bg-[#eef6f1] px-3 py-3">

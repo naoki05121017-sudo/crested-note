@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addWeight, deleteWeight } from "@/app/animals/actions";
+import { addWeight, deleteWeight, updateCheckCadence } from "@/app/animals/actions";
+import { CheckCadenceFields } from "@/app/animals/check-cadence-fields";
 import { DeleteAnimalForm } from "@/app/animals/delete-animal-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
@@ -8,6 +9,14 @@ import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Badge } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
+import { cadenceLabel, checkReminder } from "@/lib/care/check-cadence";
+import {
+  formatDeltaGrams,
+  formatGrams,
+  growthAlbumSteps,
+  latestMonthlyReport,
+  latestWeightChange,
+} from "@/lib/care/weight-growth";
 import {
   breedingsForAnimal,
   getAnimal,
@@ -23,6 +32,7 @@ import {
 } from "@/lib/db/labels";
 import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
 import { growthPoints } from "@/lib/stats/compare";
+import { todayIso } from "@/lib/stats/math";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
@@ -45,10 +55,13 @@ function PedigreeLink({
 
 export default async function AnimalDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const animal = await getAnimal(id);
   if (!animal) notFound();
 
@@ -62,7 +75,18 @@ export default async function AnimalDetailPage({
     (locus) => (animal.genotype[locus.id] ?? "wild") !== "wild",
   );
   const addWeightAction = addWeight.bind(null, animal.id);
+  const updateCadence = updateCheckCadence.bind(null, animal.id);
   const latest = weights.at(-1);
+  const asOf = todayIso();
+  const reminder = checkReminder({
+    checkEveryDays: animal.checkEveryDays,
+    lastWeighedOn: latest?.weighedOn,
+    asOf,
+  });
+  const change = latestWeightChange(weights);
+  const album = growthAlbumSteps(weights);
+  const monthReport = latestMonthlyReport(weights, asOf);
+  const justRecorded = query.recorded === "1";
 
   return (
     <div className="flex flex-col gap-8">
@@ -118,6 +142,12 @@ export default async function AnimalDetailPage({
                 <dd className="mt-1 font-medium">{animal.prefecture}</dd>
               </div>
             ) : null}
+            <div>
+              <dt className="text-xs text-muted">記録の間隔</dt>
+              <dd className="mt-1 font-medium">
+                {cadenceLabel(animal.checkEveryDays) ?? "まだ決めていない"}
+              </dd>
+            </div>
             {animal.isPublic && animal.shareSlug ? (
               <div className="sm:col-span-2">
                 <dt className="text-xs text-muted">公開ページ</dt>
@@ -142,6 +172,9 @@ export default async function AnimalDetailPage({
         <Link href={`/animals/${animal.id}/edit`} className="nc-btn w-full sm:w-auto">
           編集
         </Link>
+        <a href="#check-cadence" className="nc-btn-ghost w-full sm:w-auto">
+          記録の間隔
+        </a>
       </div>
 
       <AnimalCodeBlock
@@ -149,6 +182,30 @@ export default async function AnimalDetailPage({
         className={`${card} bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb]`}
         codeClassName="mt-2 font-mono text-3xl font-semibold tracking-wide text-ink sm:text-5xl"
       />
+
+      <section id="check-cadence" className={card}>
+        <h2 className="text-lg font-semibold tracking-tight">クレスチェックの間隔</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          この個体だけの記録ペースです。毎週・2週間ごと・1ヶ月ごと・カスタムから選べます。
+        </p>
+        <MutationForm action={updateCadence} className="mt-4 grid gap-3">
+          <CheckCadenceFields defaultDays={animal.checkEveryDays} />
+          <PendingSubmitButton pendingLabel="保存しています…" className="nc-btn w-full sm:w-auto">
+            間隔を保存
+          </PendingSubmitButton>
+        </MutationForm>
+      </section>
+
+      {reminder ? (
+        <section
+          className={`${card} ${reminder.due ? "bg-[#fff6e8]" : "bg-[#eef6f1]"}`}
+        >
+          <p className="text-sm text-ink/50">クレスチェック</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight">{reminder.headline}</p>
+          <p className="mt-2 text-sm leading-6 text-muted">{reminder.body}</p>
+          <p className="mt-2 text-xs text-muted">目安：{reminder.cadenceLabel}</p>
+        </section>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-[1.75rem] bg-[#eef6f1] p-5 text-ink sm:p-6">
@@ -171,6 +228,71 @@ export default async function AnimalDetailPage({
           <p className="mt-2 text-sm text-muted">日本国内の近い条件の平均</p>
         </Link>
       </div>
+
+      {justRecorded || change ? (
+        <section className={`${card} bg-[#fff6e8]`}>
+          <p className="text-sm text-ink/50">
+            {justRecorded ? "記録しました" : "前回との変化"}
+          </p>
+          {change ? (
+            <>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-ink/50">前回</p>
+                  <p className="mt-1 text-3xl font-semibold tabular-nums">
+                    {formatGrams(change.previous.weightG)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">{change.previous.weighedOn}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-ink/50">今回</p>
+                  <p className="mt-1 text-3xl font-semibold tabular-nums">
+                    {formatGrams(change.current.weightG)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">{change.current.weighedOn}</p>
+                </div>
+              </div>
+              <p className="mt-4 text-3xl font-semibold tabular-nums">
+                {formatDeltaGrams(change.deltaG)}
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                {change.daysBetween == null
+                  ? "前回からの日数はまだ計算できません"
+                  : `前回から${change.daysBetween}日`}
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 text-sm leading-6 text-muted">
+              最初の記録です。次に測ると、増えたか減ったかが分かります。
+            </p>
+          )}
+        </section>
+      ) : null}
+
+      {monthReport ? (
+        <section className={`${card} bg-[#e7f3fb]`}>
+          <p className="text-sm text-ink/50">月ごとの成長</p>
+          <h2 className="mt-2 text-lg font-semibold tracking-tight">{monthReport.label}</h2>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-ink/50">月初</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {formatGrams(monthReport.startG)}
+              </p>
+            </div>
+            <div>
+              <p className="text-ink/50">月末</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {formatGrams(monthReport.endG)}
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-2xl font-semibold tabular-nums">
+            {formatDeltaGrams(monthReport.deltaG)}
+          </p>
+          <p className="mt-2 text-sm text-muted">記録回数 {monthReport.count}回</p>
+        </section>
+      ) : null}
 
       <section className={card}>
         <h2 className="text-lg font-semibold tracking-tight">体重・成長</h2>
@@ -197,25 +319,66 @@ export default async function AnimalDetailPage({
             記録する
           </PendingSubmitButton>
         </MutationForm>
-        {weights.length > 0 ? (
-          <ul className="mt-4 divide-y divide-line text-sm">
-            {[...weights].reverse().map((row) => {
-              const remove = deleteWeight.bind(null, animal.id, row.id);
+      </section>
+
+      <section className={card}>
+        <h2 className="text-lg font-semibold tracking-tight">成長アルバム</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          日付と体重を、古い順に並べています。
+        </p>
+        {animal.photoUrl ? (
+          <div className="mt-4 overflow-hidden rounded-[1.25rem] bg-[#f6f3f8]">
+            <AnimalPhoto
+              src={animal.photoUrl}
+              alt={animal.name}
+              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
+            />
+            {latest ? (
+              <p className="px-4 py-3 text-sm text-ink/70">
+                {latest.weighedOn} / {formatGrams(latest.weightG)}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        {album.length > 0 ? (
+          <ol className="mt-4">
+            {album.map((step, index) => {
+              const remove = deleteWeight.bind(null, animal.id, step.log.id);
               return (
-                <li key={row.id} className="flex items-center justify-between gap-3 py-3">
-                  <span>
-                    {row.weighedOn} / {row.weightG.toFixed(1)}g
-                  </span>
-                  <MutationForm action={remove}>
-                    <PendingSubmitButton pendingLabel="削除中…" className="nc-btn-danger">
-                      削除
-                    </PendingSubmitButton>
-                  </MutationForm>
+                <li key={step.log.id} className="flex flex-col">
+                  {index > 0 ? (
+                    <p className="py-1 text-center text-ink/30" aria-hidden>
+                      ↓
+                    </p>
+                  ) : null}
+                  <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#f6f3f8] px-4 py-3">
+                    <div>
+                      <p className="text-2xl font-semibold tabular-nums">
+                        {formatGrams(step.log.weightG)}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">{step.log.weighedOn}</p>
+                      {step.deltaG != null ? (
+                        <p className="mt-1 text-sm text-ink/70">
+                          {formatDeltaGrams(step.deltaG)}
+                          {step.daysSincePrev != null
+                            ? ` / ${step.daysSincePrev}日`
+                            : ""}
+                        </p>
+                      ) : null}
+                    </div>
+                    <MutationForm action={remove}>
+                      <PendingSubmitButton pendingLabel="削除中…" className="nc-btn-danger">
+                        削除
+                      </PendingSubmitButton>
+                    </MutationForm>
+                  </div>
                 </li>
               );
             })}
-          </ul>
-        ) : null}
+          </ol>
+        ) : (
+          <p className="mt-4 text-sm text-muted">まだ体重記録がありません。</p>
+        )}
       </section>
 
       <section>

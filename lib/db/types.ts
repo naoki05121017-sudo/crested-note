@@ -110,6 +110,8 @@ export type AnimalRecord = {
   isPublic: boolean;
   shareSlug: string;
   prefecture: string;
+  /** Days between weight checks. Omitted on older rows. */
+  checkEveryDays?: number;
   createdAt: string;
   updatedAt: string;
 };

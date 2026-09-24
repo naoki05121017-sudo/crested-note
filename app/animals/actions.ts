@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import {
   parseAnimalStatus,
@@ -22,6 +23,7 @@ import { parentSexAssignmentError } from "@/lib/db/parent-sex";
 import { replaceGenes } from "@/lib/db/genes";
 import { getAnimal } from "@/lib/db/queries";
 import { mutateDb, newId, newSlug } from "@/lib/db/store";
+import { parseCheckEveryDays } from "@/lib/care/check-cadence";
 import type { AnimalRecord } from "@/lib/db/types";
 
 function parseAnimalFields(formData: FormData, existing?: AnimalRecord) {
@@ -31,6 +33,10 @@ function parseAnimalFields(formData: FormData, existing?: AnimalRecord) {
   }
   const isPublic = formData.get("isPublic") === "on";
   const traits = parseTraits(formData);
+  const cadence = parseCheckEveryDays(formData, existing?.checkEveryDays);
+  if (cadence.error !== null) {
+    return { error: cadence.error };
+  }
   return {
     error: null,
     data: {
@@ -48,8 +54,20 @@ function parseAnimalFields(formData: FormData, existing?: AnimalRecord) {
       isPublic,
       shareSlug: existing?.shareSlug || (isPublic ? newSlug() : ""),
       genotype: parseGenotype(formData),
+      checkEveryDays: cadence.days,
     },
   };
+}
+
+function applyCheckEveryDays(
+  record: AnimalRecord,
+  days: number | undefined,
+) {
+  if (days == null) {
+    delete record.checkEveryDays;
+    return;
+  }
+  record.checkEveryDays = days;
 }
 
 async function photoUrlFromForm(animalId: string, formData: FormData, existing = "") {
@@ -72,9 +90,10 @@ async function photoUrlFromForm(animalId: string, formData: FormData, existing =
 
 export async function createAnimal(formData: FormData) {
   const parsed = parseAnimalFields(formData);
-  if (parsed.error) {
-    return actionError(parsed.error);
+  if (parsed.error || !parsed.data) {
+    return actionError(parsed.error ?? "登録できませんでした。");
   }
+  const fields = parsed.data;
 
   const id = newId();
   const stamp = nowIso();
@@ -88,36 +107,37 @@ export async function createAnimal(formData: FormData) {
     await mutateDb((db) => {
       const parentError = parentSexAssignmentError(
         db.animals,
-        parsed.data.sireId,
-        parsed.data.damId,
+        fields.sireId,
+        fields.damId,
       );
       if (parentError) throw new Error(parentError);
       const record: AnimalRecord = {
         id,
         crestLinkId: "",
         code: issueAnimalCode(db),
-        name: parsed.data.name,
-        sex: parsed.data.sex,
-        hatchDate: parsed.data.hatchDate,
-        status: parsed.data.status,
-        sireId: parsed.data.sireId,
-        damId: parsed.data.damId,
-        morphLabel: parsed.data.morphLabel,
-        traits: parsed.data.traits,
-        traitLevels: parsed.data.traitLevels,
-        notes: parsed.data.notes,
+        name: fields.name,
+        sex: fields.sex,
+        hatchDate: fields.hatchDate,
+        status: fields.status,
+        sireId: fields.sireId,
+        damId: fields.damId,
+        morphLabel: fields.morphLabel,
+        traits: fields.traits,
+        traitLevels: fields.traitLevels,
+        notes: fields.notes,
         photoUrl: photo.photoUrl,
-        prefecture: parsed.data.prefecture || db.settings.prefecture,
-        isPublic: parsed.data.isPublic,
-        shareSlug: parsed.data.isPublic
-          ? parsed.data.shareSlug || newSlug()
-          : parsed.data.shareSlug,
+        prefecture: fields.prefecture || db.settings.prefecture,
+        checkEveryDays: fields.checkEveryDays,
+        isPublic: fields.isPublic,
+        shareSlug: fields.isPublic
+          ? fields.shareSlug || newSlug()
+          : fields.shareSlug,
         createdAt: stamp,
         updatedAt: stamp,
       };
       db.animals.push(record);
       issueCrestLinkForAnimal(db, id);
-      db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
+      db.genes = replaceGenes(db.genes, id, fields.genotype);
     });
   } catch (error) {
     if (uploaded) {
@@ -137,11 +157,12 @@ export async function updateAnimal(id: string, formData: FormData) {
   }
 
   const parsed = parseAnimalFields(formData, existing);
-  if (parsed.error) {
-    return actionError(parsed.error);
+  if (parsed.error || !parsed.data) {
+    return actionError(parsed.error ?? "保存できませんでした。");
   }
+  const fields = parsed.data;
 
-  if (parsed.data.sireId === id || parsed.data.damId === id) {
+  if (fields.sireId === id || fields.damId === id) {
     return actionError("自分自身を親にはできません。");
   }
 
@@ -158,29 +179,30 @@ export async function updateAnimal(id: string, formData: FormData) {
       if (!record) return;
       const parentError = parentSexAssignmentError(
         db.animals,
-        parsed.data.sireId,
-        parsed.data.damId,
+        fields.sireId,
+        fields.damId,
         { sireId: existing.sireId, damId: existing.damId },
       );
       if (parentError) throw new Error(parentError);
-      record.name = parsed.data.name;
-      record.sex = parsed.data.sex;
-      record.hatchDate = parsed.data.hatchDate;
-      record.status = parsed.data.status;
-      record.sireId = parsed.data.sireId;
-      record.damId = parsed.data.damId;
-      record.morphLabel = parsed.data.morphLabel;
-      record.traits = parsed.data.traits;
-      record.traitLevels = parsed.data.traitLevels;
-      record.notes = parsed.data.notes;
+      record.name = fields.name;
+      record.sex = fields.sex;
+      record.hatchDate = fields.hatchDate;
+      record.status = fields.status;
+      record.sireId = fields.sireId;
+      record.damId = fields.damId;
+      record.morphLabel = fields.morphLabel;
+      record.traits = fields.traits;
+      record.traitLevels = fields.traitLevels;
+      record.notes = fields.notes;
       record.photoUrl = photo.photoUrl;
-      record.prefecture = parsed.data.prefecture;
-      record.isPublic = parsed.data.isPublic;
-      if (parsed.data.isPublic && !record.shareSlug) {
+      record.prefecture = fields.prefecture;
+      applyCheckEveryDays(record, fields.checkEveryDays);
+      record.isPublic = fields.isPublic;
+      if (fields.isPublic && !record.shareSlug) {
         record.shareSlug = newSlug();
       }
       record.updatedAt = nowIso();
-      db.genes = replaceGenes(db.genes, id, parsed.data.genotype);
+      db.genes = replaceGenes(db.genes, id, fields.genotype);
       syncCrestLinkParents(db, id);
     });
     await discardPreviousAnimalPhoto(previousPhotoUrl, photo.photoUrl, id).catch(
@@ -261,8 +283,33 @@ export async function addWeight(animalId: string, formData: FormData) {
     return actionError(error, "記録できませんでした。");
   }
 
-  revalidateApp(`/animals/${animalId}`);
-  return actionOk(`/animals/${animalId}`);
+  revalidateApp("/", `/animals/${animalId}`);
+  return actionOk(`/animals/${animalId}?recorded=1`);
+}
+
+export async function updateCheckCadence(id: string, formData: FormData) {
+  const existing = await getAnimal(id);
+  if (!existing) {
+    return actionError("個体が見つかりません。");
+  }
+  const cadence = parseCheckEveryDays(formData, existing.checkEveryDays);
+  if (cadence.error !== null) {
+    return actionError(cadence.error);
+  }
+
+  try {
+    await mutateDb((db) => {
+      const record = db.animals.find((animal) => animal.id === id);
+      if (!record) return;
+      applyCheckEveryDays(record, cadence.days);
+      record.updatedAt = nowIso();
+    });
+  } catch (error) {
+    return actionError(error, "保存できませんでした。");
+  }
+
+  revalidateApp("/", `/animals/${id}`);
+  redirect(`/animals/${id}#check-cadence`);
 }
 
 export async function deleteWeight(animalId: string, weightId: string) {
