@@ -4,6 +4,7 @@ import { FeedbackForm } from "@/app/settings/feedback-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, Notice, PageHeader } from "@/app/components/ui";
+import { LegalNav } from "@/app/components/legal-nav";
 import { getSettings } from "@/lib/db/queries";
 import { PREFECTURES } from "@/lib/db/labels";
 
@@ -84,6 +85,11 @@ export default async function SettingsPage({
         <div className={sent ? "mt-4" : ""}>
           <FeedbackForm />
         </div>
+      </Card>
+
+      <Card>
+        <h2 className="mb-4 text-lg font-semibold">規約・表記</h2>
+        <LegalNav className="justify-start text-sm text-ink" />
       </Card>
     </div>
   );

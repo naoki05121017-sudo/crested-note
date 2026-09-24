@@ -13,6 +13,7 @@ import {
   IconGecko,
   IconHome,
 } from "@/app/components/icons";
+import { LegalNav } from "@/app/components/legal-nav";
 
 const groups = [
   {
@@ -149,6 +150,12 @@ export function AppShell({
           </div>
         </header>
         <main className="mx-auto w-full max-w-4xl px-4 py-8">{children}</main>
+        <footer className="mx-auto w-full max-w-4xl px-4 pb-10 text-center text-xs leading-5 text-muted">
+          クレスノート
+          <br />
+          by N.crest
+          <LegalNav className="mt-3" />
+        </footer>
       </div>
     );
   }
@@ -171,6 +178,7 @@ export function AppShell({
           <div className="mt-8 overflow-y-auto pb-8">
             <NavLinks />
             <AuthFooter email={email} />
+            <LegalNav className="mt-6 px-3 justify-start text-muted" />
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -206,6 +214,7 @@ export function AppShell({
             クレスノート
             <br />
             by N.crest
+            <LegalNav className="mt-3" />
           </footer>
         </div>
       </div>

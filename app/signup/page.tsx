@@ -1,6 +1,7 @@
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, PageHeader } from "@/app/components/ui";
+import { LegalNav } from "@/app/components/legal-nav";
 import { signUp } from "@/app/auth/actions";
 import Link from "next/link";
 
@@ -40,6 +41,17 @@ export default function SignupPage() {
             登録する
           </PendingSubmitButton>
         </MutationForm>
+        <p className="mt-4 text-sm leading-6 text-muted">
+          登録すると
+          <Link href="/legal/terms" className="underline">
+            利用規約
+          </Link>
+          および
+          <Link href="/legal/privacy" className="underline">
+            プライバシーポリシー
+          </Link>
+          に同意したものとみなします。
+        </p>
         <p className="mt-4 text-sm text-muted">
           すでにアカウントがある場合は{" "}
           <Link href="/login" className="underline">
@@ -47,6 +59,7 @@ export default function SignupPage() {
           </Link>
         </p>
       </Card>
+      <LegalNav className="max-w-md justify-start text-muted" />
     </div>
   );
 }

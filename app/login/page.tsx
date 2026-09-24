@@ -1,6 +1,7 @@
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, PageHeader } from "@/app/components/ui";
+import { LegalNav } from "@/app/components/legal-nav";
 import { signIn } from "@/app/auth/actions";
 import Link from "next/link";
 
@@ -56,6 +57,7 @@ export default async function LoginPage({
           </Link>
         </p>
       </Card>
+      <LegalNav className="max-w-md justify-start text-muted" />
     </div>
   );
 }

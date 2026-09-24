@@ -3,7 +3,7 @@ export function idsToDelete(existing: string[], keep: string[]): string[] {
   return existing.filter((id) => Boolean(id) && !keepSet.has(id));
 }
 
-const PUBLIC_PREFIXES = ["/login", "/signup", "/p/", "/auth/"];
+const PUBLIC_PREFIXES = ["/login", "/signup", "/p/", "/auth/", "/legal/"];
 
 export function isPublicAppPath(pathname: string): boolean {
   if (pathname === "/login" || pathname === "/signup") return true;
