@@ -1,9 +1,17 @@
-export const CREST_BRAND_PHOTO = "/brand/home-crest.jpg";
+import Image from "next/image";
+import crestPhoto from "@/app/brand/home-crest.png";
 
 export function CrestPhoto() {
   return (
     <div className="nc-crest-photo" aria-hidden="true">
-      <img src={CREST_BRAND_PHOTO} alt="" className="nc-crest-photo-img" />
+      <Image
+        src={crestPhoto}
+        alt=""
+        fill
+        sizes="(max-width: 640px) 80vw, 50vw"
+        priority
+        className="nc-crest-photo-img"
+      />
     </div>
   );
 }

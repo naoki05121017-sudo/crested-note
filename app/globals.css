@@ -192,26 +192,23 @@ body {
   pointer-events: none;
   position: absolute;
   z-index: 0;
-  top: -12%;
-  right: -22%;
-  bottom: -18%;
-  left: 32%;
+  top: -8%;
+  right: -16%;
+  bottom: -12%;
+  left: 34%;
 }
 
 .nc-crest-photo-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 72% 22%;
-  opacity: 0.58;
-  filter: saturate(0.88) brightness(0.7) contrast(1.04);
+  object-fit: cover !important;
+  object-position: 74% 22% !important;
+  opacity: 0.78;
+  filter: saturate(0.92) brightness(0.9) contrast(1.02);
   -webkit-mask-image:
-    linear-gradient(to left, rgba(0, 0, 0, 0.95) 12%, rgba(0, 0, 0, 0.45) 48%, transparent 86%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.85) 16%, rgba(0, 0, 0, 0.8) 70%, transparent 100%);
+    linear-gradient(to left, rgba(0, 0, 0, 0.98) 14%, rgba(0, 0, 0, 0.55) 50%, transparent 90%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 14%, rgba(0, 0, 0, 0.88) 72%, transparent 100%);
   mask-image:
-    linear-gradient(to left, rgba(0, 0, 0, 0.95) 12%, rgba(0, 0, 0, 0.45) 48%, transparent 86%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.85) 16%, rgba(0, 0, 0, 0.8) 70%, transparent 100%);
+    linear-gradient(to left, rgba(0, 0, 0, 0.98) 14%, rgba(0, 0, 0, 0.55) 50%, transparent 90%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.92) 14%, rgba(0, 0, 0, 0.88) 72%, transparent 100%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
@@ -246,7 +243,7 @@ body {
   display: block;
   width: 2.05rem;
   height: auto;
-  margin: 0 auto 0.28rem;
+  margin: 0 auto 0.08rem;
   filter: drop-shadow(0 1px 6px rgba(61, 95, 134, 0.35));
 }
 
@@ -274,16 +271,16 @@ body {
 }
 
 .nc-login-stage .nc-crest-photo {
-  top: -8%;
-  right: -18%;
+  top: -6%;
+  right: -20%;
   bottom: auto;
-  left: 28%;
-  height: 14.5rem;
+  left: 36%;
+  height: 13.25rem;
 }
 
 .nc-login-stage .nc-crest-photo-img {
-  opacity: 0.5;
-  object-position: 70% 18%;
+  opacity: 0.38;
+  object-position: 76% 20% !important;
 }
 
 @media (min-width: 640px) {
