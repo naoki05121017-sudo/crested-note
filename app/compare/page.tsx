@@ -77,6 +77,7 @@ export default async function ComparePage({
                   ? "—"
                   : `${comparison.mineWeight.toFixed(1)}g`
               }
+              tone="ink"
             />
             <Stat
               label="同条件の平均"
@@ -86,6 +87,7 @@ export default async function ComparePage({
                   : `${comparison.average.toFixed(1)}g`
               }
               hint={`n=${comparison.sampleSize}`}
+              tone="mist"
             />
             <Stat
               label="平均との差"
@@ -95,6 +97,7 @@ export default async function ComparePage({
                   : `${comparison.diff > 0 ? "+" : ""}${comparison.diff.toFixed(1)}g`
               }
               hint={comparison.tone}
+              tone="sage"
             />
           </div>
           <p className="text-sm text-muted">

@@ -6,10 +6,11 @@ import {
 import { Notice, SectionTitle } from "@/app/components/ui";
 
 const tints = [
+  "nc-card-ink",
   "bg-[#fde8ef]",
   "bg-[#e7f3fb]",
   "bg-[#eef6f1]",
-  "bg-[#f3eef8]",
+  "bg-[#ece6fb]",
 ];
 
 export function PairingResults({ result }: { result: PairingResult }) {
@@ -41,27 +42,30 @@ export function PairingResults({ result }: { result: PairingResult }) {
       <div>
         <SectionTitle hint="確率の高い順">予想される子</SectionTitle>
         <ul className="grid gap-3">
-          {result.outcomes.map((outcome, index) => (
+          {result.outcomes.map((outcome, index) => {
+            const dark = index % 5 === 0;
+            return (
             <li
               key={outcome.phenotype}
               className={`rounded-[1.75rem] px-5 py-5 ${tints[index % tints.length]}`}
             >
-              <p className="text-base font-medium leading-6 sm:text-lg">
+              <p className={`text-base font-medium leading-6 sm:text-lg ${dark ? "text-white" : ""}`}>
                 {outcome.phenotype}
               </p>
-              <p className="mt-3 text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl">
+              <p className={`mt-3 text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl ${dark ? "text-white" : ""}`}>
                 {formatProbability(outcome.probability)}
               </p>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/70">
+              <div className={`mt-3 h-2 overflow-hidden rounded-full ${dark ? "bg-white/15" : "bg-white/70"}`}>
                 <div
-                  className="h-full rounded-full bg-ink/75"
+                  className={`h-full rounded-full ${dark ? "bg-white" : "bg-ink/75"}`}
                   style={{
                     width: `${Math.min(100, Math.max(0, outcome.probability * 100))}%`,
                   }}
                 />
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
 

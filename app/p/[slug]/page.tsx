@@ -22,15 +22,19 @@ export default async function PublicAnimalPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
+      <div className="nc-hero">
+        <p className="nc-hero-kicker text-[11px] tracking-[0.22em] uppercase">
           PUBLIC ANIMAL
         </p>
-        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
+        <h1 className="nc-hero-title mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           {animal.name}
         </h1>
         <div className="mt-4">
-          <AnimalCodeBlock code={animal.code} />
+          <AnimalCodeBlock
+            code={animal.code}
+            className="rounded-[1.35rem] border border-white/15 bg-white/8 px-4 py-4"
+            codeClassName="mt-1 font-mono text-2xl font-semibold tracking-wide text-white sm:text-3xl"
+          />
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Badge tone={animal.sex === "female" ? "blush" : "mist"}>

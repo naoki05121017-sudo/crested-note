@@ -17,8 +17,8 @@ export default async function StatsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Stat label="登録個体" value={stats.registered} />
-        <Stat label="飼育中" value={stats.living} />
+        <Stat label="登録個体" value={stats.registered} tone="ink" />
+        <Stat label="飼育中" value={stats.living} tone="blush" />
         <Stat
           label="最新体重の平均"
           value={
@@ -27,6 +27,7 @@ export default async function StatsPage() {
               : `${stats.meanLatestWeight.toFixed(1)}g`
           }
           hint={`n=${stats.weightSample}`}
+          tone="mist"
         />
       </div>
 
@@ -63,7 +64,7 @@ export default async function StatsPage() {
         </ul>
       </Card>
 
-      <Card>
+      <Card tone="lilac">
         <SectionTitle>モルフの内訳</SectionTitle>
         {stats.morphs.length === 0 ? (
           <p className="text-sm text-muted">まだ集計できる個体がありません。</p>

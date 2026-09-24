@@ -25,13 +25,13 @@ export default async function AnimalsPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="nc-hero flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Collection</p>
-          <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+          <p className="nc-hero-kicker text-[11px] tracking-[0.22em] uppercase">Collection</p>
+          <h1 className="nc-hero-title mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
             個体
           </h1>
-          <p className="mt-3 text-sm leading-7 text-muted">
+          <p className="nc-hero-copy mt-3 text-sm leading-7">
             登録・検索・絞り込み。詳細から体重・血統・公開リンクも管理できます。
           </p>
         </div>
@@ -42,7 +42,7 @@ export default async function AnimalsPage({
 
       <form
         action="/animals"
-        className="grid gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
+        className="grid gap-3 rounded-[1.75rem] bg-[#fde8ef] p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
       >
         <input
           name="q"
@@ -125,9 +125,9 @@ export default async function AnimalsPage({
                           .join(" / ")}
                       </p>
                     ) : null}
-                    <div className="mt-4 flex items-end justify-between gap-3">
+                    <div className="mt-4 flex items-end justify-between gap-3 rounded-[1.15rem] bg-[#17141c] px-3 py-3 text-white">
                       <div>
-                        <p className="text-xs text-muted">体重</p>
+                        <p className="text-xs text-white/45">体重</p>
                         <p className="text-2xl font-semibold tabular-nums">
                           {latest ? `${latest.weightG}g` : "—"}
                         </p>

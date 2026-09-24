@@ -90,12 +90,12 @@ export function HomeDashboard({
 
   return (
     <div className="flex flex-col gap-8">
-      <HomeCard className="overflow-hidden bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb]">
-        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Welcome</p>
-        <h1 className="mt-2 max-w-xl text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
+      <section className="nc-hero">
+        <p className="nc-hero-kicker text-[11px] tracking-[0.22em] uppercase">Welcome</p>
+        <h1 className="nc-hero-title mt-2 max-w-xl text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           {collectionName}
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-7 text-ink/60">
+        <p className="nc-hero-copy mt-3 max-w-xl text-sm leading-7">
           クレスとともに、もっと楽しく、もっと深く。
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ export function HomeDashboard({
             遺伝計算
           </Link>
         </div>
-      </HomeCard>
+      </section>
 
       <div>
         <div className="mb-4 flex items-end justify-between gap-3">
@@ -159,42 +159,42 @@ export function HomeDashboard({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <HomeCard>
+        <section className="nc-hero">
           <div className="mb-4 flex items-end justify-between gap-3">
-            <h2 className="text-lg font-semibold tracking-tight">全国個体比較</h2>
-            <Link href="/compare" className="text-sm text-muted underline-offset-2 hover:underline">
+            <h2 className="text-lg font-semibold tracking-tight text-white">全国個体比較</h2>
+            <Link href="/compare" className="text-sm text-white/50 underline-offset-2 hover:underline">
               開く
             </Link>
           </div>
           {compare ? (
             <div>
-              <p className="text-sm text-muted">{compare.name}</p>
+              <p className="nc-hero-copy text-sm">{compare.name}</p>
               <div className="mt-4 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-ink/50">あなたの個体</p>
-                  <p className="mt-1 text-3xl font-semibold tabular-nums">
+                  <p className="text-sm text-white/45">あなたの個体</p>
+                  <p className="mt-1 text-3xl font-semibold tabular-nums text-white">
                     {compare.mineWeight === null ? "—" : `${compare.mineWeight.toFixed(1)}g`}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-ink/50">同条件の平均</p>
-                  <p className="mt-1 text-3xl font-semibold tabular-nums">
+                  <p className="text-sm text-white/45">同条件の平均</p>
+                  <p className="mt-1 text-3xl font-semibold tabular-nums text-white">
                     {compare.average === null ? "—" : `${compare.average.toFixed(1)}g`}
                   </p>
-                  <p className="mt-1 text-xs text-muted">n={compare.sampleSize}</p>
+                  <p className="mt-1 text-xs text-white/40">n={compare.sampleSize}</p>
                 </div>
               </div>
-              <p className="mt-3 text-sm text-muted">{compare.tone}</p>
+              <p className="nc-hero-copy mt-3 text-sm">{compare.tone}</p>
               <Link href={compare.href} className="nc-btn-ghost mt-4">
                 この個体で比較
               </Link>
             </div>
           ) : (
-            <p className="text-sm text-muted">体重を記録した個体があると、公開個体の平均と比べられます。</p>
+            <p className="nc-hero-copy text-sm">体重を記録した個体があると、公開個体の平均と比べられます。</p>
           )}
-        </HomeCard>
+        </section>
 
-        <HomeCard>
+        <HomeCard className="border-transparent bg-[#eef6f1]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">日本のクレス統計</h2>
             <Link href="/stats" className="text-sm text-muted underline-offset-2 hover:underline">
@@ -241,7 +241,7 @@ export function HomeDashboard({
           )}
         </HomeCard>
 
-        <HomeCard>
+        <HomeCard className="border-transparent bg-[#e7f3fb]">
           <h2 className="mb-4 text-lg font-semibold tracking-tight">近日の孵化予定</h2>
           {upcomingHatches.length === 0 ? (
             <p className="text-sm text-muted">予定日が入っている卵はありません。</p>
@@ -295,16 +295,13 @@ export function HomeDashboard({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Link
-          href="/calculator"
-          className="rounded-[1.75rem] bg-[#ece6fb] p-6"
-        >
-          <h2 className="text-lg font-semibold">遺伝計算</h2>
-          <p className="mt-2 text-sm leading-6 text-ink/60">
+        <Link href="/calculator" className="nc-hero block">
+          <h2 className="text-lg font-semibold text-white">遺伝計算</h2>
+          <p className="nc-hero-copy mt-2 text-sm leading-6">
             ペアの遺伝を計算します。
           </p>
         </Link>
-        <Link href="/breedings" className="rounded-[1.75rem] bg-[#e7f6ee] p-6">
+        <Link href="/breedings" className="block rounded-[1.75rem] bg-[#e7f6ee] p-6">
           <h2 className="text-lg font-semibold">ブリード</h2>
           <p className="mt-2 text-sm leading-6 text-ink/60">
             ペアと卵の記録へ進みます。

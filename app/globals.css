@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fbfafc;
-  --foreground: #1c1917;
+  --background: #f7f4f2;
+  --foreground: #17141c;
   --surface: #ffffff;
   --muted: #6d675f;
-  --line: #ece6dc;
-  --ink: #1c1917;
+  --line: #e8e1d8;
+  --ink: #17141c;
   --accent: #d9efe6;
   --accent-strong: #6f9d88;
   --blush: #f6dfd8;
@@ -46,9 +46,10 @@ a:active {
 html,
 body {
   background:
-    radial-gradient(900px 380px at 12% -8%, rgba(253, 232, 239, 0.7), transparent 52%),
-    radial-gradient(800px 360px at 100% 0%, rgba(231, 243, 251, 0.65), transparent 48%),
-    #fbfafc;
+    radial-gradient(720px 340px at 8% -6%, rgba(253, 232, 239, 0.78), transparent 55%),
+    radial-gradient(640px 300px at 100% 0%, rgba(231, 243, 251, 0.72), transparent 50%),
+    radial-gradient(500px 240px at 50% 100%, rgba(23, 20, 28, 0.05), transparent 55%),
+    #f7f4f2;
   color: var(--foreground);
 }
 
@@ -93,7 +94,7 @@ body {
 }
 
 .nc-btn:hover {
-  background: #2a2623;
+  background: #2a2433;
 }
 
 .nc-btn:active,
@@ -131,6 +132,63 @@ body {
   color: var(--danger);
   background: transparent;
   text-decoration: underline;
+}
+
+.nc-hero {
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(420px 180px at 90% -20%, rgba(246, 223, 216, 0.26), transparent 55%),
+    radial-gradient(280px 160px at 0% 120%, rgba(111, 157, 136, 0.18), transparent 50%),
+    linear-gradient(155deg, #2a2433 0%, #17141c 55%, #121018 100%);
+  color: #f7f4f2;
+  padding: 1.35rem 1.35rem 1.5rem;
+  box-shadow: 0 16px 36px rgba(23, 20, 28, 0.2);
+}
+
+@media (min-width: 640px) {
+  .nc-hero {
+    padding: 1.7rem 1.85rem 1.85rem;
+  }
+}
+
+.nc-hero h1,
+.nc-hero .nc-hero-title {
+  color: #fff;
+}
+
+.nc-hero .nc-hero-kicker {
+  color: rgba(247, 244, 242, 0.42);
+}
+
+.nc-hero .nc-hero-copy,
+.nc-hero .text-muted {
+  color: rgba(247, 244, 242, 0.62);
+}
+
+.nc-hero .nc-btn {
+  background: #fff;
+  color: #17141c;
+}
+
+.nc-hero .nc-btn:hover {
+  background: #f3eadc;
+}
+
+.nc-hero .nc-btn-ghost {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.nc-hero .nc-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.nc-card-ink {
+  border-color: transparent;
+  background: #17141c;
+  color: #f7f4f2;
+  box-shadow: 0 16px 36px rgba(23, 20, 28, 0.18);
 }
 
 .nc-table {

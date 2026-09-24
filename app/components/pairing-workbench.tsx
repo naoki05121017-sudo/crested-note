@@ -452,8 +452,8 @@ export function PairingWorkbench({
         />
       </div>
 
-      <div>
-        <p className="mb-3 text-[11px] tracking-[0.2em] text-ink/40 uppercase">
+      <div className="nc-hero">
+        <p className="nc-hero-kicker mb-3 text-[11px] tracking-[0.2em] uppercase">
           3. 計算する
         </p>
         <button
@@ -524,7 +524,7 @@ export function PairingWorkbench({
           </MutationForm>
         </>
       ) : (
-        <p className="rounded-[1.75rem] border border-line bg-white px-5 py-6 text-sm leading-6 text-muted shadow-[0_10px_28px_rgba(23,20,28,0.05)]">
+        <p className="rounded-[1.75rem] bg-[#ece6fb] px-5 py-6 text-sm leading-6 text-ink/65">
           親♂・親♀と遺伝形質を設定して「遺伝を計算する」を押すと、予想される子の見た目と確率が表示されます。
         </p>
       )}

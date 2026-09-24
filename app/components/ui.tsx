@@ -1,6 +1,19 @@
 import Link from "next/link";
 import { BrandMark } from "@/app/components/icons";
 
+const cardBase =
+  "rounded-[1.75rem] p-5 sm:p-6";
+
+const cardTones = {
+  white:
+    "border border-line bg-white shadow-[0_10px_28px_rgba(23,20,28,0.05)]",
+  ink: "nc-card-ink",
+  blush: "border-transparent bg-[#fde8ef]",
+  mist: "border-transparent bg-[#e7f3fb]",
+  sage: "border-transparent bg-[#eef6f1]",
+  lilac: "border-transparent bg-[#ece6fb]",
+};
+
 export function PageHeader({
   kicker,
   title,
@@ -13,18 +26,18 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="nc-hero flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-2xl">
         {kicker ? (
-          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
+          <p className="nc-hero-kicker text-[11px] tracking-[0.22em] uppercase">
             {kicker}
           </p>
         ) : null}
-        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+        <h1 className="nc-hero-title mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
           {title}
         </h1>
         {description ? (
-          <p className="mt-3 text-sm leading-7 text-muted sm:text-[0.95rem]">
+          <p className="nc-hero-copy mt-3 text-sm leading-7 sm:text-[0.95rem]">
             {description}
           </p>
         ) : null}
@@ -39,14 +52,14 @@ export function PageHeader({
 export function Card({
   children,
   className = "",
+  tone = "white",
 }: {
   children: React.ReactNode;
   className?: string;
+  tone?: keyof typeof cardTones;
 }) {
   return (
-    <section
-      className={`rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6 ${className}`}
-    >
+    <section className={`${cardBase} ${cardTones[tone]} ${className}`}>
       {children}
     </section>
   );
@@ -95,29 +108,28 @@ export function Stat({
   value,
   hint,
   href,
+  tone = "white",
 }: {
   label: string;
   value: string | number;
   hint?: string;
   href?: string;
+  tone?: keyof typeof cardTones;
 }) {
+  const muted = tone === "ink" ? "text-white/50" : "text-muted";
   const inner = (
     <>
-      <p className="text-sm text-muted">{label}</p>
+      <p className={`text-sm ${muted}`}>{label}</p>
       <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
         {value}
       </p>
-      {hint ? <p className="mt-2 text-sm text-muted">{hint}</p> : null}
+      {hint ? <p className={`mt-2 text-sm ${muted}`}>{hint}</p> : null}
     </>
   );
-  const className =
-    "rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)]";
+  const className = `${cardBase} ${cardTones[tone]}`;
   if (href) {
     return (
-      <Link
-        href={href}
-        className={`${className} block transition hover:-translate-y-0.5 hover:border-accent-strong/50`}
-      >
+      <Link href={href} className={`${className} block`}>
         {inner}
       </Link>
     );
@@ -135,12 +147,12 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Card className="py-14 text-center">
+    <Card tone="blush" className="py-14 text-center">
       <div className="mx-auto mb-4 flex justify-center">
         <BrandMark size={48} />
       </div>
       <p className="text-lg font-semibold">{title}</p>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">{body}</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink/55">{body}</p>
       {action ? <div className="mt-6 flex justify-center">{action}</div> : null}
     </Card>
   );

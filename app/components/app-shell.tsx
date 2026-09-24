@@ -235,7 +235,7 @@ export function AppShell({
               <AuthFooter email={email} />
             </div>
           ) : null}
-          <main className="flex-1 px-4 py-8 sm:px-8">{children}</main>
+          <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
           <footer className="px-4 pb-10 text-center text-xs leading-5 text-muted sm:px-8">
             クレスノート
             <br />
