@@ -1,5 +1,6 @@
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
+import { CrestPhoto } from "@/app/components/crest-photo";
 import { Card, PageHeader } from "@/app/components/ui";
 import { LegalNav } from "@/app/components/legal-nav";
 import { signIn } from "@/app/auth/actions";
@@ -18,13 +19,15 @@ export default async function LoginPage({
   const check = params.check === "1";
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageHeader
-        kicker="ACCOUNT"
-        title="ログイン"
-        description="自分の個体だけが見えます。他の人の個体は表示されません。"
-      />
-      <Card className="max-w-md">
+    <div className="nc-crest-stage nc-login-stage flex flex-col gap-8">
+      <CrestPhoto />
+      <div className="nc-crest-stage-copy">
+        <PageHeader
+          kicker="ACCOUNT"
+          title="ログイン"
+          description="自分の個体だけが見えます。他の人の個体は表示されません。"
+        />
+        <Card className="mt-8 max-w-md">
         {check ? (
           <p className="mb-4 text-sm text-muted">
             確認メールが届いている場合は、承認してからログインしてください。
@@ -56,8 +59,9 @@ export default async function LoginPage({
             新規登録
           </Link>
         </p>
-      </Card>
-      <LegalNav className="max-w-md justify-start text-white/45" />
+        </Card>
+        <LegalNav className="mt-8 max-w-md justify-start text-white/45" />
+      </div>
     </div>
   );
 }
