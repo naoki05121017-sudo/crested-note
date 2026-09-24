@@ -1,5 +1,5 @@
 import Image from "next/image";
-import crestPhoto from "@/app/brand/home-crest.png";
+import crestPhoto from "@/app/brand/home-crest.jpg";
 
 export function CrestPhoto() {
   return (
