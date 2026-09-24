@@ -19,33 +19,17 @@ import { LegalNav } from "@/app/components/legal-nav";
 
 const groups = [
   {
-    label: "ホーム",
-    items: [{ href: "/", label: "ホーム", icon: IconHome }],
-  },
-  {
-    label: "個体",
-    items: [{ href: "/animals", label: "マイ個体", icon: IconGecko }],
-  },
-  {
-    label: "データ",
+    label: "",
     items: [
+      { href: "/", label: "ホーム", icon: IconHome },
+      { href: "/animals", label: "マイ個体", icon: IconGecko },
       { href: "/compare", label: "全国個体比較", icon: IconChart },
       { href: "/stats", label: "日本のクレス統計", icon: IconChart },
-    ],
-  },
-  {
-    label: "ブリード",
-    items: [
       { href: "/calculator", label: "遺伝計算", icon: IconDna },
       { href: "/simulate", label: "シミュレーション", icon: IconDna },
       { href: "/breedings", label: "ブリード", icon: IconEgg },
-      { href: "/projects", label: "プロジェクト", icon: IconChart },
-      { href: "/predictions", label: "予想と実績", icon: IconChart },
+      { href: "/settings", label: "設定", icon: IconGear },
     ],
-  },
-  {
-    label: "設定",
-    items: [{ href: "/settings", label: "設定", icon: IconGear }],
   },
 ] as const;
 
@@ -76,11 +60,13 @@ function NavLinks() {
   return (
     <div className="flex flex-col gap-5">
       {groups.map((group) => (
-        <div key={group.label}>
-          <p className="px-3 text-[10px] tracking-[0.2em] text-white/35 uppercase">
-            {group.label}
-          </p>
-          <div className="mt-2 flex flex-col gap-1">
+        <div key={group.items.map((item) => item.href).join("-")}>
+          {group.label ? (
+            <p className="px-3 text-[10px] tracking-[0.2em] text-white/35 uppercase">
+              {group.label}
+            </p>
+          ) : null}
+          <div className={group.label ? "mt-2 flex flex-col gap-1" : "flex flex-col gap-1"}>
             {group.items.map((item) => {
               const active = isActivePath(pathname, item.href);
               return (
@@ -132,29 +118,29 @@ function AuthFooter({ email }: { email: string | null }) {
 function TopBar({ email }: { email: string | null }) {
   const initial = email?.trim().charAt(0).toUpperCase() || "?";
   return (
-    <div className="flex min-h-14 flex-1 items-center gap-2 sm:gap-3">
+    <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
       <form action="/animals" className="relative min-w-0 flex-1">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted sm:left-3">
           <IconSearch />
         </span>
         <input
           name="q"
           type="search"
           placeholder="個体名・モルフ・ID"
-          className="nc-input h-11 rounded-full border-line bg-white pl-10"
+          className="nc-input min-h-10 h-10 rounded-full border-line bg-white pl-9 text-[13px] sm:h-11 sm:min-h-11 sm:pl-10 sm:text-base"
           aria-label="個体名・モルフ・IDを検索"
         />
       </form>
       <Link
         href="/settings"
-        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink sm:h-11 sm:w-11"
         aria-label="設定・お知らせ"
       >
         <IconBell />
       </Link>
       <Link
         href="/settings"
-        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1c1917] text-sm font-semibold text-white"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1c1917] text-sm font-semibold text-white sm:h-11 sm:w-11"
         aria-label={email ? `アカウント ${email}` : "設定"}
         title={email ?? "設定"}
       >
@@ -227,18 +213,11 @@ export function AppShell({
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 border-b border-line bg-white/90 px-4 py-3 backdrop-blur sm:px-8">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="flex min-h-11 shrink-0 items-center gap-2 font-semibold tracking-tight lg:hidden"
-              >
-                <BrandMark size={28} />
-                <span className="hidden sm:block">クレスノート</span>
-              </Link>
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
               <TopBar email={email} />
               <button
                 type="button"
-                className="nc-btn-ghost shrink-0 px-4 lg:hidden"
+                className="nc-btn-ghost h-10 shrink-0 px-3 text-sm sm:h-11 sm:px-4 lg:hidden"
                 aria-expanded={open}
                 onClick={() => setOpen((value) => !value)}
               >
