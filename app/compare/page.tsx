@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { GrowthChart } from "@/app/components/growth-chart";
 import { Card, EmptyState, PageHeader, Stat } from "@/app/components/ui";
-import { listAnimals, weightsByAnimal } from "@/lib/db/queries";
+import { listAnimals, listPublicAnimals, publicWeightsByAnimal, weightsByAnimal } from "@/lib/db/queries";
 import { animalTitle } from "@/lib/db/labels";
 import { compareAnimal } from "@/lib/stats/compare";
 
@@ -19,14 +19,17 @@ export default async function ComparePage({
     typeof params.animalId === "string" ? params.animalId : animals[0]?.id ?? "";
   const animal = animals.find((row) => row.id === selectedId);
   const byWeights = await weightsByAnimal();
+  const publicAnimals = await listPublicAnimals();
+  const publicWeights = await publicWeightsByAnimal();
+  const others = publicAnimals.map((row) => ({
+    animal: row,
+    logs: publicWeights.get(row.id) ?? [],
+  }));
   const comparison = animal
     ? compareAnimal({
         animal,
         logs: byWeights.get(animal.id) ?? [],
-        others: animals.map((row) => ({
-          animal: row,
-          logs: byWeights.get(row.id) ?? [],
-        })),
+        others,
       })
     : null;
 

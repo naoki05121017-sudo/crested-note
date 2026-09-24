@@ -1,4 +1,5 @@
 import { saveSettings } from "@/app/settings/actions";
+import { signOut } from "@/app/auth/actions";
 import { FeedbackForm } from "@/app/settings/feedback-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
@@ -25,6 +26,14 @@ export default async function SettingsPage({
         title="設定"
         description="コレクション名と、新規個体の公開初期値など。"
       />
+      <Card>
+        <h2 className="mb-4 text-lg font-semibold">アカウント</h2>
+        <form action={signOut}>
+          <PendingSubmitButton pendingLabel="ログアウトしています…" className="nc-btn-ghost">
+            ログアウト
+          </PendingSubmitButton>
+        </form>
+      </Card>
       <Card>
       <MutationForm action={saveSettings} className="flex max-w-xl flex-col gap-4">
         <label className="grid gap-1 text-sm">

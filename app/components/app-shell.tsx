@@ -3,6 +3,7 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { signOut } from "@/app/auth/actions";
 import {
   BrandMark,
   IconChart,
@@ -96,7 +97,35 @@ function NavLinks() {
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function AuthFooter({ email }: { email: string | null }) {
+  if (!email) {
+    return (
+      <div className="mt-8 px-3 text-sm">
+        <Link href="/login" className="nc-btn-ghost w-full">
+          ログイン
+        </Link>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-8 px-3">
+      <p className="truncate text-xs text-muted">{email}</p>
+      <form action={signOut} className="mt-2">
+        <button type="submit" className="nc-btn-ghost w-full">
+          ログアウト
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export function AppShell({
+  children,
+  email = null,
+}: {
+  children: React.ReactNode;
+  email?: string | null;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const publicView = pathname.startsWith("/p/");
@@ -141,6 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="mt-8 overflow-y-auto pb-8">
             <NavLinks />
+            <AuthFooter email={email} />
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -166,6 +196,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {open ? (
             <div className="border-b border-line bg-surface px-4 py-4 lg:hidden">
               <NavLinks />
+              <AuthFooter email={email} />
             </div>
           ) : null}
           <main className="flex-1 px-4 py-8 sm:px-8">

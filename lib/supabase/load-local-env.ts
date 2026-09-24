@@ -124,3 +124,20 @@ export function supabaseSecretKeyFromEnv(): string {
   }
   return key;
 }
+
+export function supabasePublishableKeyFromEnv(): string {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
+  if (!key) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY が .env.local にありません。");
+  }
+  if (key.startsWith("sb_secret_")) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY に Secret が入っています。");
+  }
+  const looksPublishable =
+    key.startsWith("sb_publishable_") ||
+    (key.startsWith("eyJ") && key.split(".").length === 3);
+  if (!looksPublishable) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY の形式が正しくありません。");
+  }
+  return key;
+}

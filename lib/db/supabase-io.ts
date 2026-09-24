@@ -11,10 +11,12 @@ import {
   CREST_LINK_STATUSES,
   CREST_LINK_TRANSFER_STATUSES,
   DEFAULT_SETTINGS,
+  type AnimalRecord,
   type CrestLinkRecord,
   type DatabaseFile,
   type SettingsRecord,
 } from "@/lib/db/types";
+import { idsToDelete } from "@/lib/auth/paths";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 
@@ -73,17 +75,23 @@ async function deleteMissing(
   table: string,
   column: string,
   keep: string[],
+  scope: { column: string; value: string } | { column: string; values: string[] },
 ) {
-  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
-    client.from(table).select(column),
-  );
+  const values = "value" in scope ? [scope.value] : scope.values;
+  if (values.length === 0) return;
+  let query = client.from(table).select(column);
+  query =
+    "value" in scope
+      ? query.eq(scope.column, scope.value)
+      : query.in(scope.column, scope.values);
+  const { data, error } = await retryOnJwtIssuedAtFuture(() => query);
   if (error) {
     throw new Error(`${table} を照合できません: ${error.message}`);
   }
-  const keepSet = new Set(keep);
-  const extra = (data ?? [])
-    .map((row) => String((row as unknown as Record<string, unknown>)[column] ?? ""))
-    .filter((id) => id && !keepSet.has(id));
+  const extra = idsToDelete(
+    (data ?? []).map((row) => String((row as unknown as Record<string, unknown>)[column] ?? "")),
+    keep,
+  );
   if (extra.length === 0) return;
   const { error: delError } = await retryOnJwtIssuedAtFuture(() =>
     client.from(table).delete().in(column, extra),
@@ -93,36 +101,25 @@ async function deleteMissing(
   }
 }
 
-async function keeperUserId(client: SupabaseClient): Promise<string> {
-  const { data: animal, error: animalError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("animals").select("user_id").limit(1).maybeSingle(),
+async function selectIn(
+  client: SupabaseClient,
+  table: string,
+  column: string,
+  ids: string[],
+) {
+  if (ids.length === 0) return [];
+  return must(
+    table,
+    await retryOnJwtIssuedAtFuture(() => client.from(table).select("*").in(column, ids)),
   );
-  if (animalError) {
-    throw new Error(`個体の所有者を読めません: ${animalError.message}`);
-  }
-  if (animal?.user_id) return String(animal.user_id);
-
-  const { data: profile, error: profileError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("profiles").select("id").limit(1).maybeSingle(),
-  );
-  if (profileError) {
-    throw new Error(`プロフィールを読めません: ${profileError.message}`);
-  }
-  if (profile?.id) return String(profile.id);
-  throw new Error("Supabase に取り込み用の所有者がありません。先に npm run db:import を実行してください。");
 }
 
-export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
+export async function loadDatabaseFromSupabase(userId: string): Promise<DatabaseFile> {
   const client = createAdminClient();
   const [
     animalsRes,
-    genesRes,
-    weightsRes,
     breedingsRes,
-    clutchesRes,
-    eggsRes,
     projectsRes,
-    projectMembersRes,
     predictionsRes,
     profilesRes,
     feedbackRes,
@@ -131,34 +128,49 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
     crestLinksRes,
     transfersRes,
   ] = await Promise.all([
-    retryOnJwtIssuedAtFuture(() => client.from("animals").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("animal_genes").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("weight_logs").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("breedings").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("clutches").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("eggs").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("projects").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("project_members").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("predictions").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("profiles").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("feedback").select("*")),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("animals").select("*").eq("user_id", userId),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("breedings").select("*").eq("user_id", userId),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("projects").select("*").eq("user_id", userId),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("predictions").select("*").eq("user_id", userId),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("profiles").select("*").eq("id", userId),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("feedback").select("*").eq("user_id", userId),
+    ),
     retryOnJwtIssuedAtFuture(() =>
       client.from("crest_link_seq").select("id, value"),
     ),
     retryOnJwtIssuedAtFuture(() =>
-      client.from(ANIMAL_CODE_SEQ_TABLE).select("user_id, value"),
+      client.from(ANIMAL_CODE_SEQ_TABLE).select("user_id, value").eq("user_id", userId),
     ),
-    retryOnJwtIssuedAtFuture(() => client.from("crest_links").select("*")),
-    retryOnJwtIssuedAtFuture(() => client.from("crest_link_transfers").select("*")),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("crest_links").select("*").eq("current_owner_user_id", userId),
+    ),
+    retryOnJwtIssuedAtFuture(() =>
+      client.from("crest_link_transfers").select("*"),
+    ),
   ]);
   const animals = await must("animals", animalsRes);
-  const genes = await must("animal_genes", genesRes);
-  const weights = await must("weight_logs", weightsRes);
   const breedings = await must("breedings", breedingsRes);
-  const clutches = await must("clutches", clutchesRes);
-  const eggs = await must("eggs", eggsRes);
   const projects = await must("projects", projectsRes);
-  const projectMembers = await must("project_members", projectMembersRes);
+  const animalIds = (animals ?? []).map((row) => String(row.id));
+  const breedingIds = (breedings ?? []).map((row) => String(row.id));
+  const projectIds = (projects ?? []).map((row) => String(row.id));
+  const genes = await selectIn(client, "animal_genes", "animal_id", animalIds);
+  const weights = await selectIn(client, "weight_logs", "animal_id", animalIds);
+  const clutches = await selectIn(client, "clutches", "breeding_id", breedingIds);
+  const clutchIds = (clutches ?? []).map((row) => String(row.id));
+  const eggs = await selectIn(client, "eggs", "clutch_id", clutchIds);
+  const projectMembers = await selectIn(client, "project_members", "project_id", projectIds);
   const predictions = await must("predictions", predictionsRes);
   const profiles = await must("profiles", profilesRes);
   const feedback = await must("feedback", feedbackRes);
@@ -286,14 +298,7 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
       adminNote: String(row.admin_note ?? ""),
     })),
     crestLinkSeq: crestLinkSeqValue(seqRows),
-    animalCodeSeq: animalCodeSeqValueForUser(
-      animalCodeSeqRows,
-      String(
-        (animals as { user_id?: unknown }[] | null)?.[0]?.user_id ??
-          (profiles as { id?: unknown }[] | null)?.[0]?.id ??
-          "",
-      ),
-    ),
+    animalCodeSeq: animalCodeSeqValueForUser(animalCodeSeqRows, userId),
     crestLinks: (crestLinks ?? []).flatMap((row) => {
       const id = String(row.id ?? "");
       if (!id) return [];
@@ -333,7 +338,8 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
     crestLinkTransfers: (transfers ?? []).flatMap((row) => {
       const id = String(row.id ?? "");
       const code = String(row.code ?? "");
-      if (!id || !code) return [];
+      const animalId = String(row.animal_id ?? "");
+      if (!id || !code || !animalIds.includes(animalId)) return [];
       const status = CREST_LINK_TRANSFER_STATUSES.includes(row.status)
         ? row.status
         : "pending";
@@ -354,9 +360,9 @@ export async function loadDatabaseFromSupabase(): Promise<DatabaseFile> {
   };
 }
 
-export async function saveDatabaseToSupabase(db: DatabaseFile) {
+export async function saveDatabaseToSupabase(db: DatabaseFile, userId: string) {
   const client = createAdminClient();
-  const ownerUserId = await keeperUserId(client);
+  const ownerUserId = userId;
 
   const { data: seqRows, error: seqError } = await retryOnJwtIssuedAtFuture(() =>
     client.from("crest_link_seq").select("id, value"),
@@ -468,13 +474,24 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "animals",
     "id",
     db.animals.map((row) => row.id),
+    { column: "user_id", value: ownerUserId },
   );
 
-  const { error: geneClearError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("animal_genes").delete().neq("locus_id", "__none__"),
-  );
-  if (geneClearError) {
-    throw new Error(`genes を更新できません: ${geneClearError.message}`);
+  const ownedAnimalIds = (
+    await must(
+      "animals",
+      await retryOnJwtIssuedAtFuture(() =>
+        client.from("animals").select("id").eq("user_id", ownerUserId),
+      ),
+    )
+  ).map((row) => String(row.id));
+  if (ownedAnimalIds.length > 0) {
+    const { error: geneClearError } = await retryOnJwtIssuedAtFuture(() =>
+      client.from("animal_genes").delete().in("animal_id", ownedAnimalIds),
+    );
+    if (geneClearError) {
+      throw new Error(`genes を更新できません: ${geneClearError.message}`);
+    }
   }
   await upsert(
     client,
@@ -504,6 +521,7 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "weight_logs",
     "id",
     db.weights.map((row) => postgresUuid(row.id, "weight_logs")),
+    { column: "animal_id", values: ownedAnimalIds },
   );
 
   await upsert(
@@ -525,6 +543,7 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "projects",
     "id",
     db.projects.map((row) => row.id),
+    { column: "user_id", value: ownerUserId },
   );
 
   await upsert(
@@ -550,7 +569,17 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "breedings",
     "id",
     db.breedings.map((row) => row.id),
+    { column: "user_id", value: ownerUserId },
   );
+
+  const ownedBreedingIds = (
+    await must(
+      "breedings",
+      await retryOnJwtIssuedAtFuture(() =>
+        client.from("breedings").select("id").eq("user_id", ownerUserId),
+      ),
+    )
+  ).map((row) => String(row.id));
 
   await upsert(
     client,
@@ -568,7 +597,12 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "clutches",
     "id",
     db.clutches.map((row) => row.id),
+    { column: "breeding_id", values: ownedBreedingIds },
   );
+
+  const ownedClutchIds = (
+    await selectIn(client, "clutches", "breeding_id", ownedBreedingIds)
+  ).map((row) => String((row as { id?: unknown }).id));
 
   await upsert(
     client,
@@ -588,13 +622,24 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "eggs",
     "id",
     db.eggs.map((row) => row.id),
+    { column: "clutch_id", values: ownedClutchIds },
   );
 
-  const { error: memberClearError } = await retryOnJwtIssuedAtFuture(() =>
-    client.from("project_members").delete().neq("role", "__none__"),
-  );
-  if (memberClearError) {
-    throw new Error(`project_members を更新できません: ${memberClearError.message}`);
+  const ownedProjectIds = (
+    await must(
+      "projects",
+      await retryOnJwtIssuedAtFuture(() =>
+        client.from("projects").select("id").eq("user_id", ownerUserId),
+      ),
+    )
+  ).map((row) => String(row.id));
+  if (ownedProjectIds.length > 0) {
+    const { error: memberClearError } = await retryOnJwtIssuedAtFuture(() =>
+      client.from("project_members").delete().in("project_id", ownedProjectIds),
+    );
+    if (memberClearError) {
+      throw new Error(`project_members を更新できません: ${memberClearError.message}`);
+    }
   }
   await upsert(
     client,
@@ -630,6 +675,7 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "predictions",
     "id",
     db.predictions.map((row) => row.id),
+    { column: "user_id", value: ownerUserId },
   );
 
   await upsert(
@@ -653,6 +699,7 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     "feedback",
     "id",
     db.feedback.map((row) => row.id),
+    { column: "user_id", value: ownerUserId },
   );
 
   await upsert(
@@ -671,4 +718,66 @@ export async function saveDatabaseToSupabase(db: DatabaseFile) {
     })),
     "id",
   );
+}
+
+function asAnimalRecord(row: Record<string, unknown>): AnimalRecord {
+  return {
+    id: String(row.id),
+    crestLinkId: String(row.crest_link_id ?? ""),
+    code: String(row.code ?? ""),
+    name: String(row.name ?? ""),
+    sex: row.sex === "male" || row.sex === "female" ? row.sex : "unknown",
+    hatchDate: String(row.hatch_date ?? ""),
+    status: (row.status as AnimalRecord["status"]) ?? "active",
+    sireId: String(row.sire_id ?? ""),
+    damId: String(row.dam_id ?? ""),
+    morphLabel: String(row.morph_label ?? ""),
+    traits: Array.isArray(row.traits) ? row.traits.map(String) : [],
+    traitLevels:
+      row.trait_levels && typeof row.trait_levels === "object"
+        ? (row.trait_levels as Record<string, number>)
+        : {},
+    notes: String(row.notes ?? ""),
+    photoUrl: String(row.photo_url ?? ""),
+    isPublic: Boolean(row.is_public),
+    shareSlug: String(row.share_slug ?? ""),
+    prefecture: String(row.prefecture ?? ""),
+    createdAt: iso(row.created_at),
+    updatedAt: iso(row.updated_at),
+  };
+}
+
+export async function loadPublicAnimals(slug?: string): Promise<{
+  animals: AnimalRecord[];
+  genes: DatabaseFile["genes"];
+  weights: DatabaseFile["weights"];
+}> {
+  const client = createAdminClient();
+  let query = client.from("animals").select("*").eq("is_public", true);
+  if (slug) query = query.eq("share_slug", slug);
+  const animals = await must(
+    "animals",
+    await retryOnJwtIssuedAtFuture(() => query),
+  );
+  const records = (animals ?? []).map((row) =>
+    asAnimalRecord(row as Record<string, unknown>),
+  );
+  const ids = records.map((row) => row.id);
+  const genes = await selectIn(client, "animal_genes", "animal_id", ids);
+  const weights = await selectIn(client, "weight_logs", "animal_id", ids);
+  return {
+    animals: records,
+    genes: (genes ?? []).map((row) => ({
+      animalId: String(row.animal_id),
+      locusId: String(row.locus_id),
+      status: row.status,
+    })),
+    weights: (weights ?? []).map((row) => ({
+      id: String(row.id),
+      animalId: String(row.animal_id),
+      weighedOn: String(row.weighed_on ?? ""),
+      weightG: Number(row.weight_g),
+      notes: String(row.notes ?? ""),
+    })),
+  };
 }

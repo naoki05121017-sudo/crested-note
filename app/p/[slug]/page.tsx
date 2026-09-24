@@ -3,7 +3,7 @@ import { AnimalPhoto } from "@/app/components/animal-photo";
 import { GrowthChart } from "@/app/components/growth-chart";
 import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { Badge, Card } from "@/app/components/ui";
-import { getAnimalBySlug, listWeights } from "@/lib/db/queries";
+import { getAnimalBySlug, listPublicWeights } from "@/lib/db/queries";
 import { SEX_LABEL } from "@/lib/db/labels";
 import { formatGenotypeLabel } from "@/lib/genetics";
 import { growthPoints } from "@/lib/stats/compare";
@@ -18,7 +18,7 @@ export default async function PublicAnimalPage({
   const { slug } = await params;
   const animal = await getAnimalBySlug(slug);
   if (!animal) notFound();
-  const weights = await listWeights(animal.id);
+  const weights = await listPublicWeights(animal.id);
 
   return (
     <div className="flex flex-col gap-8">

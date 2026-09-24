@@ -1,6 +1,7 @@
 import { crestLinkView, getAnimalByCrestLinkId as animalRecordByCrestLink, type CrestLinkView } from "@/lib/crest-link/core";
 import { formatGenotypeLabel, type Genotype } from "@/lib/genetics";
 import { loadDb } from "./store";
+import { loadPublicAnimals } from "./supabase-io";
 import type {
   Animal,
   AnimalRecord,
@@ -41,13 +42,70 @@ export async function getAnimal(id: string): Promise<Animal | undefined> {
   return record ? hydrateAnimal(db, record) : undefined;
 }
 
+function publicSnapshotDb(snap: {
+  animals: AnimalRecord[];
+  genes: DatabaseFile["genes"];
+  weights: DatabaseFile["weights"];
+}): DatabaseFile {
+  return {
+    animals: snap.animals,
+    genes: snap.genes,
+    weights: snap.weights,
+    breedings: [],
+    clutches: [],
+    eggs: [],
+    projects: [],
+    projectMembers: [],
+    predictions: [],
+    settings: {
+      displayName: "",
+      collectionName: "",
+      prefecture: "",
+      publicByDefault: false,
+    },
+    feedback: [],
+    crestLinkSeq: 0,
+    animalCodeSeq: 0,
+    crestLinks: [],
+    crestLinkTransfers: [],
+  };
+}
+
 export async function getAnimalBySlug(slug: string): Promise<Animal | undefined> {
   if (!slug) return undefined;
-  const db = await loadDb();
-  const record = db.animals.find(
+  const snap = await loadPublicAnimals(slug);
+  const record = snap.animals.find(
     (animal) => animal.shareSlug === slug && animal.isPublic,
   );
-  return record ? hydrateAnimal(db, record) : undefined;
+  if (!record) return undefined;
+  return hydrateAnimal(publicSnapshotDb(snap), record);
+}
+
+export async function listPublicAnimals(): Promise<Animal[]> {
+  const snap = await loadPublicAnimals();
+  const mini = publicSnapshotDb(snap);
+  return snap.animals.map((record) => hydrateAnimal(mini, record));
+}
+
+export async function publicWeightsByAnimal(): Promise<Map<string, WeightLogRecord[]>> {
+  const snap = await loadPublicAnimals();
+  const map = new Map<string, WeightLogRecord[]>();
+  for (const row of snap.weights) {
+    const list = map.get(row.animalId) ?? [];
+    list.push(row);
+    map.set(row.animalId, list);
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => a.weighedOn.localeCompare(b.weighedOn));
+  }
+  return map;
+}
+
+export async function listPublicWeights(animalId: string): Promise<WeightLogRecord[]> {
+  const snap = await loadPublicAnimals();
+  return snap.weights
+    .filter((row) => row.animalId === animalId)
+    .sort((a, b) => a.weighedOn.localeCompare(b.weighedOn));
 }
 
 export async function filterAnimals(params: {

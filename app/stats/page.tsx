@@ -1,12 +1,12 @@
 import { Card, PageHeader, SectionTitle, Stat } from "@/app/components/ui";
-import { listAnimals, weightsByAnimal } from "@/lib/db/queries";
+import { listPublicAnimals, publicWeightsByAnimal } from "@/lib/db/queries";
 import { japanStats } from "@/lib/stats/japan";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "日本のクレス統計" };
 
 export default async function StatsPage() {
-  const stats = japanStats(await listAnimals(), await weightsByAnimal());
+  const stats = japanStats(await listPublicAnimals(), await publicWeightsByAnimal());
 
   return (
     <div className="flex flex-col gap-8">
