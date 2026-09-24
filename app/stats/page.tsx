@@ -17,7 +17,7 @@ export default async function StatsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Stat label="登録個体" value={stats.registered} tone="ink" />
+        <Stat label="登録個体" value={stats.registered} tone="blush" />
         <Stat label="飼育中" value={stats.living} tone="blush" />
         <Stat
           label="最新体重の平均"

@@ -133,14 +133,14 @@ function TopBar({ email }: { email: string | null }) {
       </form>
       <Link
         href="/settings"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-white text-ink sm:h-11 sm:w-11"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white sm:h-11 sm:w-11"
         aria-label="設定・お知らせ"
       >
         <IconBell />
       </Link>
       <Link
         href="/settings"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1c1917] text-sm font-semibold text-white sm:h-11 sm:w-11"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#17141c] sm:h-11 sm:w-11"
         aria-label={email ? `アカウント ${email}` : "設定"}
         title={email ?? "設定"}
       >
@@ -212,12 +212,12 @@ export function AppShell({
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-line bg-white/90 px-3 py-3 backdrop-blur sm:px-8">
+          <header className="sticky top-0 z-20 bg-[#17141c] px-3 py-3 sm:px-8">
             <div className="flex min-w-0 items-center gap-1 sm:gap-3">
               <TopBar email={email} />
               <button
                 type="button"
-                className="nc-btn-ghost h-9 w-9 shrink-0 px-0 text-sm sm:h-11 sm:w-auto sm:px-4 lg:hidden"
+                className="nc-btn-ghost h-9 w-9 shrink-0 border-white/20 bg-white/8 px-0 text-sm text-white hover:bg-white/12 sm:h-11 sm:w-auto sm:px-4 lg:hidden"
                 aria-expanded={open}
                 aria-label={open ? "メニューを閉じる" : "メニュー"}
                 onClick={() => setOpen((value) => !value)}

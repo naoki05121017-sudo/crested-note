@@ -7,7 +7,7 @@ const cardBase =
 const cardTones = {
   white:
     "border border-line bg-white shadow-[0_10px_28px_rgba(23,20,28,0.05)]",
-  ink: "nc-card-ink",
+  ink: "border-transparent bg-[#f3eadc]",
   blush: "border-transparent bg-[#fde8ef]",
   mist: "border-transparent bg-[#e7f3fb]",
   sage: "border-transparent bg-[#eef6f1]",
@@ -26,18 +26,18 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="nc-hero flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-2xl">
         {kicker ? (
-          <p className="nc-hero-kicker text-[11px] tracking-[0.22em] uppercase">
+          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
             {kicker}
           </p>
         ) : null}
-        <h1 className="nc-hero-title mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
+        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
           {title}
         </h1>
         {description ? (
-          <p className="nc-hero-copy mt-3 text-sm leading-7 sm:text-[0.95rem]">
+          <p className="mt-3 text-sm leading-7 text-muted sm:text-[0.95rem]">
             {description}
           </p>
         ) : null}
@@ -116,7 +116,7 @@ export function Stat({
   href?: string;
   tone?: keyof typeof cardTones;
 }) {
-  const muted = tone === "ink" ? "text-white/50" : "text-muted";
+  const muted = "text-muted";
   const inner = (
     <>
       <p className={`text-sm ${muted}`}>{label}</p>

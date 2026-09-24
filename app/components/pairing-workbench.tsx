@@ -452,8 +452,8 @@ export function PairingWorkbench({
         />
       </div>
 
-      <div className="nc-hero">
-        <p className="nc-hero-kicker mb-3 text-[11px] tracking-[0.2em] uppercase">
+      <div>
+        <p className="mb-3 text-[11px] tracking-[0.2em] text-ink/40 uppercase">
           3. 計算する
         </p>
         <button

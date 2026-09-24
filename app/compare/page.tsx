@@ -77,7 +77,7 @@ export default async function ComparePage({
                   ? "—"
                   : `${comparison.mineWeight.toFixed(1)}g`
               }
-              tone="ink"
+              tone="blush"
             />
             <Stat
               label="同条件の平均"

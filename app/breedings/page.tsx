@@ -52,13 +52,13 @@ export default async function BreedingsPage() {
                         {BREEDING_STATUS_LABEL[breeding.status]}
                       </Badge>
                     </div>
-                    <div className="mt-4 flex items-end justify-between gap-3 rounded-[1.15rem] bg-[#17141c] px-3 py-3 text-white">
+                    <div className="mt-4 flex items-end justify-between gap-3 rounded-[1.15rem] bg-[#eef6f1] px-3 py-3">
                       <div>
-                        <p className="text-xs text-white/45">開始</p>
+                        <p className="text-xs text-muted">開始</p>
                         <p className="mt-1 text-sm font-medium">{breeding.startedOn}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-white/45">卵</p>
+                        <p className="text-xs text-muted">卵</p>
                         <p className="text-3xl font-semibold tabular-nums">{eggs.length}</p>
                       </div>
                     </div>

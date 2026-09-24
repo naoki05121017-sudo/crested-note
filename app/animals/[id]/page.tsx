@@ -132,7 +132,7 @@ export default async function AnimalDetailPage({
         </div>
       </section>
 
-      <div className="nc-hero flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Link href={`/calculator?a=${animal.id}`} className="nc-btn-ghost w-full sm:w-auto">
           この個体で計算
         </Link>
@@ -146,20 +146,20 @@ export default async function AnimalDetailPage({
 
       <AnimalCodeBlock
         code={animal.code}
-        className="nc-hero"
-        codeClassName="mt-2 font-mono text-3xl font-semibold tracking-wide text-white sm:text-5xl"
+        className={`${card} bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb]`}
+        codeClassName="mt-2 font-mono text-3xl font-semibold tracking-wide text-ink sm:text-5xl"
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="nc-card-ink rounded-[1.75rem] p-5 sm:p-6">
-          <p className="text-sm text-white/50">最新体重</p>
-          <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums text-white sm:text-5xl">
+        <div className="rounded-[1.75rem] bg-[#eef6f1] p-5 sm:p-6">
+          <p className="text-sm text-ink/60">最新体重</p>
+          <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
             {latest ? `${latest.weightG.toFixed(1)}g` : "—"}
           </p>
           {latest ? (
-            <p className="mt-2 text-sm text-white/45">{latest.weighedOn}</p>
+            <p className="mt-2 text-sm text-muted">{latest.weighedOn}</p>
           ) : (
-            <p className="mt-2 text-sm text-white/45">記録がありません</p>
+            <p className="mt-2 text-sm text-muted">記録がありません</p>
           )}
         </div>
         <Link
@@ -314,13 +314,16 @@ export default async function AnimalDetailPage({
         </section>
       ) : null}
 
-      <Link href={`/compare?animalId=${animal.id}`} className="nc-hero block">
-        <p className="nc-hero-kicker text-[11px] tracking-[0.22em] uppercase">Compare</p>
-        <h2 className="mt-2 text-lg font-semibold tracking-tight text-white">全国個体比較</h2>
-        <p className="nc-hero-copy mt-2 text-sm leading-6">
+      <Link
+        href={`/compare?animalId=${animal.id}`}
+        className={`${card} block bg-gradient-to-br from-[#eef6f1] to-[#e7f3fb]`}
+      >
+        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Compare</p>
+        <h2 className="mt-2 text-lg font-semibold tracking-tight">全国個体比較</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
           この個体の体重を、日本国内の近い条件の平均と比べます。
         </p>
-        <span className="nc-btn-ghost mt-4 inline-flex">比較を見る</span>
+        <span className="nc-btn mt-4 inline-flex">比較を見る</span>
       </Link>
 
       <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 sm:px-6">

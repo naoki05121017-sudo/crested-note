@@ -27,14 +27,14 @@ export default async function SettingsPage({
         title="設定"
         description="コレクション名と、新規個体の公開初期値など。"
       />
-      <section className="nc-hero max-w-xl">
-        <h2 className="mb-4 text-lg font-semibold text-white">アカウント</h2>
+      <Card>
+        <h2 className="mb-4 text-lg font-semibold">アカウント</h2>
         <form action={signOut}>
           <PendingSubmitButton pendingLabel="ログアウトしています…" className="nc-btn-ghost">
             ログアウト
           </PendingSubmitButton>
         </form>
-      </section>
+      </Card>
       <Card tone="mist">
       <MutationForm action={saveSettings} className="flex max-w-xl flex-col gap-4">
         <label className="grid gap-1 text-sm">
