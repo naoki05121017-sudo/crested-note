@@ -60,7 +60,7 @@ export default async function PredictionDetailPage({
             {hatched.map((child) => {
               const matched = matchOutcome(child, prediction.pairing.outcomes);
               return (
-                <li key={child.id} className="rounded-2xl bg-sand p-4">
+                <li key={child.id} className="rounded-[1.35rem] bg-[#fde8ef]/70 p-4">
                   <Link href={`/animals/${child.id}`} className="font-medium hover:underline">
                     {animalTitle(child)}
                   </Link>

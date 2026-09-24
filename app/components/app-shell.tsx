@@ -168,7 +168,7 @@ export function AppShell({
   if (publicView) {
     return (
       <div className="min-h-full bg-background text-ink">
-        <header className="border-b border-line bg-surface/90 backdrop-blur">
+        <header className="border-b border-line bg-white/90 backdrop-blur">
           <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
             <BrandMark size={32} />
             <div>

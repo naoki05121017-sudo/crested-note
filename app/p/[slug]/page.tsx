@@ -23,10 +23,12 @@ export default async function PublicAnimalPage({
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <p className="text-[11px] tracking-[0.22em] text-accent-strong uppercase">
+        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
           PUBLIC ANIMAL
         </p>
-        <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{animal.name}</h1>
+        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
+          {animal.name}
+        </h1>
         <div className="mt-4">
           <AnimalCodeBlock code={animal.code} />
         </div>
@@ -41,7 +43,7 @@ export default async function PublicAnimalPage({
         <AnimalPhoto
           src={animal.photoUrl}
           alt=""
-          className="max-h-80 rounded-[1.5rem] object-cover"
+          className="max-h-80 w-full rounded-[1.75rem] object-cover"
         />
       ) : null}
       <Card>

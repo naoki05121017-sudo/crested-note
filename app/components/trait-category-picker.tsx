@@ -61,7 +61,7 @@ function MorphPickButton({
   return (
     <button
       type="button"
-      className="flex min-h-12 w-full flex-col items-start justify-center rounded-2xl border border-line bg-surface px-3 py-2 text-left hover:bg-sand"
+      className="flex min-h-12 w-full flex-col items-start justify-center rounded-[1.25rem] border border-line bg-white px-3 py-2 text-left hover:bg-[#f6f3f8]"
       onClick={() => onPick(option)}
     >
       <span className="text-sm font-medium leading-5">{option.label}</span>

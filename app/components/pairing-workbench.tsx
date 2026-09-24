@@ -6,11 +6,13 @@ import {
   listLoci,
   allelicVisualCoversLocus,
   mergeAllelicVisuals,
+  formatGenotypeLabel,
+  visualTraitName,
   type GeneStatus,
   type Genotype,
   type PairingResult,
 } from "@/lib/genetics";
-import { animalTitle } from "@/lib/db/labels";
+import { SEX_LABEL, animalTitle } from "@/lib/db/labels";
 import { PairingResults } from "@/app/components/pairing-results";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
@@ -42,9 +44,10 @@ import {
 function ParentHeading({ sex }: { sex: "male" | "female" }) {
   const symbol = sex === "male" ? "♂" : "♀";
   const color = sex === "male" ? "text-[#4d6fa8]" : "text-[#c45c78]";
+  const word = sex === "male" ? "父親" : "母親";
   return (
     <span className="inline-flex items-baseline gap-1.5">
-      <span className="text-ink">親</span>
+      <span className="text-ink">{word}</span>
       <span
         className={`${color} text-[1.45rem] font-extrabold leading-none sm:text-[1.7rem]`}
         aria-label={sex === "male" ? "オス" : "メス"}
@@ -68,6 +71,7 @@ function parentStateFromAnimal(animal?: CalculatorAnimal): CalculatorParentState
 function ParentEditor({
   title,
   stepLabel,
+  tint,
   state,
   onStateChange,
   animals,
@@ -76,6 +80,7 @@ function ParentEditor({
 }: {
   title: React.ReactNode;
   stepLabel: string;
+  tint: string;
   state: CalculatorParentState;
   onStateChange: (next: CalculatorParentState) => void;
   animals: CalculatorAnimal[];
@@ -84,6 +89,7 @@ function ParentEditor({
 }) {
   const { genotype, visualTags, addedTraits } = state;
   const options = calculatorTraitOptions();
+  const selected = animals.find((animal) => animal.id === selectedId);
   const available = options.filter((option) => {
     if (addedTraits.includes(option.id)) return false;
     if (option.kind === "locus" && allelicVisualCoversLocus(visualTags, option.id)) {
@@ -110,14 +116,14 @@ function ParentEditor({
   const visible = addedTraits;
 
   return (
-    <section className="rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)] sm:p-6">
-      <p className="text-[11px] tracking-[0.2em] text-accent-strong uppercase">
-        {stepLabel}
-      </p>
-      <h2 className="mt-1 mb-4 text-lg font-semibold">{title}</h2>
+    <section
+      className={`rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6 ${tint}`}
+    >
+      <p className="text-[11px] tracking-[0.2em] text-ink/40 uppercase">{stepLabel}</p>
+      <h2 className="mt-2 mb-5 text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
       {animals.length > 0 ? (
-        <label className="mb-5 grid gap-1 text-sm">
-          <span className="font-medium">登録個体</span>
+        <label className="mb-4 grid gap-1 text-sm">
+          <span className="font-medium">個体から選択</span>
           <select
             className="nc-input"
             value={selectedId}
@@ -132,6 +138,30 @@ function ParentEditor({
           </select>
         </label>
       ) : null}
+
+      <div className="mb-5 rounded-[1.35rem] bg-white/80 px-4 py-4">
+        {selected ? (
+          <>
+            <p className="text-lg font-semibold tracking-tight">{selected.name}</p>
+            <p className="mt-1 text-sm text-ink/70">{SEX_LABEL[selected.sex]}</p>
+            <p className="mt-2 text-sm leading-6 text-ink/60">
+              {selected.morphLabel?.trim() || formatGenotypeLabel(selected.genotype)}
+            </p>
+            {selected.traits.length > 0 ? (
+              <p className="mt-1 text-xs leading-5 text-muted">
+                {selected.traits.map((id) => visualTraitName(id)).join(" / ")}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-semibold tracking-tight">仮想（手入力）</p>
+            <p className="mt-1 text-sm leading-6 text-muted">
+              下からモルフを選ぶと、その親として計算します。
+            </p>
+          </>
+        )}
+      </div>
 
       {visible.length === 0 ? (
         <p className="mb-4 text-sm leading-6 text-muted">
@@ -150,7 +180,7 @@ function ParentEditor({
               return (
                 <div
                   key={id}
-                  className="rounded-2xl bg-sand px-4 py-3"
+                  className="rounded-[1.25rem] border border-white/70 bg-white/80 px-4 py-3"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -208,7 +238,7 @@ function ParentEditor({
             }
             if (option.kind === "axanthic" && axanthicLocus) {
               return (
-                <div key={id} className="grid gap-3 rounded-2xl bg-sand px-4 py-3">
+                <div key={id} className="grid gap-3 rounded-[1.25rem] border border-white/70 bg-white/80 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <p className="pt-2 font-medium">
                       アザンティック
@@ -285,7 +315,7 @@ function ParentEditor({
                 "wild",
               );
               return (
-                <div key={id} className="grid gap-3 rounded-2xl bg-sand px-4 py-3">
+                <div key={id} className="grid gap-3 rounded-[1.25rem] border border-white/70 bg-white/80 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <p className="pt-2 font-medium">
                       {option.label}
@@ -328,6 +358,7 @@ function ParentEditor({
       )}
 
       <div className="mt-2">
+        <p className="mb-2 text-sm font-medium">モルフから選択</p>
         <TraitCategoryPicker options={available} onPick={addTrait} />
       </div>
     </section>
@@ -402,6 +433,7 @@ export function PairingWorkbench({
         <ParentEditor
           title={<ParentHeading sex="male" />}
           stepLabel="1. オスを選ぶ"
+          tint="bg-gradient-to-br from-[#e7f3fb] via-white to-white"
           state={stateA}
           onStateChange={commitA}
           animals={maleChoices}
@@ -411,6 +443,7 @@ export function PairingWorkbench({
         <ParentEditor
           title={<ParentHeading sex="female" />}
           stepLabel="2. メスを選ぶ"
+          tint="bg-gradient-to-br from-[#fde8ef] via-white to-white"
           state={stateB}
           onStateChange={commitB}
           animals={femaleChoices}
@@ -420,12 +453,12 @@ export function PairingWorkbench({
       </div>
 
       <div>
-        <p className="mb-3 text-[11px] tracking-[0.2em] text-accent-strong uppercase">
+        <p className="mb-3 text-[11px] tracking-[0.2em] text-ink/40 uppercase">
           3. 計算する
         </p>
         <button
           type="button"
-          className="nc-btn w-full sm:w-auto"
+          className="nc-btn min-h-14 w-full px-8 text-base sm:w-auto sm:min-w-[16rem]"
           onClick={() => {
             setResult(
               runCalculatorPairing(stateARef.current, stateBRef.current),
@@ -439,14 +472,14 @@ export function PairingWorkbench({
       {result ? (
         <>
           <div>
-            <p className="mb-3 text-[11px] tracking-[0.2em] text-accent-strong uppercase">
+            <p className="mb-3 text-[11px] tracking-[0.2em] text-ink/40 uppercase">
               4. 子の予想
             </p>
             <PairingResults result={result} />
           </div>
           <MutationForm
             action={savePrediction}
-            className="flex flex-col gap-3 rounded-[1.5rem] border border-line bg-surface p-5 sm:p-6"
+            className="flex flex-col gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6"
           >
             <input type="hidden" name="maleId" value={selectedA} />
             <input type="hidden" name="femaleId" value={selectedB} />
@@ -491,7 +524,7 @@ export function PairingWorkbench({
           </MutationForm>
         </>
       ) : (
-        <p className="rounded-[1.5rem] border border-line bg-sand px-4 py-5 text-sm leading-6 text-muted">
+        <p className="rounded-[1.75rem] border border-line bg-white px-5 py-6 text-sm leading-6 text-muted shadow-[0_10px_28px_rgba(23,20,28,0.05)]">
           親♂・親♀と遺伝形質を設定して「遺伝を計算する」を押すと、予想される子の見た目と確率が表示されます。
         </p>
       )}

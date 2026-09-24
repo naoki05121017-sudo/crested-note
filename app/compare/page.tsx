@@ -47,8 +47,11 @@ export default async function ComparePage({
           body="体重を記録した個体があると、日本国内の近い条件の平均と比べられます。ランキングではありません。"
         />
       ) : (
-        <form className="flex max-w-xl flex-col gap-2 sm:flex-row sm:items-end" action="/compare">
-          <label className="grid min-w-60 flex-1 gap-1 text-sm">
+        <form
+          className="grid max-w-xl gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:grid-cols-[1fr_auto] sm:items-end sm:p-6"
+          action="/compare"
+        >
+          <label className="grid min-w-0 flex-1 gap-1 text-sm">
             <span>比較する個体</span>
             <select name="animalId" defaultValue={selectedId} className="nc-input">
               {animals.map((row) => (

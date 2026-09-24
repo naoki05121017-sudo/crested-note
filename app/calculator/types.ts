@@ -8,4 +8,5 @@ export type CalculatorAnimal = {
   sex: Sex;
   genotype: Genotype;
   traits: string[];
+  morphLabel?: string;
 };

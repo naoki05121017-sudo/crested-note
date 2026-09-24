@@ -113,7 +113,7 @@ export default async function BreedingDetailPage({
       {breeding.clutches.map((clutch) => (
         <section
           key={clutch.id}
-          className="rounded-[1.5rem] border border-line bg-surface p-5 sm:p-6"
+          className="rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6"
         >
           <h2 className="text-lg font-semibold">クラッチ {clutch.laidOn}</h2>
           <div className="mt-3 flex flex-col gap-4">

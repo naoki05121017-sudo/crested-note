@@ -275,7 +275,7 @@ export function HomeDashboard({
               <li key={animal.id}>
                 <Link
                   href={`/animals/${animal.id}`}
-                  className="block overflow-hidden rounded-[1.5rem] border border-line bg-white"
+                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white"
                 >
                   <div className="aspect-square bg-[#f6f3f8]">
                     {animal.photoUrl ? (

@@ -16,7 +16,7 @@ export function PageHeader({
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-2xl">
         {kicker ? (
-          <p className="text-[11px] tracking-[0.22em] text-accent-strong uppercase">
+          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
             {kicker}
           </p>
         ) : null}
@@ -45,7 +45,7 @@ export function Card({
 }) {
   return (
     <section
-      className={`rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)] sm:p-6 ${className}`}
+      className={`rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6 ${className}`}
     >
       {children}
     </section>
@@ -104,14 +104,14 @@ export function Stat({
   const inner = (
     <>
       <p className="text-sm text-muted">{label}</p>
-      <p className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+      <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
         {value}
       </p>
       {hint ? <p className="mt-2 text-sm text-muted">{hint}</p> : null}
     </>
   );
   const className =
-    "rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)]";
+    "rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)]";
   if (href) {
     return (
       <Link
@@ -170,7 +170,7 @@ export function Notice({
     danger: "border-red-200 bg-blush text-ink",
   };
   return (
-    <p className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${tones[tone]}`}>
+    <p className={`rounded-[1.25rem] border px-4 py-3 text-sm leading-6 ${tones[tone]}`}>
       {children}
     </p>
   );

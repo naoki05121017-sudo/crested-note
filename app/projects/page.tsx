@@ -18,7 +18,7 @@ export default async function ProjectsPage() {
         title="ブリード目標・プロジェクト"
         description="今季の狙いモルフや使いたい個体をまとめます。"
       />
-      <MutationForm action={createProject} className="grid gap-3 rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)] md:grid-cols-2">
+      <MutationForm action={createProject} className="grid gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] md:grid-cols-2 sm:p-6">
         <label className="grid gap-1 text-sm">
           <span>名前</span>
           <input required name="name" className="nc-input" placeholder="例: 2026 ファントム計画" />
@@ -43,7 +43,7 @@ export default async function ProjectsPage() {
             <li key={project.id}>
               <Link
                 href={`/projects/${project.id}`}
-                className="block rounded-[1.5rem] border border-line bg-surface p-5 shadow-[0_12px_32px_rgba(28,25,23,0.04)]"
+                className="block rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)]"
               >
                 <Badge tone={project.status === "active" ? "sage" : "sand"}>
                   {PROJECT_STATUS_LABEL[project.status]}
