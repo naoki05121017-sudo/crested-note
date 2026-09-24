@@ -2,11 +2,11 @@ import Link from "next/link";
 import { BrandMark } from "@/app/components/icons";
 
 const cardBase =
-  "rounded-[1.75rem] p-5 sm:p-6";
+  "rounded-[1.75rem] p-5 text-ink sm:p-6";
 
 const cardTones = {
   white:
-    "border border-line bg-white shadow-[0_10px_28px_rgba(23,20,28,0.05)]",
+    "border border-line bg-white shadow-[0_16px_40px_rgba(12,10,16,0.28)]",
   ink: "border-transparent bg-[#f3eadc]",
   blush: "border-transparent bg-[#fde8ef]",
   mist: "border-transparent bg-[#e7f3fb]",
@@ -29,15 +29,15 @@ export function PageHeader({
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-2xl">
         {kicker ? (
-          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
+          <p className="text-[11px] tracking-[0.22em] text-white/40 uppercase">
             {kicker}
           </p>
         ) : null}
-        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
           {title}
         </h1>
         {description ? (
-          <p className="mt-3 text-sm leading-7 text-muted sm:text-[0.95rem]">
+          <p className="mt-3 text-sm leading-7 text-white/60 sm:text-[0.95rem]">
             {description}
           </p>
         ) : null}
@@ -75,7 +75,7 @@ export function SectionTitle({
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <h2 className="text-lg font-semibold tracking-tight">{children}</h2>
-      {hint ? <p className="text-xs text-muted">{hint}</p> : null}
+      {hint ? <p className="text-xs opacity-60">{hint}</p> : null}
     </div>
   );
 }

@@ -17,7 +17,7 @@ function HomeCard({
 }) {
   return (
     <section
-      className={`rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6 ${className}`}
+      className={`rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6 ${className}`}
     >
       {children}
     </section>
@@ -38,7 +38,7 @@ function HomeStat({
   return (
     <Link
       href={href}
-      className={`block rounded-[1.75rem] p-5 ${tint}`}
+      className={`block rounded-[1.75rem] p-5 text-ink ${tint}`}
     >
       <p className="text-sm text-ink/60">{label}</p>
       <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
@@ -111,7 +111,7 @@ export function HomeDashboard({
       <div>
         <div className="mb-4 flex items-end justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight">マイ個体</h2>
-          <Link href="/animals" className="text-sm text-muted underline-offset-2 hover:underline">
+          <Link href="/animals" className="text-sm text-white/50 underline-offset-2 hover:underline">
             すべて見る
           </Link>
         </div>
@@ -125,7 +125,7 @@ export function HomeDashboard({
               <li key={animal.id}>
                 <Link
                   href={`/animals/${animal.id}`}
-                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white shadow-[0_10px_28px_rgba(23,20,28,0.05)]"
+                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)]"
                 >
                   <div className="aspect-[4/3] bg-[#f6f3f8]">
                     {animal.photoUrl ? (
@@ -162,7 +162,7 @@ export function HomeDashboard({
         <HomeCard className="border-transparent bg-[#e7f3fb]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">全国個体比較</h2>
-            <Link href="/compare" className="text-sm text-muted underline-offset-2 hover:underline">
+            <Link href="/compare" className="text-sm text-white/50 underline-offset-2 hover:underline">
               開く
             </Link>
           </div>
@@ -197,7 +197,7 @@ export function HomeDashboard({
         <HomeCard className="border-transparent bg-[#eef6f1]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 className="text-lg font-semibold tracking-tight">日本のクレス統計</h2>
-            <Link href="/stats" className="text-sm text-muted underline-offset-2 hover:underline">
+            <Link href="/stats" className="text-sm text-white/50 underline-offset-2 hover:underline">
               開く
             </Link>
           </div>
@@ -275,7 +275,7 @@ export function HomeDashboard({
               <li key={animal.id}>
                 <Link
                   href={`/animals/${animal.id}`}
-                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white"
+                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white text-ink"
                 >
                   <div className="aspect-square bg-[#f6f3f8]">
                     {animal.photoUrl ? (
@@ -295,13 +295,13 @@ export function HomeDashboard({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Link href="/calculator" className="block rounded-[1.75rem] bg-[#ece6fb] p-6">
+        <Link href="/calculator" className="block rounded-[1.75rem] bg-[#ece6fb] p-6 text-ink">
           <h2 className="text-lg font-semibold">遺伝計算</h2>
           <p className="mt-2 text-sm leading-6 text-ink/60">
             ペアの遺伝を計算します。
           </p>
         </Link>
-        <Link href="/breedings" className="block rounded-[1.75rem] bg-[#e7f6ee] p-6">
+        <Link href="/breedings" className="block rounded-[1.75rem] bg-[#e7f6ee] p-6 text-ink">
           <h2 className="text-lg font-semibold">ブリード</h2>
           <p className="mt-2 text-sm leading-6 text-ink/60">
             ペアと卵の記録へ進みます。

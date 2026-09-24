@@ -28,7 +28,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
 
 const card =
-  "rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6";
+  "rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6";
 
 function PedigreeLink({
   animal,
@@ -151,7 +151,7 @@ export default async function AnimalDetailPage({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-[1.75rem] bg-[#eef6f1] p-5 sm:p-6">
+        <div className="rounded-[1.75rem] bg-[#eef6f1] p-5 text-ink sm:p-6">
           <p className="text-sm text-ink/60">最新体重</p>
           <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
             {latest ? `${latest.weightG.toFixed(1)}g` : "—"}
@@ -164,7 +164,7 @@ export default async function AnimalDetailPage({
         </div>
         <Link
           href={`/compare?animalId=${animal.id}`}
-          className="rounded-[1.75rem] bg-[#e7f3fb] p-5 sm:p-6"
+          className="rounded-[1.75rem] bg-[#e7f3fb] p-5 text-ink sm:p-6"
         >
           <p className="text-sm text-ink/60">全国個体比較</p>
           <p className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">見る</p>
@@ -326,7 +326,7 @@ export default async function AnimalDetailPage({
         <span className="nc-btn mt-4 inline-flex">比較を見る</span>
       </Link>
 
-      <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 sm:px-6">
+      <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 text-ink sm:px-6">
         <p className="text-sm text-ink/70">この個体を削除</p>
         <p className="mt-1 text-xs leading-5 text-muted">削除すると元に戻せません。</p>
         <div className="mt-3">

@@ -20,7 +20,7 @@ export function LegalArticle({
           {children}
         </div>
       </Card>
-      <LegalNav className="text-muted" />
+      <LegalNav className="text-white/45" />
     </div>
   );
 }

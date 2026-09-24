@@ -45,7 +45,7 @@ export function PairingResults({ result }: { result: PairingResult }) {
           {result.outcomes.map((outcome, index) => (
             <li
               key={outcome.phenotype}
-              className={`rounded-[1.75rem] px-5 py-5 ${tints[index % tints.length]}`}
+              className={`rounded-[1.75rem] px-5 py-5 text-ink ${tints[index % tints.length]}`}
             >
               <p className="text-base font-medium leading-6 sm:text-lg">
                 {outcome.phenotype}
@@ -66,7 +66,7 @@ export function PairingResults({ result }: { result: PairingResult }) {
         </ul>
       </div>
 
-      <details className="rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6">
+      <details className="rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6">
         <summary className="cursor-pointer text-lg font-semibold tracking-tight">
           詳しい遺伝情報
           <span className="ml-2 text-sm font-normal text-muted">詳細を見る</span>

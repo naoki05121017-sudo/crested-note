@@ -117,7 +117,7 @@ function ParentEditor({
 
   return (
     <section
-      className={`rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6 ${tint}`}
+      className={`rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6 ${tint}`}
     >
       <p className="text-[11px] tracking-[0.2em] text-ink/40 uppercase">{stepLabel}</p>
       <h2 className="mt-2 mb-5 text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
@@ -453,7 +453,7 @@ export function PairingWorkbench({
       </div>
 
       <div>
-        <p className="mb-3 text-[11px] tracking-[0.2em] text-ink/40 uppercase">
+        <p className="mb-3 text-[11px] tracking-[0.2em] text-white/40 uppercase">
           3. 計算する
         </p>
         <button
@@ -472,14 +472,14 @@ export function PairingWorkbench({
       {result ? (
         <>
           <div>
-            <p className="mb-3 text-[11px] tracking-[0.2em] text-ink/40 uppercase">
+            <p className="mb-3 text-[11px] tracking-[0.2em] text-white/40 uppercase">
               4. 子の予想
             </p>
             <PairingResults result={result} />
           </div>
           <MutationForm
             action={savePrediction}
-            className="flex flex-col gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-6"
+            className="flex flex-col gap-3 rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6"
           >
             <input type="hidden" name="maleId" value={selectedA} />
             <input type="hidden" name="femaleId" value={selectedB} />

@@ -40,7 +40,7 @@ export default async function PredictionDetailPage({
         }
       />
 
-      <p className="text-sm text-muted">
+      <p className="text-sm text-white/55">
         {male ? animalTitle(male) : "仮想の親A"} × {female ? animalTitle(female) : "仮想の親B"}
       </p>
 

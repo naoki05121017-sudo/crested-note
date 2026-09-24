@@ -167,20 +167,20 @@ export function AppShell({
 
   if (publicView) {
     return (
-      <div className="min-h-full bg-background text-ink">
-        <header className="border-b border-line bg-white/90 backdrop-blur">
+      <div className="min-h-full bg-background">
+        <header className="bg-[#17141c] text-white">
           <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
             <BrandMark size={32} />
             <div>
               <p className="font-semibold tracking-tight">クレスノート</p>
-              <p className="text-[10px] tracking-[0.18em] text-muted">
+              <p className="text-[10px] tracking-[0.18em] text-white/40">
                 by N.crest
               </p>
             </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-4xl px-4 py-8">{children}</main>
-        <footer className="mx-auto w-full max-w-4xl px-4 pb-10 text-center text-xs leading-5 text-muted">
+        <footer className="mx-auto w-full max-w-4xl px-4 pb-10 text-center text-xs leading-5 text-white/40">
           クレスノート
           <br />
           by N.crest
@@ -191,7 +191,7 @@ export function AppShell({
   }
 
   return (
-    <div className="min-h-full bg-background text-ink">
+    <div className="min-h-full bg-background">
       <div className="mx-auto flex min-h-full max-w-[92rem]">
         <aside className="sticky top-0 hidden h-screen w-[17.5rem] shrink-0 bg-[#17141c] px-4 py-6 text-white lg:block">
           <Link href="/" className="flex min-h-12 items-center gap-3 px-2">
@@ -236,7 +236,7 @@ export function AppShell({
             </div>
           ) : null}
           <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
-          <footer className="px-4 pb-10 text-center text-xs leading-5 text-muted sm:px-8">
+          <footer className="px-4 pb-10 text-center text-xs leading-5 text-white/40 sm:px-8">
             クレスノート
             <br />
             by N.crest

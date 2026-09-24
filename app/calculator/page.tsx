@@ -32,11 +32,11 @@ export default async function CalculatorPage({
   return (
     <div className="flex flex-col gap-8">
       <div className="max-w-2xl">
-        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Genetics</p>
-        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+          <p className="text-[11px] tracking-[0.22em] text-white/40 uppercase">Genetics</p>
+        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
           遺伝計算
         </h1>
-        <p className="mt-3 text-sm leading-7 text-muted">
+        <p className="mt-3 text-sm leading-7 text-white/60">
           親を選ぶ → 遺伝を計算する → 子の予測を見る。セーブルなど座位に紐づく見た目は確率に含めます。ピンストライプなど多因子の見た目は確率に含めません。
         </p>
       </div>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f4f2;
-  --foreground: #17141c;
+  --background: #2c2832;
+  --foreground: #efeae6;
   --surface: #ffffff;
   --muted: #6d675f;
   --line: #e8e1d8;
@@ -46,10 +46,9 @@ a:active {
 html,
 body {
   background:
-    radial-gradient(720px 340px at 8% -6%, rgba(253, 232, 239, 0.78), transparent 55%),
-    radial-gradient(640px 300px at 100% 0%, rgba(231, 243, 251, 0.72), transparent 50%),
-    radial-gradient(500px 240px at 50% 100%, rgba(23, 20, 28, 0.05), transparent 55%),
-    #f7f4f2;
+    radial-gradient(720px 320px at 12% -8%, rgba(246, 223, 216, 0.08), transparent 52%),
+    radial-gradient(640px 280px at 100% 0%, rgba(111, 157, 136, 0.08), transparent 48%),
+    #2c2832;
   color: var(--foreground);
 }
 
@@ -223,7 +222,8 @@ body {
   border: 1px solid var(--line);
   border-radius: 1.75rem;
   background: #fff;
-  box-shadow: 0 10px 28px rgba(23, 20, 28, 0.05);
+  color: var(--ink);
+  box-shadow: 0 16px 40px rgba(12, 10, 16, 0.28);
 }
 
 .nc-check {

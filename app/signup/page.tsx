@@ -59,7 +59,7 @@ export default function SignupPage() {
           </Link>
         </p>
       </Card>
-      <LegalNav className="max-w-md justify-start text-muted" />
+      <LegalNav className="max-w-md justify-start text-white/45" />
     </div>
   );
 }

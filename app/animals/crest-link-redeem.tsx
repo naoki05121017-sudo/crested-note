@@ -6,7 +6,7 @@ import { getSettings } from "@/lib/db/queries";
 export async function CrestLinkRedeemCard() {
   const settings = await getSettings();
   return (
-    <details className="rounded-[1.75rem] border border-line bg-[#f7f4f2] px-5 py-4 sm:px-6">
+    <details className="rounded-[1.75rem] border border-line bg-[#f7f4f2] px-5 py-4 text-ink sm:px-6">
       <summary className="cursor-pointer text-sm font-medium text-ink/70">
         個体を引き継ぐ
       </summary>

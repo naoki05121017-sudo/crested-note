@@ -30,7 +30,7 @@ export default async function PredictionsPage() {
             <li key={row.id}>
               <Link
                 href={`/predictions/${row.id}`}
-                className="block rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)]"
+                className="block rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)]"
               >
                 <h2 className="font-semibold">{row.name}</h2>
                 <p className="mt-1 text-sm text-muted">

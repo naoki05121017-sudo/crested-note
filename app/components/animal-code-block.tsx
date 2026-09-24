@@ -3,7 +3,7 @@ import { displayAnimalId, formatAnimalCode } from "@/lib/db/animal-code";
 export function AnimalCodeBlock({
   code,
   pending = false,
-  className = "rounded-[1.5rem] border border-line bg-sand/70 px-4 py-4",
+  className = "rounded-[1.5rem] border border-line bg-sand/70 px-4 py-4 text-ink",
   codeClassName = "mt-1 font-mono text-2xl font-semibold tracking-wide text-ink sm:text-3xl",
 }: {
   code?: string;

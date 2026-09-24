@@ -137,7 +137,7 @@ export default async function ProjectDetailPage({
         )}
       </Card>
 
-      <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 sm:px-6">
+      <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 text-ink sm:px-6">
         <p className="text-sm text-ink/70">プロジェクトを削除</p>
         <p className="mt-1 text-xs leading-5 text-muted">削除すると元に戻せません。</p>
         <div className="mt-3">

@@ -23,16 +23,16 @@ export default async function PublicAnimalPage({
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">
+        <p className="text-[11px] tracking-[0.22em] text-white/40 uppercase">
           PUBLIC ANIMAL
         </p>
-        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
+        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
           {animal.name}
         </h1>
         <div className="mt-4">
           <AnimalCodeBlock
             code={animal.code}
-            className="rounded-[1.75rem] border border-line bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb] px-4 py-4"
+            className="rounded-[1.75rem] border border-line bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb] px-4 py-4 text-ink"
             codeClassName="mt-1 font-mono text-2xl font-semibold tracking-wide text-ink sm:text-3xl"
           />
         </div>

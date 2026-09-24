@@ -48,7 +48,7 @@ export default async function ComparePage({
         />
       ) : (
         <form
-          className="grid max-w-xl gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:grid-cols-[1fr_auto] sm:items-end sm:p-6"
+          className="grid max-w-xl gap-3 rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:grid-cols-[1fr_auto] sm:items-end sm:p-6"
           action="/compare"
         >
           <label className="grid min-w-0 flex-1 gap-1 text-sm">
@@ -100,7 +100,7 @@ export default async function ComparePage({
               tone="sage"
             />
           </div>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-white/55">
             条件：日本国内 / {comparison.morph} / 月齢 {comparison.ageMonths ?? "不明"}ヶ月前後
             （±3ヶ月）。比較相手が少ないときは「比較できません」と出ます。順位は表示しません。
           </p>

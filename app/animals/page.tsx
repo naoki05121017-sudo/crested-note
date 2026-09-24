@@ -27,11 +27,11 @@ export default async function AnimalsPage({
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Collection</p>
-          <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+          <p className="text-[11px] tracking-[0.22em] text-white/40 uppercase">Collection</p>
+          <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
             個体
           </h1>
-          <p className="mt-3 text-sm leading-7 text-muted">
+          <p className="mt-3 text-sm leading-7 text-white/60">
             登録・検索・絞り込み。詳細から体重・血統・公開リンクも管理できます。
           </p>
         </div>
@@ -42,7 +42,7 @@ export default async function AnimalsPage({
 
       <form
         action="/animals"
-        className="grid gap-3 rounded-[1.75rem] bg-[#fde8ef] p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
+        className="grid gap-3 rounded-[1.75rem] bg-[#fde8ef] p-5 text-ink sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
       >
         <input
           name="q"
@@ -72,7 +72,7 @@ export default async function AnimalsPage({
       </form>
 
       {animals.length === 0 ? (
-        <section className="rounded-[1.75rem] border border-line bg-white px-5 py-12 text-center shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-12">
+        <section className="rounded-[1.75rem] border border-line bg-white px-5 py-12 text-center text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-12">
           <p className="text-lg font-semibold">まだ個体がありません</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
             最初の1匹を登録すると、遺伝計算や繁殖につなげられます。
@@ -90,7 +90,7 @@ export default async function AnimalsPage({
               <li key={animal.id}>
                 <Link
                   href={`/animals/${animal.id}`}
-                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white shadow-[0_10px_28px_rgba(23,20,28,0.05)]"
+                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)]"
                 >
                   {animal.photoUrl ? (
                     <div className="aspect-[4/3] bg-[#f6f3f8]">
