@@ -124,6 +124,12 @@ describe("major morph grid (Lilly White / Sable / Cappuccino / Axanthic / Phanto
       { phenotype: "リリーホワイト", probability: 0.25 },
       { phenotype: "リリーセーブル", probability: 0.25 },
     ]);
+    expect(result.outcomes.map((row) => row.phenotype)).toEqual([
+      "ノーマル",
+      "セーブル",
+      "リリーホワイト",
+      "リリーセーブル",
+    ]);
     expect(result.outcomes.some((row) => row.phenotype.includes("スーパー"))).toBe(
       false,
     );
@@ -276,15 +282,31 @@ describe("major morph grid (Lilly White / Sable / Cappuccino / Axanthic / Phanto
       { phenotype: "リリーホワイト", probability: 0.25 },
       { phenotype: "リリーセーブル", probability: 0.25 },
     ]);
+    expect(runCalculatorPairing(lw, sable).outcomes.map((row) => row.phenotype)).toEqual([
+      "ノーマル",
+      "セーブル",
+      "リリーホワイト",
+      "リリーセーブル",
+    ]);
     expectRows(runCalculatorPairing(sable, sable), [
       { phenotype: "ノーマル", probability: 0.25 },
       { phenotype: "セーブル", probability: 0.5 },
       { phenotype: "スーパーセーブル", probability: 0.25 },
     ]);
+    expect(runCalculatorPairing(sable, sable).outcomes.map((row) => row.phenotype)).toEqual([
+      "セーブル",
+      "ノーマル",
+      "スーパーセーブル",
+    ]);
     expectRows(runCalculatorPairing(lw, lw), [
       { phenotype: "ノーマル", probability: 0.25 },
       { phenotype: "リリーホワイト", probability: 0.5 },
       { phenotype: "スーパーリリーホワイト", probability: 0.25 },
+    ]);
+    expect(runCalculatorPairing(lw, lw).outcomes.map((row) => row.phenotype)).toEqual([
+      "リリーホワイト",
+      "ノーマル",
+      "スーパーリリーホワイト",
     ]);
     expectRows(runCalculatorPairing(capp, capp), [
       { phenotype: "ノーマル", probability: 0.25 },

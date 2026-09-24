@@ -36,6 +36,24 @@ import type {
 } from "./types";
 
 const EPS = 1e-12;
+
+/** Stable order when probabilities tie (Lilly White × Sable 4×25%, 1:2:1 supers). */
+const PHENOTYPE_TIE_RANK: Record<string, number> = {
+  ノーマル: 0,
+  セーブル: 1,
+  カプチーノ: 2,
+  ハイウェイ: 3,
+  リリーホワイト: 4,
+  リリーセーブル: 5,
+  フラペチーノ: 6,
+  スーパーセーブル: 7,
+  スーパーカプチーノ: 8,
+  スーパーリリーホワイト: 9,
+};
+
+function phenotypeTieRank(phenotype: string): number {
+  return PHENOTYPE_TIE_RANK[phenotype] ?? 50 + phenotype.length;
+}
 const SKIP_UNRECOGNIZED = new Set(["csh", "sable", "highway"]);
 
 function asGeneStatus(value: string | undefined): GeneStatus {
@@ -194,9 +212,10 @@ function expandPairing(
     addWarnings(state, warningTotals);
   }
 
-  const outcomes = [...merged.values()].sort(
-    (a, b) => b.probability - a.probability,
-  );
+  const outcomes = [...merged.values()].sort((a, b) => {
+    if (b.probability !== a.probability) return b.probability - a.probability;
+    return phenotypeTieRank(a.phenotype) - phenotypeTieRank(b.phenotype);
+  });
   const warnings = [...warningTotals.values()]
     .filter((warning) => warning.probability > EPS)
     .sort((a, b) => {

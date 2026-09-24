@@ -240,8 +240,8 @@ describe("geneStatusLabelJa", () => {
 describe("formatProbability", () => {
   it("formats common ratios", () => {
     expect(formatProbability(1)).toBe("100%");
-    expect(formatProbability(0.5)).toBe("50.0%");
-    expect(formatProbability(0.25)).toBe("25.0%");
+    expect(formatProbability(0.5)).toBe("50%");
+    expect(formatProbability(0.25)).toBe("25%");
     expect(formatProbability(1 / 3)).toBe("33.3%");
   });
 });

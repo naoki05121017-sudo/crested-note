@@ -58,11 +58,11 @@ function ParentHeading({ sex }: { sex: "male" | "female" }) {
 function parentStateFromAnimal(animal?: CalculatorAnimal): CalculatorParentState {
   const genotype = mergeAllelicVisuals(animal?.genotype ?? {}, animal?.traits ?? []);
   const visualTags = animal?.traits ?? [];
-  return {
+  return hydrateParentForPairing({
     genotype,
     visualTags,
-    addedTraits: visibleTraitsFromParent(animal?.genotype ?? {}, visualTags),
-  };
+    addedTraits: visibleTraitsFromParent(genotype, visualTags),
+  });
 }
 
 function ParentEditor({
@@ -104,7 +104,7 @@ function ParentEditor({
   }
 
   function patchGenotype(nextGenotype: Genotype) {
-    onStateChange({ ...state, genotype: nextGenotype });
+    onStateChange(hydrateParentForPairing({ ...state, genotype: nextGenotype }));
   }
 
   const visible = addedTraits;

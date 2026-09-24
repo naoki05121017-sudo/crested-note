@@ -7,7 +7,11 @@ import {
   uiTagsForPairing,
   type CalculatorParentState,
 } from "@/app/components/calculator-pairing";
-import { calculatorTraitOptions } from "@/app/components/calculator-traits";
+import { mergeAllelicVisuals } from "@/lib/genetics/allelic-visual";
+import {
+  calculatorTraitOptions,
+  visibleTraitsFromParent,
+} from "@/app/components/calculator-traits";
 import { calculatePairing, getLocus } from "@/lib/genetics";
 import { parentStatusOptions } from "@/app/components/parent-gene-status";
 
@@ -165,9 +169,35 @@ describe("calculator UI pairing path (遺伝を計算する)", () => {
     expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
     expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
     expect(result.outcomes).toHaveLength(4);
+    expect(result.outcomes.map((row) => row.phenotype)).toEqual([
+      "ノーマル",
+      "セーブル",
+      "リリーホワイト",
+      "リリーセーブル",
+    ]);
     expect(result.outcomes.some((row) => row.phenotype.includes("スーパー"))).toBe(
       false,
     );
+  });
+
+  it("登録個体の形（リリー het × traits セーブル）も 4×25%", () => {
+    const lily: CalculatorParentState = {
+      genotype: { lillyWhite: "het" },
+      visualTags: [],
+      addedTraits: visibleTraitsFromParent({ lillyWhite: "het" }, []),
+    };
+    const sableGenotype = mergeAllelicVisuals({}, ["sable"]);
+    const sable: CalculatorParentState = {
+      genotype: sableGenotype,
+      visualTags: ["sable"],
+      addedTraits: visibleTraitsFromParent(sableGenotype, ["sable"]),
+    };
+    const result = runCalculatorPairing(lily, sable);
+    expect(prob(result, "ノーマル")).toBeCloseTo(0.25);
+    expect(prob(result, "セーブル")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーホワイト")).toBeCloseTo(0.25);
+    expect(prob(result, "リリーセーブル")).toBeCloseTo(0.25);
+    expect(result.outcomes).toHaveLength(4);
   });
 
   it("leftover sable diplotype on a Lilly White-only parent does not create super sable", () => {
