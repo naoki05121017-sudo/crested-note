@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CrestLinkRedeemCard } from "@/app/animals/crest-link-redeem";
 import { AnimalPhoto } from "@/app/components/animal-photo";
-import { EmptyState, PageHeader, Badge } from "@/app/components/ui";
-import { filterAnimals } from "@/lib/db/queries";
+import { Badge } from "@/app/components/ui";
 import { displayAnimalId } from "@/lib/db/animal-code";
+import { filterAnimals, weightsByAnimal } from "@/lib/db/queries";
 import { ANIMAL_STATUS_LABEL, SEX_LABEL } from "@/lib/db/labels";
 import { ANIMAL_STATUSES, SEXES } from "@/lib/db/types";
 import { formatGenotypeLabel, visualTraitName } from "@/lib/genetics";
@@ -21,21 +21,29 @@ export default async function AnimalsPage({
   const sex = typeof params.sex === "string" ? params.sex : "";
   const status = typeof params.status === "string" ? params.status : "";
   const animals = await filterAnimals({ q, sex, status });
+  const byWeights = await weightsByAnimal();
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        kicker="COLLECTION"
-        title="個体"
-        description="登録・検索・絞り込み。詳細から体重・血統・公開リンクも管理できます。"
-        actions={
-          <Link href="/animals/new" className="nc-btn">
-            新規登録
-          </Link>
-        }
-      />
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Collection</p>
+          <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+            個体
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-muted">
+            登録・検索・絞り込み。詳細から体重・血統・公開リンクも管理できます。
+          </p>
+        </div>
+        <Link href="/animals/new" className="nc-btn w-full sm:w-auto">
+          新規登録
+        </Link>
+      </div>
 
-      <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" action="/animals">
+      <form
+        action="/animals"
+        className="grid gap-3 rounded-[1.75rem] border border-line bg-white p-5 shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
+      >
         <input
           name="q"
           defaultValue={q}
@@ -63,76 +71,80 @@ export default async function AnimalsPage({
         </button>
       </form>
 
-      <CrestLinkRedeemCard />
-
       {animals.length === 0 ? (
-        <EmptyState
-          title="まだ個体がありません"
-          body="最初の1匹を登録すると、遺伝計算や繁殖につなげられます。"
-          action={
-            <Link href="/animals/new" className="nc-btn">
-              個体を登録
-            </Link>
-          }
-        />
+        <section className="rounded-[1.75rem] border border-line bg-white px-5 py-12 text-center shadow-[0_10px_28px_rgba(23,20,28,0.05)] sm:p-12">
+          <p className="text-lg font-semibold">まだ個体がありません</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+            最初の1匹を登録すると、遺伝計算や繁殖につなげられます。
+          </p>
+          <Link href="/animals/new" className="nc-btn mt-6">
+            個体を登録
+          </Link>
+        </section>
       ) : (
-        <div className="nc-table-wrap">
-          <table className="nc-table min-w-[36rem]">
-            <thead>
-              <tr>
-                <th>個体</th>
-                <th>個体ID</th>
-                <th>性別</th>
-                <th>遺伝子 / 見た目</th>
-                <th>状態</th>
-              </tr>
-            </thead>
-            <tbody>
-              {animals.map((animal) => (
-                <tr key={animal.id}>
-                  <td>
-                    <Link href={`/animals/${animal.id}`} className="flex items-center gap-3 font-medium hover:underline">
-                      {animal.photoUrl ? (
-                        <AnimalPhoto
-                          src={animal.photoUrl}
-                          alt=""
-                          className="h-12 w-12 shrink-0 rounded-xl object-cover"
-                        />
-                      ) : null}
-                      {animal.name}
-                    </Link>
-                  </td>
-                  <td>
-                    <span className="font-mono text-base font-semibold tracking-wide">
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {animals.map((animal) => {
+            const logs = byWeights.get(animal.id) ?? [];
+            const latest = logs[logs.length - 1];
+            return (
+              <li key={animal.id}>
+                <Link
+                  href={`/animals/${animal.id}`}
+                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white shadow-[0_10px_28px_rgba(23,20,28,0.05)]"
+                >
+                  {animal.photoUrl ? (
+                    <div className="aspect-[4/3] bg-[#f6f3f8]">
+                      <AnimalPhoto
+                        src={animal.photoUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="p-4 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <p className="text-lg font-semibold tracking-tight">{animal.name}</p>
+                      <Badge
+                        tone={
+                          animal.sex === "female" ? "blush" : animal.sex === "male" ? "mist" : "sand"
+                        }
+                      >
+                        {SEX_LABEL[animal.sex]}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 font-mono text-sm font-semibold tracking-wide text-ink/70">
                       {displayAnimalId(animal)}
-                    </span>
-                  </td>
-                  <td>
-                    <Badge tone={animal.sex === "female" ? "blush" : animal.sex === "male" ? "mist" : "sand"}>
-                      {SEX_LABEL[animal.sex]}
-                    </Badge>
-                  </td>
-                  <td className="text-muted">
-                    {animal.morphLabel || formatGenotypeLabel(animal.genotype)}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-ink/60">
+                      {animal.morphLabel || formatGenotypeLabel(animal.genotype)}
+                    </p>
                     {animal.traits.length > 0 ? (
-                      <span className="mt-1 block text-xs">
+                      <p className="mt-1 text-xs leading-5 text-muted">
                         {animal.traits
                           .map((id) => visualTraitName(id, animal.traitLevels?.[id]))
                           .join(" / ")}
-                      </span>
+                      </p>
                     ) : null}
-                  </td>
-                  <td>
-                    <Badge tone={animal.status === "breeding" ? "sage" : "sand"}>
-                      {ANIMAL_STATUS_LABEL[animal.status]}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <div className="mt-4 flex items-end justify-between gap-3">
+                      <div>
+                        <p className="text-xs text-muted">体重</p>
+                        <p className="text-2xl font-semibold tabular-nums">
+                          {latest ? `${latest.weightG}g` : "—"}
+                        </p>
+                      </div>
+                      <Badge tone={animal.status === "breeding" ? "sage" : "sand"}>
+                        {ANIMAL_STATUS_LABEL[animal.status]}
+                      </Badge>
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
+
+      <CrestLinkRedeemCard />
     </div>
   );
 }
