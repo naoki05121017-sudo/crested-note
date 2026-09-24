@@ -1,8 +1,39 @@
 import Link from "next/link";
+import { Dela_Gothic_One } from "next/font/google";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { displayAnimalId } from "@/lib/db/animal-code";
 import { formatGenotypeLabel } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
+
+const crestTitle = Dela_Gothic_One({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+function TitleCrown() {
+  return (
+    <svg
+      className="nc-home-title-crown"
+      viewBox="0 0 48 28"
+      aria-hidden="true"
+    >
+      <path
+        d="M7.2 20.6 12.4 8.4c.35-.82 1.5-.86 1.92-.06L18.8 17l4.15-11.2c.38-.98 1.74-.98 2.12 0L29.2 17l4.48-8.66c.42-.8 1.57-.76 1.92.06l5.2 12.2c.22.52-.16 1.1-.72 1.1H7.92c-.56 0-.94-.58-.72-1.1Z"
+        fill="#3d5f86"
+      />
+      <path
+        d="M8.4 22.2h31.2"
+        stroke="#3d5f86"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+      <circle cx="12.6" cy="7.2" r="1.55" fill="#4a6d96" />
+      <circle cx="24" cy="4.4" r="1.7" fill="#4a6d96" />
+      <circle cx="35.4" cy="7.2" r="1.55" fill="#4a6d96" />
+    </svg>
+  );
+}
 
 function morphText(animal: Animal) {
   return animal.morphLabel.trim() || formatGenotypeLabel(animal.genotype);
@@ -49,7 +80,7 @@ function HomeStat({
 }
 
 export function HomeDashboard({
-  collectionName,
+  collectionName: _collectionName,
   animalCount,
   activeBreedings,
   incubatingEggs,
@@ -90,23 +121,35 @@ export function HomeDashboard({
 
   return (
     <div className="flex flex-col gap-8">
-      <HomeCard className="overflow-hidden border-transparent bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb]">
-        <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Welcome</p>
-        <h1 className="mt-2 max-w-xl text-[1.85rem] font-semibold leading-tight tracking-tight sm:text-4xl">
-          {collectionName}
-        </h1>
-        <p className="mt-3 max-w-xl text-sm leading-7 text-ink/60">
-          クレスとともに、もっと楽しく、もっと深く。
-        </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Link href="/animals/new" className="nc-btn">
-            個体を登録
-          </Link>
-          <Link href="/calculator" className="nc-btn-ghost">
-            遺伝計算
-          </Link>
+      <section className="nc-hero nc-home-title">
+        <div className="nc-home-title-photo" aria-hidden="true">
+          <img
+            src="/brand/home-crest.png"
+            alt=""
+            className="nc-home-title-photo-img"
+          />
         </div>
-      </HomeCard>
+        <div className="nc-home-title-copy">
+          <div className="nc-home-title-brand">
+            <TitleCrown />
+            <h1 className={`nc-home-title-word ${crestTitle.className}`}>
+              クレスノート
+            </h1>
+            <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
+          </div>
+          <p className="nc-hero-copy mt-4 max-w-[16.5rem] text-sm leading-7 sm:max-w-sm">
+            クレスとともに、もっと楽しく、もっと深く。
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link href="/animals/new" className="nc-btn">
+              個体を登録
+            </Link>
+            <Link href="/calculator" className="nc-btn-ghost">
+              遺伝計算
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <div>
         <div className="mb-4 flex items-end justify-between gap-3">
