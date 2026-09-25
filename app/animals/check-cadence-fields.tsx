@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import {
   CHECK_CADENCE_PRESETS,
   cadenceIdFromDays,
+  type CheckCadenceId,
 } from "@/lib/care/check-cadence";
 
 export function CheckCadenceFields({
@@ -8,7 +12,11 @@ export function CheckCadenceFields({
 }: {
   defaultDays?: number;
 }) {
-  const selected = cadenceIdFromDays(defaultDays);
+  const initial = cadenceIdFromDays(defaultDays);
+  const [cadence, setCadence] = useState<CheckCadenceId>(initial);
+  const [customDays, setCustomDays] = useState(
+    initial === "custom" && defaultDays ? String(defaultDays) : "",
+  );
 
   return (
     <div className="grid gap-3 sm:col-span-2">
@@ -16,7 +24,10 @@ export function CheckCadenceFields({
         <span className="font-medium">記録の間隔</span>
         <select
           name="checkCadence"
-          defaultValue={selected}
+          value={cadence}
+          onChange={(event) =>
+            setCadence(event.target.value as CheckCadenceId)
+          }
           className="nc-input"
         >
           <option value="unset">まだ決めていない</option>
@@ -32,10 +43,14 @@ export function CheckCadenceFields({
         <span className="font-medium">カスタムの日数</span>
         <input
           name="checkEveryDays"
-          type="number"
-          min={1}
-          max={365}
-          defaultValue={selected === "custom" ? defaultDays : ""}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          value={customDays}
+          onChange={(event) =>
+            setCustomDays(event.target.value.replace(/[^\d]/g, ""))
+          }
           placeholder="カスタムを選んだとき"
           className="nc-input sm:max-w-40"
         />
