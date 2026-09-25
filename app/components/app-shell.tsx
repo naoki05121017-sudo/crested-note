@@ -115,6 +115,33 @@ function AuthFooter({ email }: { email: string | null }) {
   );
 }
 
+function HeaderBell() {
+  const pathname = usePathname();
+
+  function openPushSettings(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (pathname !== "/settings") return;
+    event.preventDefault();
+    const target = document.getElementById("crest-push");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    window.location.hash = "crest-push";
+  }
+
+  return (
+    <Link
+      href="/settings#crest-push"
+      onClick={openPushSettings}
+      className="relative z-30 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white"
+      aria-label="クレスチェックの通知設定"
+      title="クレスチェックの通知"
+    >
+      <IconBell />
+    </Link>
+  );
+}
+
 function TopBar({ email }: { email: string | null }) {
   const initial = email?.trim().charAt(0).toUpperCase() || "?";
   return (
@@ -131,16 +158,10 @@ function TopBar({ email }: { email: string | null }) {
           aria-label="個体名・モルフ・IDを検索"
         />
       </form>
+      <HeaderBell />
       <Link
         href="/settings"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white sm:h-11 sm:w-11"
-        aria-label="設定・お知らせ"
-      >
-        <IconBell />
-      </Link>
-      <Link
-        href="/settings"
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#17141c] sm:h-11 sm:w-11"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#17141c]"
         aria-label={email ? `アカウント ${email}` : "設定"}
         title={email ?? "設定"}
       >

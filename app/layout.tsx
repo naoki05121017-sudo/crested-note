@@ -21,6 +21,16 @@ export const metadata: Metadata = {
   },
   description:
     "クレスノート by N.crest。クレスとともに、もっと楽しく、もっと深く。クレステッドゲッコーの個体・遺伝・繁殖管理。",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "クレスノート",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

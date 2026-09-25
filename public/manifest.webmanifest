@@ -1,0 +1,19 @@
+{
+  "name": "クレスノート",
+  "short_name": "クレスノート",
+  "description": "クレスの記録とクレスチェック",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#2c2832",
+  "theme_color": "#2c2832",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CHECK_CADENCE_PRESETS,
   cadenceIdFromDays,
+  calendarDateInTimeZone,
   checkReminder,
   parseCheckEveryDays,
 } from "./check-cadence";
@@ -61,5 +62,11 @@ describe("check cadence", () => {
     });
     expect(waiting?.due).toBe(false);
     expect(waiting?.headline).toBe("次の記録まであと26日");
+  });
+
+  it("formats the calendar date in Japan time", () => {
+    expect(calendarDateInTimeZone(new Date("2026-09-24T22:30:00Z"))).toBe(
+      "2026-09-25",
+    );
   });
 });

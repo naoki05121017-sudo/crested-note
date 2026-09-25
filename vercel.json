@@ -1,5 +1,11 @@
 {
   "env": {
     "NEXT_PUBLIC_SITE_URL": "https://crested-note-vercel.vercel.app"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/crest-check",
+      "schedule": "0 22 * * *"
+    }
+  ]
 }

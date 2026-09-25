@@ -59,6 +59,18 @@ export function parseCheckEveryDays(
   return { error: null, days };
 }
 
+export function calendarDateInTimeZone(
+  now = new Date(),
+  timeZone = "Asia/Tokyo",
+): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
 export function calendarDaysBetween(fromIso: string, toIso: string): number | null {
   if (!fromIso || !toIso) return null;
   const from = new Date(`${fromIso}T00:00:00`);
