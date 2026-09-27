@@ -59,7 +59,7 @@ export default async function ComparePage({
         />
       ) : (
         <form
-          className="grid max-w-xl gap-3 rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:grid-cols-[1fr_auto] sm:items-end sm:p-6"
+          className="nc-lift grid max-w-xl gap-3 rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] p-5 text-ink sm:grid-cols-[1fr_auto] sm:items-end sm:p-6"
           action="/compare"
         >
           <label className="grid min-w-0 flex-1 gap-1 text-sm">

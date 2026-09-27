@@ -32,7 +32,7 @@ export default async function PublicAnimalPage({
         <div className="mt-4">
           <AnimalCodeBlock
             code={animal.code}
-            className="rounded-[1.75rem] border border-line bg-gradient-to-br from-[#fde8ef] via-white to-[#e7f3fb] px-4 py-4 text-ink"
+            className="nc-lift rounded-[2rem] bg-gradient-to-br from-[#fde8ef] via-[#fff8fb] to-[#e7f3fb] px-4 py-4 text-ink"
             codeClassName="mt-1 font-mono text-2xl font-semibold tracking-wide text-ink sm:text-3xl"
           />
         </div>
@@ -47,7 +47,7 @@ export default async function PublicAnimalPage({
         <AnimalPhoto
           src={animal.photoUrl}
           alt=""
-          className="max-h-80 w-full rounded-[1.75rem] object-cover"
+          className="nc-lift max-h-80 w-full rounded-[2rem] object-cover"
         />
       ) : null}
       <Card>

@@ -21,7 +21,7 @@ export function IncludedFeatures({
         {CREST_NOTE_INCLUDED.map((label) => (
           <li
             key={label}
-            className="rounded-full bg-[#f6f3f8] px-3 py-1 text-sm text-ink/80"
+            className="rounded-full bg-white/55 px-3 py-1.5 text-sm text-ink/80"
           >
             {label}
           </li>

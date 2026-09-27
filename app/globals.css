@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #2c2832;
-  --foreground: #efeae6;
-  --surface: #ffffff;
-  --muted: #6d675f;
-  --line: #e8e1d8;
+  --background: #161318;
+  --foreground: #f4eee8;
+  --surface: #fff8fb;
+  --muted: #7a736c;
+  --line: rgba(255, 255, 255, 0.14);
   --ink: #17141c;
   --accent: #d9efe6;
-  --accent-strong: #6f9d88;
+  --accent-strong: #7eb8a4;
   --blush: #f6dfd8;
   --mist: #e3eaf7;
   --sand: #f3eadc;
   --danger: #c45c4a;
   --warn: #b5813c;
+  --lilac: #ece6fb;
 }
 
 @theme inline {
@@ -46,9 +47,10 @@ a:active {
 html,
 body {
   background:
-    radial-gradient(720px 320px at 12% -8%, rgba(246, 223, 216, 0.08), transparent 52%),
-    radial-gradient(640px 280px at 100% 0%, rgba(111, 157, 136, 0.08), transparent 48%),
-    #2c2832;
+    radial-gradient(900px 420px at 8% -12%, rgba(246, 223, 216, 0.16), transparent 54%),
+    radial-gradient(760px 380px at 100% 0%, rgba(176, 196, 240, 0.14), transparent 50%),
+    radial-gradient(640px 320px at 70% 100%, rgba(157, 224, 196, 0.08), transparent 46%),
+    #141218;
   color: var(--foreground);
 }
 
@@ -58,19 +60,31 @@ body {
 
 .nc-input {
   width: 100%;
-  min-height: 44px;
-  border-radius: 1rem;
-  border: 1px solid var(--line);
-  background: white;
-  padding: 0.65rem 0.9rem;
+  min-height: 48px;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(23, 20, 28, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0.7rem 0.95rem;
   font-size: 1rem;
   color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .nc-input:focus {
-  outline: 2px solid rgba(111, 157, 136, 0.45);
+  outline: 2px solid rgba(176, 150, 214, 0.45);
   outline-offset: 1px;
-  border-color: var(--accent-strong);
+  border-color: #c9b4e4;
+}
+
+.nc-input-chrome {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f7f1ea;
+  box-shadow: none;
+}
+
+.nc-input-chrome::placeholder {
+  color: rgba(247, 241, 234, 0.42);
 }
 
 .nc-btn,
@@ -79,21 +93,22 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  min-height: 44px;
+  min-height: 48px;
   border-radius: 999px;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9375rem;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.98rem;
   font-weight: 600;
   text-align: center;
 }
 
 .nc-btn {
-  background: var(--ink);
-  color: white;
+  background: linear-gradient(180deg, #f8e4ec 0%, #ead6f4 100%);
+  color: #17141c;
+  box-shadow: 0 10px 24px rgba(18, 12, 22, 0.28);
 }
 
 .nc-btn:hover {
-  background: #2a2433;
+  background: linear-gradient(180deg, #ffeef4 0%, #f0e0fa 100%);
 }
 
 .nc-btn:active,
@@ -111,13 +126,25 @@ body {
 }
 
 .nc-btn-ghost {
-  border: 1px solid var(--line);
-  background: white;
-  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  color: #f4eee8;
 }
 
 .nc-btn-ghost:hover {
-  background: var(--sand);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.text-ink .nc-btn-ghost,
+.nc-lift .nc-btn-ghost {
+  border-color: rgba(23, 20, 28, 0.1);
+  background: rgba(255, 255, 255, 0.55);
+  color: #17141c;
+}
+
+.text-ink .nc-btn-ghost:hover,
+.nc-lift .nc-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .nc-btn-danger {
@@ -134,14 +161,14 @@ body {
 }
 
 .nc-hero {
-  border-radius: 1.75rem;
+  border-radius: 2rem;
   background:
-    radial-gradient(420px 180px at 90% -20%, rgba(246, 223, 216, 0.26), transparent 55%),
-    radial-gradient(280px 160px at 0% 120%, rgba(111, 157, 136, 0.18), transparent 50%),
-    linear-gradient(155deg, #2a2433 0%, #17141c 55%, #121018 100%);
+    radial-gradient(420px 180px at 90% -20%, rgba(246, 223, 216, 0.22), transparent 55%),
+    radial-gradient(280px 160px at 0% 120%, rgba(176, 196, 240, 0.16), transparent 50%),
+    linear-gradient(155deg, #221c28 0%, #141218 58%, #0e0c12 100%);
   color: #f7f4f2;
   padding: 1.35rem 1.35rem 1.5rem;
-  box-shadow: 0 16px 36px rgba(23, 20, 28, 0.2);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.32);
 }
 
 @media (min-width: 640px) {
@@ -165,12 +192,12 @@ body {
 }
 
 .nc-hero .nc-btn {
-  background: #fff;
+  background: linear-gradient(180deg, #f8e4ec 0%, #ead6f4 100%);
   color: #17141c;
 }
 
 .nc-hero .nc-btn:hover {
-  background: #f3eadc;
+  background: linear-gradient(180deg, #ffeef4 0%, #f0e0fa 100%);
 }
 
 .nc-hero .nc-btn-ghost {
@@ -201,13 +228,13 @@ body {
 .nc-crest-photo-img {
   object-fit: cover !important;
   object-position: 0% 52% !important;
-  opacity: 0.72;
+  opacity: 0.58;
   -webkit-mask-image:
-    linear-gradient(to left, rgba(0, 0, 0, 0.95) 22%, rgba(0, 0, 0, 0.45) 58%, transparent 92%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.9) 16%, rgba(0, 0, 0, 0.88) 78%, transparent 100%);
+    linear-gradient(to left, rgba(0, 0, 0, 0.92) 18%, rgba(0, 0, 0, 0.38) 56%, transparent 90%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.88) 14%, rgba(0, 0, 0, 0.82) 76%, transparent 100%);
   mask-image:
-    linear-gradient(to left, rgba(0, 0, 0, 0.95) 22%, rgba(0, 0, 0, 0.45) 58%, transparent 92%),
-    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.9) 16%, rgba(0, 0, 0, 0.88) 78%, transparent 100%);
+    linear-gradient(to left, rgba(0, 0, 0, 0.92) 18%, rgba(0, 0, 0, 0.38) 56%, transparent 90%),
+    linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.88) 14%, rgba(0, 0, 0, 0.82) 76%, transparent 100%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
@@ -234,29 +261,29 @@ body {
 .nc-home-title-brand {
   width: fit-content;
   max-width: 100%;
-  padding: 0.15rem 0.6rem 0.35rem 0;
-  background: linear-gradient(90deg, rgba(44, 40, 50, 0.42), rgba(44, 40, 50, 0.08) 72%, transparent);
+  padding: 0.2rem 0.75rem 0.45rem 0;
+  background: linear-gradient(90deg, rgba(14, 12, 18, 0.62), rgba(14, 12, 18, 0.12) 72%, transparent);
 }
 
 .nc-home-title-crown {
   display: block;
-  width: 2.05rem;
+  width: 2.7rem;
   height: auto;
-  margin: 0 auto 0.08rem;
-  filter: drop-shadow(0 1px 6px rgba(61, 95, 134, 0.35));
+  margin: 0 auto 0.12rem;
+  filter: drop-shadow(0 2px 10px rgba(61, 95, 134, 0.45));
 }
 
 .nc-home-title-word {
   margin: 0;
   color: #f7f1ea;
-  font-size: 1.58rem;
-  line-height: 1.28;
+  font-size: 1.72rem;
+  line-height: 1.26;
   letter-spacing: 0.08em;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   text-shadow:
     0 1px 0 rgba(23, 20, 28, 0.55),
-    0 6px 22px rgba(23, 20, 28, 0.5);
+    0 8px 28px rgba(23, 20, 28, 0.55);
 }
 
 .nc-home-title-by {
@@ -278,8 +305,19 @@ body {
 }
 
 .nc-login-stage .nc-crest-photo-img {
-  opacity: 0.42;
+  opacity: 0.5;
   object-position: 0% 52% !important;
+}
+
+.nc-login-stage .nc-input {
+  background: rgba(12, 10, 16, 0.62);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f7f1ea;
+  box-shadow: none;
+}
+
+.nc-login-stage .nc-input::placeholder {
+  color: rgba(247, 241, 234, 0.38);
 }
 
 @media (min-width: 640px) {
@@ -298,11 +336,11 @@ body {
   }
 
   .nc-home-title-crown {
-    width: 2.25rem;
+    width: 3.05rem;
   }
 
   .nc-home-title-word {
-    font-size: 2.35rem;
+    font-size: 2.5rem;
     letter-spacing: 0.09em;
   }
 
@@ -312,11 +350,11 @@ body {
   }
 }
 
-.nc-card-ink {
-  border-color: transparent;
-  background: #17141c;
-  color: #f7f4f2;
-  box-shadow: 0 16px 36px rgba(23, 20, 28, 0.18);
+.nc-lift {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 18px 46px rgba(6, 4, 10, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .nc-table {
@@ -326,8 +364,8 @@ body {
 }
 
 .nc-table thead {
-  border-bottom: 1px solid var(--line);
-  background: #faf7f2;
+  border-bottom: 1px solid rgba(23, 20, 28, 0.08);
+  background: rgba(255, 248, 251, 0.7);
   color: var(--muted);
 }
 
@@ -338,7 +376,7 @@ body {
 
 .nc-table td {
   padding: 0.95rem 1rem;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(23, 20, 28, 0.08);
   vertical-align: top;
 }
 
@@ -348,11 +386,11 @@ body {
 
 .nc-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 1.75rem;
-  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2rem;
+  background: linear-gradient(180deg, #fff8fb, #f4eef8);
   color: var(--ink);
-  box-shadow: 0 16px 40px rgba(12, 10, 16, 0.28);
+  box-shadow: 0 18px 46px rgba(6, 4, 10, 0.38);
 }
 
 .nc-check {

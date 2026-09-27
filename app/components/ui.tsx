@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { BrandMark } from "@/app/components/icons";
 
-const cardBase =
-  "rounded-[1.75rem] p-5 text-ink sm:p-6";
+const cardBase = "nc-lift rounded-[2rem] p-5 sm:p-6";
 
 const cardTones = {
   white:
-    "border border-line bg-white shadow-[0_16px_40px_rgba(12,10,16,0.28)]",
-  ink: "border-transparent bg-[#f3eadc]",
-  blush: "border-transparent bg-[#fde8ef]",
-  mist: "border-transparent bg-[#e7f3fb]",
-  sage: "border-transparent bg-[#eef6f1]",
-  lilac: "border-transparent bg-[#ece6fb]",
+    "bg-gradient-to-br from-[#fff8fb] via-[#f7f2f8] to-[#eef6fb] text-ink",
+  ink: "bg-gradient-to-br from-[#f3eadc] to-[#f7f2f8] text-ink",
+  blush: "bg-gradient-to-br from-[#fde8ef] to-[#f7f2f8] text-ink",
+  mist: "bg-gradient-to-br from-[#e7f3fb] to-[#f4eef8] text-ink",
+  sage: "bg-gradient-to-br from-[#eef6f1] to-[#e7f3fb] text-ink",
+  lilac: "bg-gradient-to-br from-[#ece6fb] to-[#fde8ef] text-ink",
+  glass:
+    "border-white/12 bg-[#1c1822]/78 text-[#f4eee8] shadow-[0_22px_50px_rgba(0,0,0,0.4)] backdrop-blur-xl",
 };
 
 export function PageHeader({
@@ -33,7 +34,7 @@ export function PageHeader({
             {kicker}
           </p>
         ) : null}
-        <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
+        <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
           {title}
         </h1>
         {description ? (
@@ -120,7 +121,7 @@ export function Stat({
   const inner = (
     <>
       <p className={`text-sm ${muted}`}>{label}</p>
-      <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
+      <p className="mt-3 text-[1.7rem] font-semibold tracking-tight tabular-nums sm:text-5xl">
         {value}
       </p>
       {hint ? <p className={`mt-2 text-sm ${muted}`}>{hint}</p> : null}

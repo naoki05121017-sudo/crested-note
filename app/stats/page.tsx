@@ -38,15 +38,15 @@ export default async function StatsPage() {
       <Card>
         <SectionTitle>性別</SectionTitle>
         <ul className="grid gap-3 text-sm sm:grid-cols-3">
-          <li className="rounded-2xl bg-mist px-4 py-4">
+          <li className="rounded-3xl bg-mist px-4 py-4">
             <p className="text-muted">オス</p>
             <p className="mt-1 text-3xl font-semibold">{stats.bySex.male}</p>
           </li>
-          <li className="rounded-2xl bg-blush px-4 py-4">
+          <li className="rounded-3xl bg-blush px-4 py-4">
             <p className="text-muted">メス</p>
             <p className="mt-1 text-3xl font-semibold">{stats.bySex.female}</p>
           </li>
-          <li className="rounded-2xl bg-sand px-4 py-4">
+          <li className="rounded-3xl bg-sand px-4 py-4">
             <p className="text-muted">不明</p>
             <p className="mt-1 text-3xl font-semibold">{stats.bySex.unknown}</p>
           </li>

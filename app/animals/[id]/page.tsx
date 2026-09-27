@@ -38,7 +38,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
 
 const card =
-  "rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6";
+  "nc-lift rounded-[2rem] bg-gradient-to-br from-[#fff8fb] via-[#f7f2f8] to-[#eef6fb] p-5 text-ink sm:p-6";
 
 function PedigreeLink({
   animal,
@@ -102,7 +102,7 @@ export default async function AnimalDetailPage({
         ) : null}
         <div className="p-5 sm:p-6">
           <p className="text-[11px] tracking-[0.22em] text-ink/40 uppercase">Profile</p>
-          <h1 className="mt-2 text-[1.85rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
+          <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight tracking-tight text-ink sm:text-4xl">
             {animal.name}
           </h1>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -208,9 +208,9 @@ export default async function AnimalDetailPage({
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-[1.75rem] bg-[#eef6f1] p-5 text-ink sm:p-6">
+        <div className="nc-lift rounded-[2rem] bg-gradient-to-br from-[#eef6f1] to-[#e7f3fb] p-5 text-ink sm:p-6">
           <p className="text-sm text-ink/60">最新体重</p>
-          <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
+          <p className="mt-3 text-[2.1rem] font-semibold tracking-tight tabular-nums sm:text-5xl">
             {latest ? `${latest.weightG.toFixed(1)}g` : "—"}
           </p>
           {latest ? (
@@ -221,7 +221,7 @@ export default async function AnimalDetailPage({
         </div>
         <Link
           href={`/compare?animalId=${animal.id}`}
-          className="rounded-[1.75rem] bg-[#e7f3fb] p-5 text-ink sm:p-6"
+          className="nc-lift rounded-[2rem] bg-gradient-to-br from-[#e7f3fb] to-[#ece6fb] p-5 text-ink sm:p-6"
         >
           <p className="text-sm text-ink/60">全国個体比較</p>
           <p className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">見る</p>
@@ -489,7 +489,7 @@ export default async function AnimalDetailPage({
         <span className="nc-btn mt-4 inline-flex">比較を見る</span>
       </Link>
 
-      <section className="rounded-[1.75rem] border border-red-100 bg-[#fdf6f6] px-5 py-5 text-ink sm:px-6">
+      <section className="nc-lift rounded-[2rem] border border-red-200/40 bg-[#fdf6f6] px-5 py-5 text-ink sm:px-6">
         <p className="text-sm text-ink/70">この個体を削除</p>
         <p className="mt-1 text-xs leading-5 text-muted">削除すると元に戻せません。</p>
         <div className="mt-3">

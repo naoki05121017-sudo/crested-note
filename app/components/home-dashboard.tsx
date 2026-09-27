@@ -4,6 +4,8 @@ import { AnimalPhoto } from "@/app/components/animal-photo";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { IncludedFeatures } from "@/app/components/included-features";
 import { displayAnimalId } from "@/lib/db/animal-code";
+import { SEX_LABEL } from "@/lib/db/labels";
+import { formatGenotypeLabel } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 
 const crestTitle = Dela_Gothic_One({
@@ -22,7 +24,7 @@ function HomeCard({
 }) {
   return (
     <section
-      className={`rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6 ${className}`}
+      className={`nc-lift rounded-[2rem] border-transparent bg-gradient-to-br from-[#fff8fb] via-[#f7f2f8] to-[#eef6fb] p-5 text-ink sm:p-6 ${className}`}
     >
       {children}
     </section>
@@ -43,7 +45,7 @@ function HomeStat({
   return (
     <Link
       href={href}
-      className={`block rounded-[1.75rem] p-5 text-ink ${tint}`}
+      className={`nc-lift block rounded-[2rem] p-5 text-ink ${tint}`}
     >
       <p className="text-sm text-ink/60">{label}</p>
       <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
@@ -112,6 +114,7 @@ export function HomeDashboard({
         <div className="nc-home-title-copy">
           <div className="nc-home-title-brand">
             <TitleCrown />
+            <p className="nc-hero-kicker mb-3">WELCOME</p>
             <h1 className={`nc-home-title-word ${crestTitle.className}`}>
               クレスノート
             </h1>
@@ -123,6 +126,9 @@ export function HomeDashboard({
           <div className="mt-5 flex flex-wrap gap-2">
             <Link href="/animals/new" className="nc-btn">
               個体を登録
+            </Link>
+            <Link href="/calculator" className="nc-btn-ghost">
+              遺伝計算
             </Link>
             <Link href="/animals" className="nc-btn-ghost">
               マイ個体
@@ -170,7 +176,7 @@ export function HomeDashboard({
                 <li key={animal.id}>
                   <Link
                     href={`/animals/${animal.id}`}
-                    className="block overflow-hidden rounded-[1.75rem] border border-line bg-white text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)]"
+                    className="nc-lift block overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] text-ink"
                   >
                     <div className="aspect-[4/3] bg-[#f6f3f8]">
                       {animal.photoUrl ? (
@@ -184,6 +190,11 @@ export function HomeDashboard({
                     <div className="p-4">
                       <p className="font-semibold">{animal.name}</p>
                       <p className="mt-1 text-sm text-muted">{displayAnimalId(animal)}</p>
+                      <p className="mt-1 text-sm text-ink/60">
+                        {SEX_LABEL[animal.sex]}
+                        {" / "}
+                        {animal.morphLabel.trim() || formatGenotypeLabel(animal.genotype) || "モルフ未設定"}
+                      </p>
                       <p className="mt-2 text-2xl font-semibold tabular-nums">
                         {latest ? `${latest.weightG}g` : "体重未記録"}
                       </p>
@@ -373,19 +384,19 @@ export function HomeDashboard({
           )}
         </HomeCard>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Link href="/calculator" className="block rounded-[1.75rem] bg-[#ece6fb] p-6 text-ink">
+          <Link href="/calculator" className="nc-lift block rounded-[2rem] bg-[#ece6fb] p-6 text-ink">
             <h2 className="text-lg font-semibold">遺伝計算</h2>
             <p className="mt-2 text-sm leading-6 text-ink/60">
               ペアの遺伝を計算します。
             </p>
           </Link>
-          <Link href="/simulate" className="block rounded-[1.75rem] bg-[#fde8ef] p-6 text-ink">
+          <Link href="/simulate" className="nc-lift block rounded-[2rem] bg-[#fde8ef] p-6 text-ink">
             <h2 className="text-lg font-semibold">シミュレーション</h2>
             <p className="mt-2 text-sm leading-6 text-ink/60">
               複数世代の遺伝を見ます。
             </p>
           </Link>
-          <Link href="/breedings" className="block rounded-[1.75rem] bg-[#e7f6ee] p-6 text-ink">
+          <Link href="/breedings" className="nc-lift block rounded-[2rem] bg-[#e7f6ee] p-6 text-ink">
             <h2 className="text-lg font-semibold">ブリード</h2>
             <p className="mt-2 text-sm leading-6 text-ink/60">
               ペアと卵の記録へ進みます。

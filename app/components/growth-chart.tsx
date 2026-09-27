@@ -36,7 +36,7 @@ export function GrowthChart({
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full">
-      <rect width={width} height={height} rx="24" fill="#fffdf9" />
+      <rect width={width} height={height} rx="28" fill="#f7f2f8" />
       {[0.25, 0.5, 0.75].map((frac) => (
         <line
           key={frac}
@@ -44,7 +44,7 @@ export function GrowthChart({
           x2={width - pad}
           y1={pad + (height - pad * 2) * frac}
           y2={pad + (height - pad * 2) * frac}
-          stroke="#ece6dc"
+          stroke="#e4d7ea"
         />
       ))}
       <text x={pad} y={22} fontSize="11" fill="#6d675f">
@@ -54,10 +54,10 @@ export function GrowthChart({
         月齢
       </text>
       {average.length > 1 ? (
-        <path d={path(average)} fill="none" stroke="#d9efe6" strokeWidth="5" />
+        <path d={path(average)} fill="none" stroke="#9de0c4" strokeWidth="5" />
       ) : null}
       {mine.length > 1 ? (
-        <path d={path(mine)} fill="none" stroke="#1c1917" strokeWidth="3" />
+        <path d={path(mine)} fill="none" stroke="#5a4a78" strokeWidth="3.2" />
       ) : null}
       {mine.map((point) => (
         <circle
@@ -65,7 +65,7 @@ export function GrowthChart({
           cx={x(point.month)}
           cy={y(point.weightG)}
           r="4.5"
-          fill="#1c1917"
+          fill="#5a4a78"
         />
       ))}
       {average.map((point) => (

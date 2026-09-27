@@ -43,7 +43,7 @@ export default async function AnimalsPage({
 
       <form
         action="/animals"
-        className="grid gap-3 rounded-[1.75rem] bg-[#fde8ef] p-5 text-ink sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
+        className="nc-lift grid gap-3 rounded-[2rem] bg-gradient-to-br from-[#fde8ef] to-[#ece6fb] p-5 text-ink sm:grid-cols-2 sm:p-6 lg:grid-cols-4"
       >
         <input
           name="q"
@@ -73,7 +73,7 @@ export default async function AnimalsPage({
       </form>
 
       {animals.length === 0 ? (
-        <section className="rounded-[1.75rem] border border-line bg-white px-5 py-12 text-center text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-12">
+        <section className="nc-lift rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] px-5 py-12 text-center text-ink sm:p-12">
           <p className="text-lg font-semibold">まだ個体がありません</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
             最初の1匹を登録すると、遺伝計算や繁殖につなげられます。
@@ -91,7 +91,7 @@ export default async function AnimalsPage({
               <li key={animal.id}>
                 <Link
                   href={`/animals/${animal.id}`}
-                  className="block overflow-hidden rounded-[1.75rem] border border-line bg-white text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)]"
+                  className="nc-lift block overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] text-ink"
                 >
                   {animal.photoUrl ? (
                     <div className="aspect-[4/3] bg-[#f6f3f8]">

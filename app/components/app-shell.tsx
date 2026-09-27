@@ -152,14 +152,14 @@ function TopBar({ email }: { email: string | null }) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
       <form action="/animals" className="relative min-w-0 flex-[1_1_0]">
-        <span className="pointer-events-none absolute left-2.5 top-1/2 hidden -translate-y-1/2 text-muted sm:left-3 sm:block">
+        <span className="pointer-events-none absolute left-2.5 top-1/2 hidden -translate-y-1/2 text-white/40 sm:left-3 sm:block">
           <IconSearch />
         </span>
         <input
           name="q"
           type="search"
           placeholder="個体名・モルフ・ID"
-          className="nc-input h-10 min-h-10 min-w-0 rounded-full border-line bg-white px-3 text-[12px] leading-normal placeholder:text-[12px] placeholder:text-muted [appearance:none] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden sm:h-11 sm:min-h-11 sm:px-10 sm:text-base sm:placeholder:text-base"
+          className="nc-input nc-input-chrome h-10 min-h-10 min-w-0 rounded-full px-3 text-[12px] leading-normal placeholder:text-[12px] [appearance:none] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden sm:h-11 sm:min-h-11 sm:px-10 sm:text-base sm:placeholder:text-base"
           aria-label="個体名・モルフ・IDを検索"
         />
       </form>

@@ -117,7 +117,7 @@ function ParentEditor({
 
   return (
     <section
-      className={`rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6 ${tint}`}
+      className={`nc-lift rounded-[2rem] border-transparent p-5 text-ink sm:p-6 ${tint}`}
     >
       <p className="text-[11px] tracking-[0.2em] text-ink/40 uppercase">{stepLabel}</p>
       <h2 className="mt-2 mb-5 text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
@@ -479,7 +479,7 @@ export function PairingWorkbench({
           </div>
           <MutationForm
             action={savePrediction}
-            className="flex flex-col gap-3 rounded-[1.75rem] border border-line bg-white p-5 text-ink shadow-[0_16px_40px_rgba(12,10,16,0.28)] sm:p-6"
+            className="nc-lift flex flex-col gap-3 rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] p-5 text-ink sm:p-6"
           >
             <input type="hidden" name="maleId" value={selectedA} />
             <input type="hidden" name="femaleId" value={selectedB} />
@@ -524,7 +524,7 @@ export function PairingWorkbench({
           </MutationForm>
         </>
       ) : (
-        <p className="rounded-[1.75rem] bg-[#ece6fb] px-5 py-6 text-sm leading-6 text-ink/65">
+        <p className="nc-lift rounded-[2rem] bg-[#ece6fb] px-5 py-6 text-sm leading-6 text-ink/65">
           親♂・親♀と遺伝形質を設定して「遺伝を計算する」を押すと、予想される子の見た目と確率が表示されます。
         </p>
       )}
