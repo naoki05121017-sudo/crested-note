@@ -25,10 +25,15 @@ const groups = [
       { href: "/animals", label: "マイ個体", icon: IconGecko },
       { href: "/compare", label: "全国個体比較", icon: IconChart },
       { href: "/stats", label: "日本のクレス統計", icon: IconChart },
+      { href: "/settings", label: "設定", icon: IconGear },
+    ],
+  },
+  {
+    label: "ブリード",
+    items: [
       { href: "/calculator", label: "遺伝計算", icon: IconDna },
       { href: "/simulate", label: "シミュレーション", icon: IconDna },
       { href: "/breedings", label: "ブリード", icon: IconEgg },
-      { href: "/settings", label: "設定", icon: IconGear },
     ],
   },
 ] as const;
@@ -62,7 +67,7 @@ function NavLinks() {
       {groups.map((group) => (
         <div key={group.items.map((item) => item.href).join("-")}>
           {group.label ? (
-            <p className="px-3 text-[10px] tracking-[0.2em] text-white/35 uppercase">
+            <p className="px-3 text-[10px] tracking-[0.16em] text-white/35">
               {group.label}
             </p>
           ) : null}

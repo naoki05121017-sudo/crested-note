@@ -81,6 +81,17 @@ export default async function Home() {
       japanMeanWeight={japan.meanLatestWeight}
       japanWeightSample={japan.weightSample}
       checks={checks}
+      latestWeights={Object.fromEntries(
+        animals.map((animal) => {
+          const last = latestWeight(byWeights.get(animal.id) ?? []);
+          return [
+            animal.id,
+            last
+              ? { weightG: last.weightG, weighedOn: last.weighedOn }
+              : null,
+          ];
+        }),
+      )}
       compare={
         compareSource && comparison
           ? {
