@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CHECK_CADENCE_PRESETS,
   cadenceIdFromDays,
+  cadenceLabel,
   calendarDateInTimeZone,
   checkReminder,
   parseCheckEveryDays,
@@ -19,6 +20,11 @@ describe("check cadence", () => {
     expect(cadenceIdFromDays(CHECK_CADENCE_PRESETS[1].days)).toBe("fortnight");
     expect(cadenceIdFromDays(CHECK_CADENCE_PRESETS[2].days)).toBe("monthly");
     expect(cadenceIdFromDays(11)).toBe("custom");
+    expect(cadenceLabel(CHECK_CADENCE_PRESETS[0].days)).toBe("毎週");
+    expect(cadenceLabel(CHECK_CADENCE_PRESETS[1].days)).toBe("2週間ごと");
+    expect(cadenceLabel(CHECK_CADENCE_PRESETS[2].days)).toBe("1ヶ月ごと");
+    expect(cadenceLabel(10)).toBe("10日ごと");
+    expect(cadenceLabel(undefined)).toBe(null);
   });
 
   it("parses per-animal form values", () => {
@@ -27,6 +33,28 @@ describe("check cadence", () => {
     expect(parseCheckEveryDays(weekly)).toEqual({
       error: null,
       days: CHECK_CADENCE_PRESETS[0].days,
+    });
+
+    const weeklyEmptyCustom = new FormData();
+    weeklyEmptyCustom.set("checkCadence", "weekly");
+    weeklyEmptyCustom.set("checkEveryDays", "");
+    expect(parseCheckEveryDays(weeklyEmptyCustom)).toEqual({
+      error: null,
+      days: CHECK_CADENCE_PRESETS[0].days,
+    });
+
+    const fortnight = new FormData();
+    fortnight.set("checkCadence", "fortnight");
+    expect(parseCheckEveryDays(fortnight)).toEqual({
+      error: null,
+      days: CHECK_CADENCE_PRESETS[1].days,
+    });
+
+    const monthly = new FormData();
+    monthly.set("checkCadence", "monthly");
+    expect(parseCheckEveryDays(monthly)).toEqual({
+      error: null,
+      days: CHECK_CADENCE_PRESETS[2].days,
     });
 
     const custom = new FormData();
@@ -43,6 +71,32 @@ describe("check cadence", () => {
 
     const missing = new FormData();
     expect(parseCheckEveryDays(missing, 10)).toEqual({ error: null, days: 10 });
+  });
+
+  it("round-trips saved days back to the profile labels", () => {
+    const cases = [
+      ["weekly", "毎週"],
+      ["fortnight", "2週間ごと"],
+      ["monthly", "1ヶ月ごと"],
+    ] as const;
+    for (const [id, label] of cases) {
+      const form = new FormData();
+      form.set("checkCadence", id);
+      const parsed = parseCheckEveryDays(form);
+      expect(parsed.error).toBeNull();
+      if (parsed.error !== null) continue;
+      expect(cadenceLabel(parsed.days)).toBe(label);
+      expect(cadenceIdFromDays(parsed.days)).toBe(id);
+    }
+
+    const custom = new FormData();
+    custom.set("checkCadence", "custom");
+    custom.set("checkEveryDays", "10");
+    const parsedCustom = parseCheckEveryDays(custom);
+    expect(parsedCustom.error).toBeNull();
+    if (parsedCustom.error !== null) return;
+    expect(cadenceLabel(parsedCustom.days)).toBe("10日ごと");
+    expect(cadenceIdFromDays(parsedCustom.days)).toBe("custom");
   });
 
   it("builds next-check copy from the last record", () => {

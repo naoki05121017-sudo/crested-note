@@ -14,4 +14,13 @@ describe("animal parent sex and delete confirm wiring", () => {
     expect(form).toContain("window.confirm");
     expect(form).toContain("この個体を削除しますか");
   });
+
+  it("submits cadence from a hidden field so iPhone can save weekly", () => {
+    const fields = readFileSync("app/animals/check-cadence-fields.tsx", "utf8");
+    expect(fields).toContain('name="checkCadence"');
+    expect(fields).toContain("<select");
+    expect(fields).not.toMatch(/<select[^>]*name=/);
+    const form = readFileSync("app/components/mutation-form.tsx", "utf8");
+    expect(form).not.toMatch(/fieldset[^>]*contents/);
+  });
 });

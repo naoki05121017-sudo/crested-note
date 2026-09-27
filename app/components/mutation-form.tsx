@@ -60,7 +60,7 @@ export function MutationForm({
           }
         }}
       >
-        <fieldset disabled={leaving} className="contents">
+        <fieldset disabled={leaving} className="min-w-0 border-0 p-0">
           {children}
         </fieldset>
         {error ? (

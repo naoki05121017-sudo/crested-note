@@ -22,8 +22,8 @@ export function CheckCadenceFields({
     <div className="grid gap-3 sm:col-span-2">
       <label className="grid gap-1 text-sm">
         <span className="font-medium">記録の間隔</span>
+        <input type="hidden" name="checkCadence" value={cadence} />
         <select
-          name="checkCadence"
           value={cadence}
           onChange={(event) =>
             setCadence(event.target.value as CheckCadenceId)
@@ -42,7 +42,7 @@ export function CheckCadenceFields({
       <label className="grid gap-1 text-sm">
         <span className="font-medium">カスタムの日数</span>
         <input
-          name="checkEveryDays"
+          name={cadence === "custom" ? "checkEveryDays" : undefined}
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
