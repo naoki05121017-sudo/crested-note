@@ -7,6 +7,9 @@ import { AGE_BUCKETS, ageInMonths, mean, todayIso } from "./math";
 export const MIN_STATS_FOR_AVERAGE = 5;
 export const MIN_MORPH_COUNT = 3;
 
+export const JAPAN_STATS_SAMPLE_NOTE =
+  "日本国内のクレスノートに蓄積された、匿名の集計です。公開・非公開にかかわらず、個体名・写真・飼い主は出しません。件数が少ない項目は平均を出さず、データが増えるほど参考にしやすくなります。全国の全頭数ではありません。";
+
 export function japanStats(
   animals: Animal[],
   weightsByAnimal: Map<string, WeightLogRecord[]>,
@@ -76,8 +79,7 @@ export function japanStats(
       .sort((a, b) => a.year.localeCompare(b.year)),
     sexLabels: SEX_LABEL,
     asOf,
-    sampleNote:
-      "日本国内のクレスノートに蓄積された、匿名の集計です。個人の個体名・写真・連絡先は出しません。件数が少ない項目は平均を出さず、データが増えるほど参考にしやすくなります。全国の全頭数ではありません。",
+    sampleNote: JAPAN_STATS_SAMPLE_NOTE,
   };
 }
 

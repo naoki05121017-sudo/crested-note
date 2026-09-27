@@ -301,7 +301,7 @@ export function HomeDashboard({
               </Link>
             </div>
           ) : (
-            <p className="text-sm text-muted">体重を記録した個体があると、公開個体の平均と比べられます。</p>
+            <p className="text-sm text-muted">体重を記録した個体があると、近い条件の平均と比べられます。</p>
           )}
         </HomeCard>
 

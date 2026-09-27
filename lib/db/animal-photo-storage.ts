@@ -25,7 +25,7 @@ async function ensurePhotoBucket(): Promise<void> {
         throw new Error(`写真の保存先を確認できません: ${listed.error.message}`);
       }
       const bucketOptions = {
-        public: true,
+        public: false,
         fileSizeLimit: MAX_ANIMAL_PHOTO_BYTES,
         allowedMimeTypes: ANIMAL_PHOTO_MIME_TYPES,
       };

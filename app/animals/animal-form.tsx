@@ -111,6 +111,9 @@ export function AnimalForm({
           <input type="checkbox" name="isPublic" defaultChecked={animal?.isPublic ?? publicByDefault} className="nc-check" />
           個体ページを公開する
         </label>
+        <p className="text-sm text-muted sm:col-span-2">
+          オフでも、名前・写真・飼い主は出さず、体重などの匿名統計・比較には含まれます。
+        </p>
         <label className="grid gap-1 text-sm sm:col-span-2">
           <span className="font-medium">メモ</span>
           <textarea name="notes" rows={3} defaultValue={animal?.notes} className="nc-input" />

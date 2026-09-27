@@ -91,11 +91,39 @@ export function isManagedAnimalPhotoUrl(url: string): boolean {
 export function animalPhotoObjectKey(url: string): string | null {
   const text = url.trim();
   if (!text) return null;
-  const marker = `/storage/v1/object/public/${ANIMAL_PHOTO_BUCKET}/`;
-  const index = text.indexOf(marker);
-  if (index === -1) return null;
-  const key = decodeURIComponent(text.slice(index + marker.length).split("?")[0] ?? "");
-  return key && !key.includes("..") ? key : null;
+
+  const apiPrefix = "/api/animal-photos/";
+  const apiIndex = text.indexOf(apiPrefix);
+  if (apiIndex !== -1) {
+    const key = decodeURIComponent(text.slice(apiIndex + apiPrefix.length).split("?")[0] ?? "");
+    return key && !key.includes("..") ? key : null;
+  }
+
+  const publicMarker = `/storage/v1/object/public/${ANIMAL_PHOTO_BUCKET}/`;
+  const publicIndex = text.indexOf(publicMarker);
+  if (publicIndex !== -1) {
+    const key = decodeURIComponent(
+      text.slice(publicIndex + publicMarker.length).split("?")[0] ?? "",
+    );
+    return key && !key.includes("..") ? key : null;
+  }
+
+  const signMarker = `/storage/v1/object/sign/${ANIMAL_PHOTO_BUCKET}/`;
+  const signIndex = text.indexOf(signMarker);
+  if (signIndex !== -1) {
+    const key = decodeURIComponent(
+      text.slice(signIndex + signMarker.length).split("?")[0] ?? "",
+    );
+    return key && !key.includes("..") ? key : null;
+  }
+
+  return null;
+}
+
+export function animalPhotoAppSrc(url: string): string {
+  const key = animalPhotoObjectKey(url);
+  if (!key) return url;
+  return `/api/animal-photos/${key}`;
 }
 
 export function animalPhotoPrefix(animalId: string): string {

@@ -14,6 +14,14 @@ describe("legal pages wiring", () => {
     expect(signup).toContain("/legal/privacy");
   });
 
+  it("privacy policy describes anonymous stats without publishing private animals", () => {
+    const privacy = readFileSync("app/legal/privacy/page.tsx", "utf8");
+    expect(privacy).toContain("匿名集計");
+    expect(privacy).toContain("非公開にした個体のページや写真");
+    expect(privacy).not.toContain("非公開の個体は集計対象にしません");
+    expect(privacy).not.toContain("公開個体に限る");
+  });
+
   it("tokushoho page reads operator fields instead of hard-coded identity", () => {
     const page = readFileSync("app/legal/tokushoho/page.tsx", "utf8");
     expect(page).toContain("legalOperator");

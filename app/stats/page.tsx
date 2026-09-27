@@ -1,19 +1,19 @@
 import { Card, PageHeader, SectionTitle, Stat } from "@/app/components/ui";
-import { listPublicAnimals, publicWeightsByAnimal } from "@/lib/db/queries";
-import { japanStats } from "@/lib/stats/japan";
+import { fetchJapanCrestStats } from "@/lib/db/stats-rpc";
+import { JAPAN_STATS_SAMPLE_NOTE } from "@/lib/stats/japan";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "日本のクレス統計" };
 
 export default async function StatsPage() {
-  const stats = japanStats(await listPublicAnimals(), await publicWeightsByAnimal());
+  const stats = await fetchJapanCrestStats();
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         kicker="JAPAN"
         title="日本のクレス統計"
-        description={stats.sampleNote}
+        description={JAPAN_STATS_SAMPLE_NOTE}
       />
 
       <div className="grid gap-4 md:grid-cols-3">

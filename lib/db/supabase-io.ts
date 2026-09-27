@@ -17,6 +17,7 @@ import {
   type SettingsRecord,
 } from "@/lib/db/types";
 import { idsToDelete } from "@/lib/auth/paths";
+import { persistStatsMorphKey } from "@/lib/stats/compare";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 
@@ -486,6 +487,7 @@ export async function saveDatabaseToSupabase(db: DatabaseFile, userId: string) {
       is_public: Boolean(row.isPublic),
       share_slug: row.shareSlug ?? "",
       prefecture: row.prefecture ?? "",
+      stats_morph_key: persistStatsMorphKey(row, db.genes),
       check_every_days: row.checkEveryDays ?? null,
       created_at: timestampOrNow(row.createdAt),
       updated_at: timestampOrNow(row.updatedAt),

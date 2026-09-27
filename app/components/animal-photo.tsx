@@ -1,3 +1,5 @@
+import { animalPhotoAppSrc } from "@/lib/db/animal-photo";
+
 export function AnimalPhoto({
   src,
   alt,
@@ -10,6 +12,6 @@ export function AnimalPhoto({
   if (!src) return null;
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={className} />
+    <img src={animalPhotoAppSrc(src)} alt={alt} className={className} />
   );
 }

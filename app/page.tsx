@@ -1,15 +1,13 @@
 import { HomeDashboard } from "@/app/components/home-dashboard";
 import { checkReminder } from "@/lib/care/check-cadence";
+import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
+import { dashboardStats, getSettings, listAnimals, weightsByAnimal } from "@/lib/db/queries";
 import {
-  dashboardStats,
-  getSettings,
-  listAnimals,
-  listPublicAnimals,
-  publicWeightsByAnimal,
-  weightsByAnimal,
-} from "@/lib/db/queries";
-import { compareAnimal, latestWeight } from "@/lib/stats/compare";
-import { japanStats } from "@/lib/stats/japan";
+  compareAgeFilterMonths,
+  latestWeight,
+  presentComparison,
+  visualMorphKey,
+} from "@/lib/stats/compare";
 import { todayIso } from "@/lib/stats/math";
 
 export const dynamic = "force-dynamic";
@@ -19,9 +17,7 @@ export default async function Home() {
   const settings = await getSettings();
   const animals = await listAnimals();
   const byWeights = await weightsByAnimal();
-  const publicAnimals = await listPublicAnimals();
-  const publicWeights = await publicWeightsByAnimal();
-  const japan = japanStats(publicAnimals, publicWeights);
+  const japan = await fetchJapanCrestStats();
   const asOf = todayIso();
 
   const recentWeights = animals
@@ -54,16 +50,25 @@ export default async function Home() {
     .slice(0, 6);
 
   const compareSource = animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
-  const comparison = compareSource
-    ? compareAnimal({
-        animal: compareSource,
-        logs: byWeights.get(compareSource.id) ?? [],
-        others: publicAnimals.map((row) => ({
-          animal: row,
-          logs: publicWeights.get(row.id) ?? [],
-        })),
+  const compareLogs = compareSource ? (byWeights.get(compareSource.id) ?? []) : [];
+  const cohort = compareSource
+    ? await fetchCompareCohort({
+        excludeAnimalId: compareSource.id,
+        sex: compareSource.sex,
+        morphKey: visualMorphKey(compareSource),
+        ageMonths: compareAgeFilterMonths(compareSource, compareLogs),
       })
     : null;
+  const comparison =
+    compareSource && cohort
+      ? presentComparison({
+          animal: compareSource,
+          logs: compareLogs,
+          sampleSize: cohort.sampleSize,
+          average: cohort.average,
+          averageCurve: cohort.curve,
+        })
+      : null;
 
   return (
     <HomeDashboard

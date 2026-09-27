@@ -66,6 +66,7 @@ describe("compareAnimal", () => {
     expect(result.comparable).toBe(false);
     expect(result.average).toBeNull();
     expect(result.vsAverage).toBeNull();
+    expect(result.tone).toContain("データがまだ少ない");
   });
 
   it("shows vs-average copy when the cohort is large enough", () => {

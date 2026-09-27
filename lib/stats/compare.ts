@@ -1,5 +1,5 @@
 import { PREFECTURES } from "@/lib/db/labels";
-import { combinePhenotype, LOCI } from "@/lib/genetics";
+import { combinePhenotype, LOCI, type GeneStatus } from "@/lib/genetics";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 import { formatDeltaGrams } from "@/lib/care/weight-growth";
 import { ageInMonths, mean, todayIso, weightTone } from "./math";
@@ -15,7 +15,9 @@ export function isJapanDomesticAnimal(animal: {
   return (PREFECTURES as readonly string[]).includes(prefecture);
 }
 
-export function visualMorphKey(animal: Animal): string {
+export function visualMorphKey(
+  animal: Pick<Animal, "morphLabel" | "traits" | "genotype">,
+): string {
   const labeled = animal.morphLabel.trim().toLowerCase();
   if (labeled) return labeled;
 
@@ -78,6 +80,71 @@ export function averageCurve(series: CohortPoint[][]): CohortPoint[] {
     }));
 }
 
+export function persistStatsMorphKey(
+  animal: Pick<Animal, "id" | "morphLabel" | "traits">,
+  genes: { animalId: string; locusId: string; status: GeneStatus }[],
+): string {
+  const genotype: Animal["genotype"] = {};
+  for (const gene of genes) {
+    if (gene.animalId !== animal.id) continue;
+    if (gene.status === "wild") continue;
+    genotype[gene.locusId] = gene.status;
+  }
+  return visualMorphKey({
+    morphLabel: animal.morphLabel,
+    traits: animal.traits,
+    genotype,
+  });
+}
+
+export function compareAgeFilterMonths(
+  animal: Animal,
+  logs: WeightLogRecord[],
+): number | null {
+  const mine = latestWeight(logs);
+  if (!mine) return null;
+  return ageInMonths(animal.hatchDate, mine.weighedOn);
+}
+
+export function presentComparison(options: {
+  animal: Animal;
+  logs: WeightLogRecord[];
+  sampleSize: number;
+  average: number | null;
+  averageCurve: CohortPoint[];
+}) {
+  const asOf = todayIso();
+  const mine = latestWeight(options.logs);
+  const myAge = mine
+    ? ageInMonths(options.animal.hatchDate, mine.weighedOn)
+    : ageInMonths(options.animal.hatchDate, asOf);
+  const morph = visualMorphKey(options.animal);
+  const comparable = options.sampleSize >= MIN_COHORT_FOR_AVERAGE;
+  const average = comparable ? options.average : null;
+  const mineWeight = mine?.weightG ?? null;
+  const diff =
+    mineWeight !== null && average !== null ? mineWeight - average : null;
+
+  return {
+    morph,
+    ageMonths: myAge,
+    mineWeight,
+    average,
+    diff,
+    sampleSize: options.sampleSize,
+    comparable,
+    vsAverage: diff === null ? null : `平均より${formatDeltaGrams(diff)}`,
+    tone:
+      diff !== null && average !== null
+        ? weightTone(diff, average)
+        : comparable
+          ? "比較できません"
+          : "近い条件のデータがまだ少ないので、平均は出していません。",
+    mineCurve: growthPoints(options.animal, options.logs),
+    averageCurve: comparable ? options.averageCurve : [],
+  };
+}
+
 export function compareAnimal(options: {
   animal: Animal;
   logs: WeightLogRecord[];
@@ -107,32 +174,16 @@ export function compareAnimal(options: {
     .filter((value): value is number => typeof value === "number");
   const sampleSize = cohortWeights.length;
   const comparable = sampleSize >= MIN_COHORT_FOR_AVERAGE;
-  const average = comparable ? mean(cohortWeights) : null;
-  const mineWeight = mine?.weightG ?? null;
-  const diff =
-    mineWeight !== null && average !== null ? mineWeight - average : null;
 
-  return {
-    morph,
-    ageMonths: myAge,
-    mineWeight,
-    average,
-    diff,
+  return presentComparison({
+    animal: options.animal,
+    logs: options.logs,
     sampleSize,
-    comparable,
-    vsAverage:
-      diff === null ? null : `平均より${formatDeltaGrams(diff)}`,
-    tone:
-      diff !== null && average !== null
-        ? weightTone(diff, average)
-        : comparable
-          ? "比較できません"
-          : "近い条件の公開データがまだ少ないので、平均は出していません。",
-    mineCurve: growthPoints(options.animal, options.logs),
+    average: comparable ? mean(cohortWeights) : null,
     averageCurve: comparable
       ? averageCurve(
           cohort.map(({ animal, logs }) => growthPoints(animal, logs)),
         )
       : [],
-  };
+  });
 }

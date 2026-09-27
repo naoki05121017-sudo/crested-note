@@ -63,6 +63,7 @@ describe("animal photo files", () => {
     const url = `https://proj.supabase.co/storage/v1/object/public/${ANIMAL_PHOTO_BUCKET}/${path}`;
     expect(isManagedAnimalPhotoUrl(url)).toBe(true);
     expect(animalPhotoObjectKey(url)).toBe(path);
+    expect(animalPhotoObjectKey(`/api/animal-photos/${path}`)).toBe(path);
     expect(isManagedAnimalPhotoUrl("https://images.example/gecko.jpg")).toBe(false);
   });
 });

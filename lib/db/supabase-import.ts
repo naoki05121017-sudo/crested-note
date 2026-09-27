@@ -3,6 +3,7 @@ import { postgresUuid, uuidOrNull } from "@/lib/db/pg-id";
 import { fetchWithJwtClockSkewRetry } from "@/lib/supabase/clock-skew-fetch";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readLocalJsonFile } from "@/lib/db/read-json-file";
+import { persistStatsMorphKey } from "@/lib/stats/compare";
 import type { DatabaseFile } from "@/lib/db/types";
 
 export type ImportSummary = {
@@ -187,6 +188,7 @@ export async function importLocalJsonToSupabase(client: SupabaseClient) {
       is_public: Boolean(row.isPublic),
       share_slug: row.shareSlug ?? "",
       prefecture: row.prefecture ?? "",
+      stats_morph_key: persistStatsMorphKey(row, db.genes),
       check_every_days: row.checkEveryDays ?? null,
       created_at: timestampOrNow(row.createdAt),
       updated_at: timestampOrNow(row.updatedAt),

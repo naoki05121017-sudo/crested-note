@@ -1,9 +1,14 @@
-import Link from "next/link";
+import {
+  compareAgeFilterMonths,
+  presentComparison,
+  visualMorphKey,
+} from "@/lib/stats/compare";
+import { fetchCompareCohort } from "@/lib/db/stats-rpc";
+import { listAnimals, weightsByAnimal } from "@/lib/db/queries";
 import { GrowthChart } from "@/app/components/growth-chart";
 import { Card, EmptyState, PageHeader, Stat } from "@/app/components/ui";
-import { listAnimals, listPublicAnimals, publicWeightsByAnimal, weightsByAnimal } from "@/lib/db/queries";
 import { animalTitle } from "@/lib/db/labels";
-import { compareAnimal } from "@/lib/stats/compare";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "全国個体比較" };
@@ -19,26 +24,32 @@ export default async function ComparePage({
     typeof params.animalId === "string" ? params.animalId : animals[0]?.id ?? "";
   const animal = animals.find((row) => row.id === selectedId);
   const byWeights = await weightsByAnimal();
-  const publicAnimals = await listPublicAnimals();
-  const publicWeights = await publicWeightsByAnimal();
-  const others = publicAnimals.map((row) => ({
-    animal: row,
-    logs: publicWeights.get(row.id) ?? [],
-  }));
-  const comparison = animal
-    ? compareAnimal({
-        animal,
-        logs: byWeights.get(animal.id) ?? [],
-        others,
+  const logs = animal ? byWeights.get(animal.id) ?? [] : [];
+  const cohort = animal
+    ? await fetchCompareCohort({
+        excludeAnimalId: animal.id,
+        sex: animal.sex,
+        morphKey: visualMorphKey(animal),
+        ageMonths: compareAgeFilterMonths(animal, logs),
       })
     : null;
+  const comparison =
+    animal && cohort
+      ? presentComparison({
+          animal,
+          logs,
+          sampleSize: cohort.sampleSize,
+          average: cohort.average,
+          averageCurve: cohort.curve,
+        })
+      : null;
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         kicker="COMPARE"
         title="全国個体比較"
-        description="日本国内の、条件が近い個体の平均体重と比べます。海外データは含めません。順位・パーセンタイル・上位○%は出しません。全国の飼育者データがまだ少ないときは、クレスノートに登録された個体だけの参考値です。"
+        description="日本国内の、条件が近い個体の平均体重と比べます。公開・非公開を問わず匿名の集計です。海外データは含めません。順位・パーセンタイル・上位○%は出しません。全国の飼育者データがまだ少ないときは、クレスノートに登録された個体だけの参考値です。"
       />
 
       {animals.length === 0 ? (
