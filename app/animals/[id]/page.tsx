@@ -10,6 +10,8 @@ import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Badge } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
 import { cadenceLabel, checkReminder } from "@/lib/care/check-cadence";
+import { growthGuideSeries } from "@/lib/care/growth-guide";
+import { fetchGrowthGuideMonths } from "@/lib/db/stats-rpc";
 import {
   formatDeltaGrams,
   formatGrams,
@@ -87,6 +89,7 @@ export default async function AnimalDetailPage({
   const album = growthAlbumSteps(weights);
   const monthReport = latestMonthlyReport(weights, asOf);
   const justRecorded = query.recorded === "1";
+  const growthGuide = growthGuideSeries(await fetchGrowthGuideMonths());
 
   return (
     <div className="flex flex-col gap-8">
@@ -296,8 +299,15 @@ export default async function AnimalDetailPage({
 
       <section className={card}>
         <h2 className="text-lg font-semibold tracking-tight">体重・成長</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">
+          参考目安には個体差があります
+        </p>
         <div className="mt-4">
-          <GrowthChart mine={growthPoints(animal, weights)} average={[]} />
+          <GrowthChart
+            mine={growthPoints(animal, weights)}
+            average={[]}
+            guide={growthGuide}
+          />
         </div>
         <MutationForm action={addWeightAction} className="mt-5 grid gap-2 sm:flex sm:flex-wrap">
           <input

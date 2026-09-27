@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseCompareCohort, parseJapanCrestStats } from "./stats-rpc";
+import {
+  parseCompareCohort,
+  parseGrowthGuideMonths,
+  parseJapanCrestStats,
+} from "./stats-rpc";
 
 describe("anonymous stats payloads", () => {
   it("accepts aggregate-only Japan stats", () => {
@@ -27,5 +31,19 @@ describe("anonymous stats payloads", () => {
     });
     expect(cohort.average).toBeNull();
     expect(cohort.curve).toEqual([]);
+  });
+
+  it("keeps growth-guide months anonymous and hides small-n averages", () => {
+    const months = parseGrowthGuideMonths([
+      { month: 2, sampleSize: 8, averageWeight: 3.4 },
+      { month: 3, sampleSize: 3, averageWeight: 99 },
+    ]);
+    expect(months).toEqual([
+      { month: 2, sampleSize: 8, averageWeight: 3.4 },
+      { month: 3, sampleSize: 3, averageWeight: null },
+    ]);
+    expect(JSON.stringify(months)).not.toContain("user_id");
+    expect(JSON.stringify(months)).not.toContain("photo");
+    expect(JSON.stringify(months)).not.toContain("notes");
   });
 });

@@ -23,4 +23,16 @@ describe("animal parent sex and delete confirm wiring", () => {
     const form = readFileSync("app/components/mutation-form.tsx", "utf8");
     expect(form).not.toMatch(/fieldset[^>]*contents/);
   });
+
+  it("labels the growth guide as 参考目安, not 平均", () => {
+    const page = readFileSync("app/animals/[id]/page.tsx", "utf8");
+    expect(page).toContain("参考目安には個体差があります");
+    expect(page).toContain("growthGuideSeries");
+    expect(page).not.toContain("標準体重");
+    const chart = readFileSync("app/components/growth-chart.tsx", "utf8");
+    expect(chart).toContain("あなたのクレス");
+    expect(chart).toContain("参考目安");
+    expect(chart).toContain("クレスノート実測平均");
+    expect(chart).toContain("overflow-hidden");
+  });
 });

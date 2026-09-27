@@ -18,6 +18,12 @@ export type CompareCohortPayload = {
   curve: CohortPoint[];
 };
 
+export type GrowthGuideMonthPayload = {
+  month: number;
+  sampleSize: number;
+  averageWeight: number | null;
+};
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -115,6 +121,38 @@ export function parseCompareCohort(raw: unknown): CompareCohortPayload {
   return { sampleSize, average, curve };
 }
 
+export function parseGrowthGuideMonths(raw: unknown): GrowthGuideMonthPayload[] {
+  if (!Array.isArray(raw)) {
+    throw new Error("成長の実測集計を取得できません。");
+  }
+  return raw.map((item) => {
+    const row = asRecord(item);
+    const month = asFiniteNumber(row?.month);
+    const sampleSize = asFiniteNumber(row?.sampleSize);
+    if (
+      month === null ||
+      sampleSize === null ||
+      !Number.isInteger(month) ||
+      !Number.isInteger(sampleSize) ||
+      month < 1 ||
+      month > 12 ||
+      sampleSize < 0
+    ) {
+      throw new Error("成長の実測集計を読めません。");
+    }
+    const averageWeight =
+      row?.averageWeight === null || row?.averageWeight === undefined
+        ? null
+        : asFiniteNumber(row.averageWeight);
+    return {
+      month,
+      sampleSize,
+      averageWeight:
+        sampleSize >= MIN_COHORT_FOR_AVERAGE ? averageWeight : null,
+    };
+  });
+}
+
 async function rpc(name: string, args?: Record<string, unknown>): Promise<unknown> {
   const client = await createSupabaseServerClient();
   const { data, error } = await client.rpc(name, args ?? {});
@@ -142,4 +180,12 @@ export async function fetchCompareCohort(options: {
       p_age_months: options.ageMonths,
     }),
   );
+}
+
+export async function fetchGrowthGuideMonths(): Promise<GrowthGuideMonthPayload[]> {
+  try {
+    return parseGrowthGuideMonths(await rpc("growth_guide_month_stats"));
+  } catch {
+    return [];
+  }
 }

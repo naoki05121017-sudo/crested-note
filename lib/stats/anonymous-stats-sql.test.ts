@@ -23,4 +23,23 @@ describe("anonymous stats SQL", () => {
     expect(sql).toContain("set public = false");
     expect(sql).toContain("animal_photos_select_if_animal_public");
   });
+
+  it("adds a month-level growth guide RPC without identity fields", () => {
+    const sql = readFileSync(
+      "supabase/migrations/20260928_growth_guide_month_stats.sql",
+      "utf8",
+    );
+    expect(sql).toContain("growth_guide_month_stats");
+    expect(sql).toContain("security definer");
+    expect(sql).toContain("stats_is_japan_prefecture");
+    expect(sql).toContain("sampleSize");
+    expect(sql).toContain("averageWeight");
+    expect(sql).not.toContain("photo_url");
+    expect(sql).not.toContain("user_id");
+    expect(sql).not.toMatch(/\ba\.name\b/);
+    expect(sql).not.toMatch(/\ba\.notes\b/);
+    expect(sql).toContain(
+      "grant execute on function public.growth_guide_month_stats() to authenticated",
+    );
+  });
 });
