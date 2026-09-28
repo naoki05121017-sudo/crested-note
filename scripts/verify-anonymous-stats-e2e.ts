@@ -127,16 +127,23 @@ async function main() {
     if (publicWeightError) fail("public weight insert", publicWeightError.message);
 
     const after = await statsAs(emailB, password);
-    if (after.registered !== before.registered + 2) {
+    if (after.registered !== before.registered + 1) {
       fail(
-        "匿名統計に非公開個体が含まれる",
-        `registered ${before.registered} → ${after.registered}（+2 を期待。非公開+公開）`,
+        "日本のクレス統計は公開個体だけを数える",
+        `registered ${before.registered} → ${after.registered}（公開+1 を期待。非公開は入れない）`,
       );
     }
-    if (after.living < before.living + 2) {
-      fail("匿名統計 living", `${before.living} → ${after.living}`);
+    if (after.living !== before.living + 1) {
+      fail("日本のクレス統計 living", `${before.living} → ${after.living}`);
     }
-    ok("非公開個体が匿名統計に入った", `registered ${before.registered} → ${after.registered}`);
+    const afterA = await statsAs(emailA, password);
+    if (afterA.registered !== after.registered) {
+      fail(
+        "ユーザーAとBで全国公開個体数が一致しない",
+        `A=${afterA.registered} B=${after.registered}`,
+      );
+    }
+    ok("公開個体だけが日本のクレス統計に入った", `registered ${before.registered} → ${after.registered}`);
 
     const sessionB = await signIn(emailB, password);
     const compare = await sessionB.rpc("compare_cohort_stats", {

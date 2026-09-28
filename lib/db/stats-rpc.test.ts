@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   parseCompareCohort,
@@ -21,6 +22,26 @@ describe("anonymous stats payloads", () => {
     expect(stats.meanLatestWeight).toBe(21.5);
     expect(JSON.stringify(stats)).not.toContain("user_id");
     expect(JSON.stringify(stats)).not.toContain("photo");
+  });
+
+  it("keeps the home animal preview separate from nationwide Japan stats", () => {
+    const home = readFileSync("app/page.tsx", "utf8");
+    expect(home).toContain("pageSize: HOME_ANIMAL_PREVIEW");
+    expect(home).toContain("const japan = await fetchJapanCrestStats()");
+    expect(home).toContain("const animalCount = await countOwnedAnimals");
+    expect(home).toContain("japanRegistered={japan.registered}");
+    expect(home).toContain("animalCount={animalCount}");
+  });
+
+  it("loads Japan stats with the service-role client instead of the signed-in user", () => {
+    const source = readFileSync("lib/db/stats-rpc.ts", "utf8");
+    expect(source).toContain("createAdminClient");
+    expect(source).toMatch(
+      /function japanCrestStatsRpc[\s\S]*client\.rpc\("japan_crest_stats"\)/,
+    );
+    expect(source).not.toMatch(
+      /fetchJapanCrestStats[\s\S]*rpc\("japan_crest_stats"\)/,
+    );
   });
 
   it("drops an average when the compare sample is too small", () => {

@@ -1,4 +1,6 @@
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 import { MIN_COHORT_FOR_AVERAGE, type CohortPoint } from "@/lib/stats/compare";
 
 export type JapanCrestStatsPayload = {
@@ -162,8 +164,19 @@ async function rpc(name: string, args?: Record<string, unknown>): Promise<unknow
   return data;
 }
 
+async function japanCrestStatsRpc(): Promise<unknown> {
+  const client = createAdminClient();
+  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+    client.rpc("japan_crest_stats"),
+  );
+  if (error) {
+    throw new Error(`集計を取得できません: ${error.message}`);
+  }
+  return data;
+}
+
 export async function fetchJapanCrestStats(): Promise<JapanCrestStatsPayload> {
-  return parseJapanCrestStats(await rpc("japan_crest_stats"));
+  return parseJapanCrestStats(await japanCrestStatsRpc());
 }
 
 export async function fetchCompareCohort(options: {

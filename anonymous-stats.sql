@@ -57,6 +57,7 @@ language plpgsql
 stable
 security definer
 set search_path = public
+set row_security = off
 as $$
 declare
   v_registered integer;
@@ -70,11 +71,14 @@ declare
   v_buckets jsonb;
   v_years jsonb;
 begin
-  select count(*)::integer into v_registered from public.animals;
+  select count(*)::integer into v_registered
+  from public.animals
+  where is_public = true;
 
   select count(*)::integer into v_living
   from public.animals
-  where status is distinct from 'deceased';
+  where is_public = true
+    and status is distinct from 'deceased';
 
   select
     count(*) filter (where sex = 'male')::integer,
@@ -82,7 +86,8 @@ begin
     count(*) filter (where sex is distinct from 'male' and sex is distinct from 'female')::integer
   into v_male, v_female, v_unknown
   from public.animals
-  where status is distinct from 'deceased';
+  where is_public = true
+    and status is distinct from 'deceased';
 
   with latest as (
     select distinct on (animal_id) animal_id, weight_g
@@ -94,7 +99,8 @@ begin
   into v_weight_sample, v_mean
   from latest l
   join public.animals a on a.id = l.animal_id
-  where a.status is distinct from 'deceased';
+  where a.is_public = true
+    and a.status is distinct from 'deceased';
 
   select coalesce(
     jsonb_agg(jsonb_build_object('label', label, 'count', n) order by n desc, label),
@@ -104,7 +110,8 @@ begin
   from (
     select public.stats_morph_key_of(a) as label, count(*)::integer as n
     from public.animals a
-    where a.status is distinct from 'deceased'
+    where a.is_public = true
+      and a.status is distinct from 'deceased'
       and public.stats_morph_key_of(a) <> ''
     group by 1
     having count(*) >= 3
@@ -154,7 +161,8 @@ begin
         where weighed_on ~ '^\d{4}-\d{2}-\d{2}$'
         order by animal_id, weighed_on desc
       ) l on l.animal_id = a.id
-      where a.status is distinct from 'deceased'
+      where a.is_public = true
+        and a.status is distinct from 'deceased'
     ) v on v.age_m is not null and v.age_m >= x.min_m and v.age_m < x.max_m
     group by x.id, x.label, x.sort
   ) b;
@@ -167,7 +175,8 @@ begin
   from (
     select left(hatch_date, 4) as year, count(*)::integer as n
     from public.animals
-    where status is distinct from 'deceased'
+    where is_public = true
+      and status is distinct from 'deceased'
       and hatch_date ~ '^\d{4}'
     group by 1
   ) y;
@@ -296,6 +305,7 @@ revoke all on function public.stats_morph_key_of(public.animals) from public;
 revoke all on function public.japan_crest_stats() from public;
 revoke all on function public.compare_cohort_stats(uuid, text, text, integer) from public;
 grant execute on function public.japan_crest_stats() to authenticated;
+grant execute on function public.japan_crest_stats() to service_role;
 grant execute on function public.compare_cohort_stats(uuid, text, text, integer) to authenticated;
 
 update public.animals
