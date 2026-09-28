@@ -20,6 +20,7 @@ export function MutationForm({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const running = useRef(false);
 
@@ -31,11 +32,17 @@ export function MutationForm({
           if (running.current || leaving) return;
           running.current = true;
           setError(null);
+          setNotice(null);
           try {
             const result = await action(formData);
             if (result && typeof result === "object" && "error" in result) {
               if (result.error) {
                 setError(result.error);
+                running.current = false;
+                return;
+              }
+              if (result.notice) {
+                setNotice(result.notice);
                 running.current = false;
                 return;
               }
@@ -66,6 +73,11 @@ export function MutationForm({
         {error ? (
           <p role="alert" className="text-sm text-[var(--danger)]">
             {error}
+          </p>
+        ) : null}
+        {notice ? (
+          <p role="status" className="text-sm leading-6">
+            {notice}
           </p>
         ) : null}
       </form>

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 export type ActionResult = {
   error: string | null;
   redirectTo?: string;
+  notice?: string;
 };
 
 export function actionError(
@@ -27,6 +28,10 @@ export function actionError(
 
 export function actionOk(redirectTo?: string): ActionResult {
   return redirectTo ? { error: null, redirectTo } : { error: null };
+}
+
+export function actionNotice(notice: string): ActionResult {
+  return { error: null, notice };
 }
 
 export function revalidateApp(...paths: string[]) {

@@ -43,7 +43,7 @@ export default async function LoginPage({
         <Card tone="glass" className="mt-8 max-w-md">
         {check ? (
           <p className="mb-4 text-sm text-white/55">
-            確認メールが届いている場合は、承認してからログインしてください。
+            確認メールのリンクを開いてからログインしてください。届いていない場合は迷惑メールフォルダも確認してください。
           </p>
         ) : null}
         <MutationForm action={signIn} className="flex flex-col gap-4">
