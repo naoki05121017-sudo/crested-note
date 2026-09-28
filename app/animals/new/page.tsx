@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { AnimalForm } from "@/app/animals/animal-form";
 import { PageHeader } from "@/app/components/ui";
-import { listAnimals, getSettings } from "@/lib/db/queries";
+import { listAnimalsForParents, getSettings } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体を登録" };
 
 export default async function NewAnimalPage() {
-  const parents = await listAnimals();
+  const parents = await listAnimalsForParents();
   const settings = await getSettings();
   return (
     <div className="flex flex-col gap-8">

@@ -7,22 +7,23 @@ import {
   parseProjectStatus,
   textField,
 } from "@/lib/db/form";
-import { mutateDb, newId } from "@/lib/db/store";
+import { requireSessionUser } from "@/lib/auth/session";
+import { getOwnedProject, updateOwnedProject, upsertOwnedProjectMember, deleteOwnedProject, deleteOwnedProjectMember, insertOwnedProject } from "@/lib/db/owned-tables";
+import { newId } from "@/lib/db/store";
 
 export async function createProject(formData: FormData) {
   const name = textField(formData, "name");
   if (!name) return actionError("プロジェクト名は必須です。");
   const id = newId();
   try {
-    await mutateDb((db) => {
-      db.projects.push({
-        id,
-        name,
-        goal: textField(formData, "goal"),
-        notes: textField(formData, "notes"),
-        status: "active",
-        createdAt: nowIso(),
-      });
+    const user = await requireSessionUser();
+    await insertOwnedProject(user.id, {
+      id,
+      name,
+      goal: textField(formData, "goal"),
+      notes: textField(formData, "notes"),
+      status: "active",
+      createdAt: nowIso(),
     });
   } catch (error) {
     return actionError(error, "作成できませんでした。");
@@ -33,14 +34,15 @@ export async function createProject(formData: FormData) {
 
 export async function updateProject(id: string, formData: FormData) {
   try {
-    await mutateDb((db) => {
-      const project = db.projects.find((row) => row.id === id);
-      if (!project) throw new Error("プロジェクトが見つかりません。");
-      const name = textField(formData, "name");
-      if (name) project.name = name;
-      project.goal = textField(formData, "goal");
-      project.notes = textField(formData, "notes");
-      project.status = parseProjectStatus(textField(formData, "status"));
+    const user = await requireSessionUser();
+    const existing = await getOwnedProject(user.id, id);
+    if (!existing) throw new Error("プロジェクトが見つかりません。");
+    const name = textField(formData, "name") || existing.name;
+    await updateOwnedProject(user.id, id, {
+      name,
+      goal: textField(formData, "goal"),
+      notes: textField(formData, "notes"),
+      status: parseProjectStatus(textField(formData, "status")),
     });
   } catch (error) {
     return actionError(error, "保存できませんでした。");
@@ -54,12 +56,8 @@ export async function addProjectMember(projectId: string, formData: FormData) {
   if (!animalId) return actionError("個体を選んでください。");
   const role = parseProjectRole(textField(formData, "role"));
   try {
-    await mutateDb((db) => {
-      db.projectMembers = db.projectMembers.filter(
-        (row) => !(row.projectId === projectId && row.animalId === animalId),
-      );
-      db.projectMembers.push({ projectId, animalId, role });
-    });
+    const user = await requireSessionUser();
+    await upsertOwnedProjectMember(user.id, projectId, animalId, role);
   } catch (error) {
     return actionError(error, "追加できませんでした。");
   }
@@ -69,11 +67,8 @@ export async function addProjectMember(projectId: string, formData: FormData) {
 
 export async function removeProjectMember(projectId: string, animalId: string) {
   try {
-    await mutateDb((db) => {
-      db.projectMembers = db.projectMembers.filter(
-        (row) => !(row.projectId === projectId && row.animalId === animalId),
-      );
-    });
+    const user = await requireSessionUser();
+    await deleteOwnedProjectMember(user.id, projectId, animalId);
   } catch (error) {
     return actionError(error, "外せませんでした。");
   }
@@ -83,10 +78,8 @@ export async function removeProjectMember(projectId: string, animalId: string) {
 
 export async function deleteProject(id: string) {
   try {
-    await mutateDb((db) => {
-      db.projects = db.projects.filter((row) => row.id !== id);
-      db.projectMembers = db.projectMembers.filter((row) => row.projectId !== id);
-    });
+    const user = await requireSessionUser();
+    await deleteOwnedProject(user.id, id);
   } catch (error) {
     return actionError(error, "削除できませんでした。");
   }

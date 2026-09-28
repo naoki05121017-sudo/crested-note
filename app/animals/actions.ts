@@ -17,23 +17,30 @@ import {
   removeManagedAnimalPhoto,
   uploadAnimalPhoto,
 } from "@/lib/db/animal-photo-storage";
-import { issueCrestLinkForAnimal, retireCrestLinkForAnimal, syncCrestLinkParents } from "@/lib/crest-link/core";
 import { parentSexAssignmentError } from "@/lib/db/parent-sex";
 import { replaceGenes } from "@/lib/db/genes";
 import { getAnimal, getSettings } from "@/lib/db/queries";
 import {
   animalIsReferenced,
   deleteOwnedAnimal,
+  deleteOwnedWeight,
   getOwnedAnimal,
   getOwnedAnimalsByIds,
   insertOwnedAnimal,
+  insertOwnedWeight,
   issueNextAnimalCode,
+  patchOwnedAnimalCadence,
   patchOwnedAnimalCrestLinkId,
   replaceOwnedAnimalGenes,
-  listGenesForAnimals,
   updateOwnedAnimal,
 } from "@/lib/db/animal-io";
-import { mutateDb, newId, newSlug } from "@/lib/db/store";
+import {
+  deleteProjectMembersForAnimal,
+  issueOwnedCrestLink,
+  retireOwnedCrestLink,
+  syncOwnedCrestLinkParents,
+} from "@/lib/db/crest-link-io";
+import { newId, newSlug } from "@/lib/db/store";
 import { requireSessionUser } from "@/lib/auth/session";
 import { parseCheckEveryDays } from "@/lib/care/check-cadence";
 import type { AnimalRecord } from "@/lib/db/types";
@@ -156,14 +163,7 @@ export async function createAnimal(formData: FormData) {
     };
     await insertOwnedAnimal(user.id, record, genes);
     try {
-      const link = await mutateDb((db) => {
-        if (!db.animals.some((animal) => animal.id === id)) {
-          db.animals.push(record);
-        }
-        const issued = issueCrestLinkForAnimal(db, id);
-        db.genes = replaceGenes(db.genes, id, fields.genotype);
-        return issued;
-      });
+      const link = await issueOwnedCrestLink(user.id, record);
       await patchOwnedAnimalCrestLinkId(user.id, id, link.id);
     } catch (error) {
       await deleteOwnedAnimal(user.id, id).catch(() => undefined);
@@ -240,9 +240,7 @@ export async function updateAnimal(id: string, formData: FormData) {
     applyCheckEveryDays(next, fields.checkEveryDays);
     const genes = await replaceOwnedAnimalGenes(id, fields.genotype);
     await updateOwnedAnimal(user.id, next, genes);
-    await mutateDb((db) => {
-      syncCrestLinkParents(db, id);
-    });
+    await syncOwnedCrestLinkParents(next);
     await discardPreviousAnimalPhoto(previousPhotoUrl, photo.photoUrl, id).catch(
       () => undefined,
     );
@@ -271,10 +269,10 @@ export async function deleteAnimal(
     }
     const existingRow = await getOwnedAnimal(user.id, id);
     previousPhotoUrl = existingRow?.photoUrl ?? "";
-    await mutateDb((db) => {
-      retireCrestLinkForAnimal(db, id);
-      db.projectMembers = db.projectMembers.filter((row) => row.animalId !== id);
-    });
+    if (existingRow) {
+      await retireOwnedCrestLink(user.id, existingRow);
+    }
+    await deleteProjectMembersForAnimal(id);
     await deleteOwnedAnimal(user.id, id);
   } catch (error) {
     return { error: actionError(error, "削除できませんでした。").error, deleted: false };
@@ -301,14 +299,13 @@ export async function addWeight(animalId: string, formData: FormData) {
     textField(formData, "weighedOn") || new Date().toISOString().slice(0, 10);
 
   try {
-    await mutateDb((db) => {
-      db.weights.push({
-        id: newId(),
-        animalId,
-        weighedOn,
-        weightG,
-        notes: textField(formData, "notes"),
-      });
+    const user = await requireSessionUser();
+    await insertOwnedWeight(user.id, {
+      id: newId(),
+      animalId,
+      weighedOn,
+      weightG,
+      notes: textField(formData, "notes"),
     });
   } catch (error) {
     return actionError(error, "記録できませんでした。");
@@ -330,10 +327,7 @@ export async function updateCheckCadence(id: string, formData: FormData) {
 
   try {
     const user = await requireSessionUser();
-    const next: AnimalRecord = { ...existing, updatedAt: nowIso() };
-    applyCheckEveryDays(next, cadence.days);
-    const genes = await listGenesForAnimals([id]);
-    await updateOwnedAnimal(user.id, next, genes);
+    await patchOwnedAnimalCadence(user.id, id, cadence.days);
   } catch (error) {
     return actionError(error, "保存できませんでした。");
   }
@@ -344,9 +338,8 @@ export async function updateCheckCadence(id: string, formData: FormData) {
 
 export async function deleteWeight(animalId: string, weightId: string) {
   try {
-    await mutateDb((db) => {
-      db.weights = db.weights.filter((row) => row.id !== weightId);
-    });
+    const user = await requireSessionUser();
+    await deleteOwnedWeight(user.id, animalId, weightId);
   } catch (error) {
     return actionError(error, "削除できませんでした。");
   }

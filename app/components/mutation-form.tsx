@@ -22,15 +22,17 @@ export function MutationForm({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [busy, setBusy] = useState(false);
   const running = useRef(false);
 
   return (
-    <MutationBusyContext.Provider value={leaving}>
+    <MutationBusyContext.Provider value={busy || leaving}>
       <form
         className={className}
         action={async (formData) => {
           if (running.current || leaving) return;
           running.current = true;
+          setBusy(true);
           setError(null);
           setNotice(null);
           try {
@@ -39,11 +41,13 @@ export function MutationForm({
               if (result.error) {
                 setError(result.error);
                 running.current = false;
+                setBusy(false);
                 return;
               }
               if (result.notice) {
                 setNotice(result.notice);
                 running.current = false;
+                setBusy(false);
                 return;
               }
               if (result.redirectTo) {
@@ -54,9 +58,11 @@ export function MutationForm({
             }
             router.refresh();
             running.current = false;
+            setBusy(false);
           } catch (caught) {
             unstable_rethrow(caught);
             running.current = false;
+            setBusy(false);
             const message =
               caught instanceof Error ? caught.message.trim() : "";
             setError(

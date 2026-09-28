@@ -26,7 +26,8 @@ function TransferActionButton({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
-  const busy = pending || leaving;
+  const [pressed, setPressed] = useState(false);
+  const busy = pending || leaving || pressed;
 
   return (
     <div>
@@ -34,11 +35,15 @@ function TransferActionButton({
         type="button"
         disabled={busy}
         className={className}
+        onPointerDown={() => {
+          if (!busy) setPressed(true);
+        }}
         onClick={() => {
           setError(null);
           start(async () => {
             const result = await run(animalId);
             if (result.error) {
+              setPressed(false);
               setError(result.error);
               return;
             }

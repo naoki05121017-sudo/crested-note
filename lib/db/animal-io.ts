@@ -1,15 +1,24 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 import { persistStatsMorphKey } from "@/lib/stats/compare";
-import { uuidOrNull } from "@/lib/db/pg-id";
+import { postgresUuid, uuidOrNull } from "@/lib/db/pg-id";
 import {
   ANIMAL_CODE_SEQ_TABLE,
   animalCodeSeqValueForUser,
   animalCodeSeqWriteRow,
 } from "@/lib/db/animal-code-seq";
-import { formatAnimalCode, issueAnimalCode, parseAnimalCodeSeq } from "@/lib/db/animal-code";
+import { formatAnimalCode } from "@/lib/db/animal-code";
 import { replaceGenes } from "@/lib/db/genes";
-import type { AnimalGeneRecord, AnimalRecord } from "@/lib/db/types";
+import {
+  DEFAULT_SETTINGS,
+  EGG_RESULTS,
+  type AnimalGeneRecord,
+  type AnimalRecord,
+  type Breeding,
+  type EggResult,
+  type SettingsRecord,
+  type WeightLogRecord,
+} from "@/lib/db/types";
 import type { GeneStatus, Genotype } from "@/lib/genetics";
 import { ANIMAL_LIST_PAGE_SIZE, sanitizeAnimalSearch } from "@/lib/db/animal-search";
 import {
@@ -89,42 +98,40 @@ export function animalWritePayload(
 
 export async function issueNextAnimalCode(userId: string): Promise<string> {
   const client = createAdminClient();
-  const seqRows = await selectPagedAll(
-    (from, to) =>
-      retryOnJwtIssuedAtFuture(() =>
-        client
-          .from(ANIMAL_CODE_SEQ_TABLE)
-          .select("user_id, value")
-          .eq("user_id", userId)
-          .range(from, to),
-      ),
+  const { data: seqRows, error: seqReadError } = await retryOnJwtIssuedAtFuture(() =>
+    client.from(ANIMAL_CODE_SEQ_TABLE).select("user_id, value").eq("user_id", userId),
   );
-  const codeRows = await selectPagedAll((from, to) =>
-    retryOnJwtIssuedAtFuture(() =>
-      client.from("animals").select("code").eq("user_id", userId).range(from, to),
-    ),
-  );
-  const stub = {
-    animalCodeSeq: animalCodeSeqValueForUser(seqRows, userId),
-    animals: codeRows.map((row) => ({
-      code: String(row.code ?? ""),
-    })) as AnimalRecord[],
-  };
-  const code = issueAnimalCode(stub);
-  const { error } = await retryOnJwtIssuedAtFuture(() =>
-    client.from(ANIMAL_CODE_SEQ_TABLE).upsert(
-      animalCodeSeqWriteRow(
-        userId,
-        stub.animalCodeSeq,
-        parseAnimalCodeSeq(code) || stub.animalCodeSeq,
-      ),
-      { onConflict: "user_id" },
-    ),
-  );
-  if (error) {
-    throw new Error(`個体ID連番を保存できません: ${error.message}`);
+  if (seqReadError) {
+    throw new Error(`個体ID連番を読めません: ${seqReadError.message}`);
   }
-  return formatAnimalCode(parseAnimalCodeSeq(code) || stub.animalCodeSeq);
+  let seq = animalCodeSeqValueForUser(seqRows, userId);
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    seq += 1;
+    const code = formatAnimalCode(seq);
+    const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+      client
+        .from("animals")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("code", code)
+        .maybeSingle(),
+    );
+    if (error) {
+      throw new Error(`animals を照合できません: ${error.message}`);
+    }
+    if (data) continue;
+    const { error: seqError } = await retryOnJwtIssuedAtFuture(() =>
+      client.from(ANIMAL_CODE_SEQ_TABLE).upsert(
+        animalCodeSeqWriteRow(userId, seq, seq),
+        { onConflict: "user_id" },
+      ),
+    );
+    if (seqError) {
+      throw new Error(`個体ID連番を保存できません: ${seqError.message}`);
+    }
+    return code;
+  }
+  throw new Error("個体IDを発行できません。");
 }
 
 export async function insertOwnedAnimal(
@@ -401,8 +408,26 @@ export async function listWeightsForAnimals(animalIds: string[]) {
   );
 }
 
+type AnimalFilterQuery = {
+  eq: (column: string, value: string) => AnimalFilterQuery;
+  or: (filters: string) => AnimalFilterQuery;
+  order: (
+    column: string,
+    options: { ascending: boolean },
+  ) => {
+    range: (
+      from: number,
+      to: number,
+    ) => PromiseLike<{
+      data: unknown[] | null;
+      error: { message: string } | null;
+      count: number | null;
+    }>;
+  };
+};
+
 function applyAnimalFilters(
-  query: any,
+  query: AnimalFilterQuery,
   userId: string,
   params: { q?: string; sex?: string; status?: string },
 ) {
@@ -421,15 +446,15 @@ function applyAnimalFilters(
 
 export async function listOwnedAnimalsPage(
   userId: string,
-  params: { q?: string; sex?: string; status?: string; page?: number },
+  params: { q?: string; sex?: string; status?: string; page?: number; pageSize?: number },
 ): Promise<{ records: AnimalRecord[]; total: number; page: number; pageSize: number }> {
   const page = Math.max(1, params.page ?? 1);
-  const pageSize = ANIMAL_LIST_PAGE_SIZE;
+  const pageSize = Math.max(1, Math.min(params.pageSize ?? ANIMAL_LIST_PAGE_SIZE, 100));
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
   const client = createAdminClient();
   const filtered = applyAnimalFilters(
-    client.from("animals").select("*", { count: "exact" }),
+    client.from("animals").select("*", { count: "exact" }) as unknown as AnimalFilterQuery,
     userId,
     params,
   );
@@ -461,4 +486,217 @@ export async function listOwnedAnimalsAll(userId: string): Promise<AnimalRecord[
     ),
   );
   return rows.map(asAnimalRecord);
+}
+
+export async function listOwnedParentOptions(userId: string): Promise<AnimalRecord[]> {
+  const client = createAdminClient();
+  const rows = await selectPagedAll((from, to) =>
+    retryOnJwtIssuedAtFuture(() =>
+      client
+        .from("animals")
+        .select("id, name, code, sex, sire_id, dam_id, crest_link_id, hatch_date, status, morph_label, traits, trait_levels, notes, photo_url, is_public, share_slug, prefecture, check_every_days, created_at, updated_at")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .range(from, to),
+    ),
+  );
+  return rows.map(asAnimalRecord);
+}
+
+export async function listOwnedChildren(
+  userId: string,
+  animalId: string,
+): Promise<AnimalRecord[]> {
+  const client = createAdminClient();
+  const rows = await selectPagedAll((from, to) =>
+    retryOnJwtIssuedAtFuture(() =>
+      client
+        .from("animals")
+        .select("*")
+        .eq("user_id", userId)
+        .or(`sire_id.eq.${animalId},dam_id.eq.${animalId}`)
+        .range(from, to),
+    ),
+  );
+  return rows.map(asAnimalRecord);
+}
+
+export async function getOwnedSettings(userId: string): Promise<SettingsRecord> {
+  const client = createAdminClient();
+  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+    client
+      .from("profiles")
+      .select("display_name, collection_name, prefecture, public_by_default")
+      .eq("id", userId)
+      .maybeSingle(),
+  );
+  if (error) {
+    throw new Error(`profiles を読めません: ${error.message}`);
+  }
+  return {
+    displayName: String(data?.display_name ?? DEFAULT_SETTINGS.displayName),
+    collectionName: String(data?.collection_name ?? DEFAULT_SETTINGS.collectionName),
+    prefecture: String(data?.prefecture ?? DEFAULT_SETTINGS.prefecture),
+    publicByDefault: Boolean(data?.public_by_default ?? DEFAULT_SETTINGS.publicByDefault),
+  };
+}
+
+export async function patchOwnedAnimalCadence(
+  userId: string,
+  animalId: string,
+  checkEveryDays: number | undefined,
+): Promise<void> {
+  const client = createAdminClient();
+  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+    client
+      .from("animals")
+      .update({
+        check_every_days: checkEveryDays ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", animalId)
+      .eq("user_id", userId)
+      .select("id"),
+  );
+  if (error) {
+    throw new Error(`animals を保存できません: ${error.message}`);
+  }
+  if (!data?.length) {
+    throw new Error("個体が見つかりません。");
+  }
+}
+
+export async function insertOwnedWeight(
+  userId: string,
+  row: WeightLogRecord,
+): Promise<void> {
+  const owned = await getOwnedAnimal(userId, row.animalId);
+  if (!owned) {
+    throw new Error("個体が見つかりません。");
+  }
+  const client = createAdminClient();
+  const { error } = await retryOnJwtIssuedAtFuture(() =>
+    client.from("weight_logs").insert({
+      id: postgresUuid(row.id, "weight_logs"),
+      animal_id: row.animalId,
+      weighed_on: row.weighedOn,
+      weight_g: row.weightG,
+      notes: row.notes ?? "",
+    }),
+  );
+  if (error) {
+    throw new Error(`weight_logs を保存できません: ${error.message}`);
+  }
+}
+
+export async function deleteOwnedWeight(
+  userId: string,
+  animalId: string,
+  weightId: string,
+): Promise<void> {
+  const owned = await getOwnedAnimal(userId, animalId);
+  if (!owned) {
+    throw new Error("個体が見つかりません。");
+  }
+  const client = createAdminClient();
+  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+    client
+      .from("weight_logs")
+      .delete()
+      .eq("id", postgresUuid(weightId, "weight_logs"))
+      .eq("animal_id", animalId)
+      .select("id"),
+  );
+  if (error) {
+    throw new Error(`weight_logs を削除できません: ${error.message}`);
+  }
+  if (!data?.length) {
+    throw new Error("記録が見つかりません。");
+  }
+}
+
+export async function listOwnedBreedingsForAnimal(
+  userId: string,
+  animalId: string,
+): Promise<Breeding[]> {
+  const client = createAdminClient();
+  const breedings = await selectPagedAll((from, to) =>
+    retryOnJwtIssuedAtFuture(() =>
+      client
+        .from("breedings")
+        .select("*")
+        .eq("user_id", userId)
+        .or(`male_id.eq.${animalId},female_id.eq.${animalId}`)
+        .range(from, to),
+    ),
+  );
+  const breedingIds = breedings.map((row) => String(row.id));
+  const clutches =
+    breedingIds.length === 0
+      ? []
+      : (
+          await Promise.all(
+            chunkIds(breedingIds).map((part) =>
+              selectPagedAll((from, to) =>
+                retryOnJwtIssuedAtFuture(() =>
+                  client
+                    .from("clutches")
+                    .select("*")
+                    .in("breeding_id", part)
+                    .range(from, to),
+                ),
+              ),
+            ),
+          )
+        ).flat();
+  const clutchIds = clutches.map((row) => String(row.id));
+  const eggs =
+    clutchIds.length === 0
+      ? []
+      : (
+          await Promise.all(
+            chunkIds(clutchIds).map((part) =>
+              selectPagedAll((from, to) =>
+                retryOnJwtIssuedAtFuture(() =>
+                  client.from("eggs").select("*").in("clutch_id", part).range(from, to),
+                ),
+              ),
+            ),
+          )
+        ).flat();
+  return breedings.map((breeding) => {
+    const clutchRows = clutches.filter((row) => String(row.breeding_id) === String(breeding.id));
+    return {
+      id: String(breeding.id),
+      maleId: String(breeding.male_id),
+      femaleId: String(breeding.female_id),
+      startedOn: String(breeding.started_on ?? ""),
+      endedOn: String(breeding.ended_on ?? ""),
+      status: (breeding.status as "active" | "closed") ?? "active",
+      notes: String(breeding.notes ?? ""),
+      predictionId: String(breeding.prediction_id ?? ""),
+      projectId: String(breeding.project_id ?? ""),
+      createdAt: String(breeding.created_at ?? ""),
+      clutches: clutchRows
+        .map((clutch) => ({
+          id: String(clutch.id),
+          breedingId: String(clutch.breeding_id),
+          laidOn: String(clutch.laid_on ?? ""),
+          notes: String(clutch.notes ?? ""),
+          eggs: eggs
+            .filter((egg) => String(egg.clutch_id) === String(clutch.id))
+            .map((egg) => ({
+              id: String(egg.id),
+              clutchId: String(egg.clutch_id),
+              expectedHatchOn: String(egg.expected_hatch_on ?? ""),
+              result: EGG_RESULTS.includes(egg.result as EggResult)
+                ? (egg.result as EggResult)
+                : "incubating",
+              hatchAnimalId: String(egg.hatch_animal_id ?? ""),
+              notes: String(egg.notes ?? ""),
+            })),
+        }))
+        .sort((a, b) => b.laidOn.localeCompare(a.laidOn)),
+    };
+  });
 }

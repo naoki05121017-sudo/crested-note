@@ -3,14 +3,14 @@ import { createBreeding } from "@/app/breedings/actions";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { Card, EmptyState, PageHeader } from "@/app/components/ui";
-import { listAnimals, listProjects } from "@/lib/db/queries";
+import { listAnimalsForParents, listProjects } from "@/lib/db/queries";
 import { animalTitle } from "@/lib/db/labels";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ペアを作成" };
 
 export default async function NewBreedingPage() {
-  const animals = (await listAnimals()).filter(
+  const animals = (await listAnimalsForParents()).filter(
     (animal) => animal.status === "active" || animal.status === "breeding",
   );
   const males = animals.filter((animal) => animal.sex !== "female");

@@ -6,3 +6,4 @@ export function sanitizeAnimalSearch(raw: string): string {
 }
 
 export const ANIMAL_LIST_PAGE_SIZE = 24;
+export const HOME_ANIMAL_PREVIEW = 6;

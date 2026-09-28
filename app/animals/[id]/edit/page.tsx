@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AnimalForm } from "@/app/animals/animal-form";
 import { PageHeader } from "@/app/components/ui";
-import { getAnimal, listAnimals } from "@/lib/db/queries";
+import { getAnimal, listAnimalsForParents } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体を編集" };
@@ -27,7 +27,7 @@ export default async function EditAnimalPage({
           </Link>
         }
       />
-      <AnimalForm animal={animal} parents={await listAnimals()} />
+      <AnimalForm animal={animal} parents={await listAnimalsForParents()} />
     </div>
   );
 }

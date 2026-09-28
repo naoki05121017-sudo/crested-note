@@ -1,4 +1,4 @@
-import { crestLinkView, getAnimalByCrestLinkId as animalRecordByCrestLink, type CrestLinkView } from "@/lib/crest-link/core";
+import { crestLinkView, type CrestLinkView } from "@/lib/crest-link/core";
 import type { Genotype } from "@/lib/genetics";
 import { requireSessionUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -7,16 +7,32 @@ import { loadPublicAnimals } from "./supabase-io";
 import {
   countOwnedAnimals,
   getOwnedAnimal,
+  getOwnedAnimalsByIds,
+  getOwnedSettings,
   listGenesForAnimals,
   listOwnedAnimalsAll,
   listOwnedAnimalsPage,
+  listOwnedBreedingsForAnimal,
+  listOwnedChildren,
+  listOwnedParentOptions,
   listWeightsForAnimals,
 } from "./animal-io";
+import {
+  dashboardCounts,
+  getOwnedBreeding,
+  getOwnedPrediction,
+  getOwnedPredictionForBreeding,
+  getOwnedProject,
+  listOwnedBreedings,
+  listOwnedPredictions,
+  listOwnedProjectMembers,
+  listOwnedProjects,
+} from "./owned-tables";
+import { getAnimalByOwnedCrestLinkId } from "./crest-link-io";
 import type {
   Animal,
   AnimalRecord,
   Breeding,
-  Clutch,
   DatabaseFile,
   FeedbackRecord,
   PredictionRecord,
@@ -80,6 +96,14 @@ export async function getAnimal(id: string): Promise<Animal | undefined> {
   if (!record) return undefined;
   const genes = await listGenesForAnimals([record.id]);
   return hydrateAnimal(emptyGeneDb([record], genes), record);
+}
+
+export async function getAnimalsByIds(ids: string[]): Promise<Animal[]> {
+  const user = await requireSessionUser();
+  const records = await getOwnedAnimalsByIds(user.id, ids);
+  const genes = await listGenesForAnimals(records.map((row) => row.id));
+  const db = emptyGeneDb(records, genes);
+  return records.map((record) => hydrateAnimal(db, record));
 }
 
 function publicSnapshotDb(snap: {
@@ -204,74 +228,68 @@ export async function weightsByAnimal(
 }
 
 export async function listBreedings(): Promise<Breeding[]> {
-  const db = await loadDb();
-  return db.breedings
-    .map((record) => hydrateBreeding(db, record.id))
-    .filter((row): row is Breeding => row !== undefined)
-    .sort((a, b) => b.startedOn.localeCompare(a.startedOn));
+  const user = await requireSessionUser();
+  return listOwnedBreedings(user.id);
 }
 
 export async function getBreeding(id: string): Promise<Breeding | undefined> {
-  return hydrateBreeding(await loadDb(), id);
-}
-
-function hydrateBreeding(db: DatabaseFile, id: string): Breeding | undefined {
-  const record = db.breedings.find((breeding) => breeding.id === id);
-  if (!record) return undefined;
-  const clutches: Clutch[] = db.clutches
-    .filter((clutch) => clutch.breedingId === id)
-    .map((clutch) => ({
-      ...clutch,
-      eggs: db.eggs.filter((egg) => egg.clutchId === clutch.id),
-    }))
-    .sort((a, b) => b.laidOn.localeCompare(a.laidOn));
-  return { ...record, clutches };
+  const user = await requireSessionUser();
+  return getOwnedBreeding(user.id, id);
 }
 
 export async function listProjects(): Promise<ProjectRecord[]> {
-  const db = await loadDb();
-  return db.projects.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const user = await requireSessionUser();
+  return listOwnedProjects(user.id);
 }
 
 export async function getProject(id: string): Promise<ProjectRecord | undefined> {
-  const db = await loadDb();
-  return db.projects.find((project) => project.id === id);
+  const user = await requireSessionUser();
+  return getOwnedProject(user.id, id);
 }
 
 export async function projectMembers(projectId: string): Promise<{
   animal: Animal;
   role: import("./types").ProjectRole;
 }[]> {
-  const db = await loadDb();
-  return db.projectMembers
-    .filter((row) => row.projectId === projectId)
-    .flatMap((row) => {
-      const record = db.animals.find((animal) => animal.id === row.animalId);
-      if (!record) return [];
-      return [{ animal: hydrateAnimal(db, record), role: row.role }];
-    });
+  const user = await requireSessionUser();
+  const members = await listOwnedProjectMembers(user.id, projectId);
+  const records = await getOwnedAnimalsByIds(
+    user.id,
+    members.map((row) => row.animalId),
+  );
+  const genes = await listGenesForAnimals(records.map((row) => row.id));
+  const db = emptyGeneDb(records, genes);
+  return members.flatMap((row) => {
+    const record = records.find((animal) => animal.id === row.animalId);
+    if (!record) return [];
+    return [{ animal: hydrateAnimal(db, record), role: row.role }];
+  });
 }
 
 export async function listPredictions(): Promise<PredictionRecord[]> {
-  const db = await loadDb();
-  return db.predictions.sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
-  );
+  const user = await requireSessionUser();
+  return listOwnedPredictions(user.id);
 }
 
 export async function getPrediction(id: string): Promise<PredictionRecord | undefined> {
-  const db = await loadDb();
-  return db.predictions.find((row) => row.id === id);
+  const user = await requireSessionUser();
+  return getOwnedPrediction(user.id, id);
 }
 
 export async function predictionForBreeding(breedingId: string): Promise<PredictionRecord | undefined> {
-  const db = await loadDb();
-  return db.predictions.find((row) => row.breedingId === breedingId);
+  const user = await requireSessionUser();
+  return getOwnedPredictionForBreeding(user.id, breedingId);
+}
+
+export async function listAnimalsForParents(): Promise<Animal[]> {
+  const user = await requireSessionUser();
+  const records = await listOwnedParentOptions(user.id);
+  return records.map((record) => ({ ...record, genotype: {} }));
 }
 
 export async function getSettings(): Promise<SettingsRecord> {
-  const db = await loadDb();
-  return db.settings;
+  const user = await requireSessionUser();
+  return getOwnedSettings(user.id);
 }
 
 export async function listFeedbackForOperator(): Promise<FeedbackRecord[]> {
@@ -282,36 +300,10 @@ export async function listFeedbackForOperator(): Promise<FeedbackRecord[]> {
 export async function dashboardStats() {
   const user = await requireSessionUser();
   const animalCount = await countOwnedAnimals(user.id, { excludeDeceased: true });
-  const breedings = await listBreedings();
-  const incubating = breedings.flatMap((breeding) =>
-    breeding.clutches.flatMap((clutch) =>
-      clutch.eggs
-        .filter(
-          (egg) => egg.result === "incubating" || egg.result === "fertile",
-        )
-        .map((egg) => ({ egg, breedingId: breeding.id })),
-    ),
-  );
-  const today = new Date().toISOString().slice(0, 10);
-  const soon = incubating.filter((row) => {
-    if (!row.egg.expectedHatchOn) return false;
-    return row.egg.expectedHatchOn >= today;
-  });
-  const projects = await listProjects();
-
+  const rest = await dashboardCounts(user.id);
   return {
     animalCount,
-    activeBreedings: breedings.filter((breeding) => breeding.status === "active")
-      .length,
-    incubatingEggs: incubating.length,
-    projectCount: projects.filter((project) => project.status === "active")
-      .length,
-    upcomingHatches: soon
-      .slice()
-      .sort((a, b) =>
-        a.egg.expectedHatchOn.localeCompare(b.egg.expectedHatchOn),
-      )
-      .slice(0, 8),
+    ...rest,
   };
 }
 
@@ -320,24 +312,24 @@ export async function getCrestLinkView(animalId: string): Promise<CrestLinkView 
 }
 
 export async function getAnimalByCrestLinkId(crestLinkId: string) {
-  const db = await loadDb();
-  const record = animalRecordByCrestLink(db, crestLinkId);
-  return record ? hydrateAnimal(db, record) : undefined;
+  const record = await getAnimalByOwnedCrestLinkId(crestLinkId);
+  if (!record) return undefined;
+  const genes = await listGenesForAnimals([record.id]);
+  return hydrateAnimal(emptyGeneDb([record], genes), record);
 }
 
 export async function childrenOf(animalId: string): Promise<Animal[]> {
-  const animals = await listAnimals();
-  return animals.filter(
-    (animal) => animal.sireId === animalId || animal.damId === animalId,
-  );
+  const user = await requireSessionUser();
+  const records = await listOwnedChildren(user.id, animalId);
+  const genes = await listGenesForAnimals(records.map((row) => row.id));
+  const db = emptyGeneDb(records, genes);
+  return records.map((record) => hydrateAnimal(db, record));
 }
 
 export async function breedingsForAnimal(animalId: string): Promise<Breeding[]> {
-  const breedings = await listBreedings();
-  return breedings.filter(
-    (breeding) =>
-      breeding.maleId === animalId || breeding.femaleId === animalId,
-  );
+  const user = await requireSessionUser();
+  const rows = await listOwnedBreedingsForAnimal(user.id, animalId);
+  return rows.sort((a, b) => b.startedOn.localeCompare(a.startedOn));
 }
 
 export function addDays(isoDate: string, days: number): string {
@@ -347,44 +339,43 @@ export function addDays(isoDate: string, days: number): string {
 }
 
 export async function pedigreeOf(animalId: string) {
-  const db = await loadDb();
-  const record = db.animals.find((animal) => animal.id === animalId);
+  const user = await requireSessionUser();
+  const record = await getOwnedAnimal(user.id, animalId);
   if (!record) return undefined;
+  const relativeIds = [
+    record.sireId,
+    record.damId,
+  ].filter(Boolean);
+  const parents = await getOwnedAnimalsByIds(user.id, relativeIds);
+  const sireRecord = parents.find((row) => row.id === record.sireId);
+  const damRecord = parents.find((row) => row.id === record.damId);
+  const grandIds = [
+    sireRecord?.sireId,
+    sireRecord?.damId,
+    damRecord?.sireId,
+    damRecord?.damId,
+  ].filter((id): id is string => Boolean(id));
+  const grands = await getOwnedAnimalsByIds(user.id, grandIds);
+  const children = await listOwnedChildren(user.id, animalId);
+  const all = [record, ...parents, ...grands, ...children];
+  const genes = await listGenesForAnimals(all.map((row) => row.id));
+  const db = emptyGeneDb(all, genes);
   const animal = hydrateAnimal(db, record);
-  const sireRecord = animal.sireId
-    ? db.animals.find((row) => row.id === animal.sireId)
-    : undefined;
-  const damRecord = animal.damId
-    ? db.animals.find((row) => row.id === animal.damId)
-    : undefined;
   const sire = sireRecord ? hydrateAnimal(db, sireRecord) : undefined;
   const dam = damRecord ? hydrateAnimal(db, damRecord) : undefined;
+  function relative(id?: string) {
+    if (!id) return undefined;
+    const found = grands.find((row) => row.id === id);
+    return found ? hydrateAnimal(db, found) : undefined;
+  }
   return {
     animal,
     sire,
     dam,
-    sireSire: sire?.sireId
-      ? db.animals.find((row) => row.id === sire.sireId)
-        ? hydrateAnimal(db, db.animals.find((row) => row.id === sire.sireId)!)
-        : undefined
-      : undefined,
-    sireDam: sire?.damId
-      ? db.animals.find((row) => row.id === sire.damId)
-        ? hydrateAnimal(db, db.animals.find((row) => row.id === sire.damId)!)
-        : undefined
-      : undefined,
-    damSire: dam?.sireId
-      ? db.animals.find((row) => row.id === dam.sireId)
-        ? hydrateAnimal(db, db.animals.find((row) => row.id === dam.sireId)!)
-        : undefined
-      : undefined,
-    damDam: dam?.damId
-      ? db.animals.find((row) => row.id === dam.damId)
-        ? hydrateAnimal(db, db.animals.find((row) => row.id === dam.damId)!)
-        : undefined
-      : undefined,
-    children: db.animals
-      .filter((row) => row.sireId === animalId || row.damId === animalId)
-      .map((row) => hydrateAnimal(db, row)),
+    sireSire: relative(sire?.sireId),
+    sireDam: relative(sire?.damId),
+    damSire: relative(dam?.sireId),
+    damDam: relative(dam?.damId),
+    children: children.map((row) => hydrateAnimal(db, row)),
   };
 }

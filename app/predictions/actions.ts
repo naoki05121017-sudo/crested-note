@@ -4,7 +4,9 @@ import { actionError, actionOk, revalidateApp } from "@/app/components/action-re
 import { calculatePairing, type Genotype } from "@/lib/genetics";
 import { nowIso, textField } from "@/lib/db/form";
 import { getAnimal } from "@/lib/db/queries";
-import { mutateDb, newId } from "@/lib/db/store";
+import { insertOwnedPrediction } from "@/lib/db/owned-tables";
+import { requireSessionUser } from "@/lib/auth/session";
+import { newId } from "@/lib/db/store";
 
 function parseJsonGenotype(raw: string): Genotype {
   try {
@@ -40,19 +42,18 @@ export async function savePrediction(formData: FormData) {
 
   const id = newId();
   try {
-    await mutateDb((db) => {
-      db.predictions.push({
-        id,
-        name,
-        maleId,
-        femaleId,
-        parentA,
-        parentB,
-        pairing,
-        breedingId: textField(formData, "breedingId"),
-        projectId: textField(formData, "projectId"),
-        createdAt: nowIso(),
-      });
+    const user = await requireSessionUser();
+    await insertOwnedPrediction(user.id, {
+      id,
+      name,
+      maleId,
+      femaleId,
+      parentA,
+      parentB,
+      pairing,
+      breedingId: textField(formData, "breedingId"),
+      projectId: textField(formData, "projectId"),
+      createdAt: nowIso(),
     });
   } catch (error) {
     return actionError(error, "保存できませんでした。");

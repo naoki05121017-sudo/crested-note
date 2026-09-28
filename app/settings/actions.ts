@@ -1,17 +1,19 @@
 "use server";
 
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
+import { requireSessionUser } from "@/lib/auth/session";
 import { parseFeedbackCategory, textField } from "@/lib/db/form";
-import { mutateDb, newId } from "@/lib/db/store";
+import { insertOwnedFeedback, updateOwnedSettings } from "@/lib/db/owned-tables";
+import { newId } from "@/lib/db/store";
 
 export async function saveSettings(formData: FormData) {
   try {
-    await mutateDb((db) => {
-      db.settings.displayName = textField(formData, "displayName");
-      db.settings.collectionName =
-        textField(formData, "collectionName") || "クレスノート";
-      db.settings.prefecture = textField(formData, "prefecture");
-      db.settings.publicByDefault = formData.get("publicByDefault") === "on";
+    const user = await requireSessionUser();
+    await updateOwnedSettings(user.id, {
+      displayName: textField(formData, "displayName"),
+      collectionName: textField(formData, "collectionName") || "クレスノート",
+      prefecture: textField(formData, "prefecture"),
+      publicByDefault: formData.get("publicByDefault") === "on",
     });
   } catch (error) {
     return actionError(error, "保存できませんでした。");
@@ -28,17 +30,16 @@ export async function submitFeedback(formData: FormData) {
 
   const stamp = new Date().toISOString();
   try {
-    await mutateDb((db) => {
-      db.feedback.push({
-        id: newId(),
-        category: parseFeedbackCategory(textField(formData, "category")),
-        status: "open",
-        body,
-        name: textField(formData, "name"),
-        createdAt: stamp,
-        updatedAt: stamp,
-        adminNote: "",
-      });
+    const user = await requireSessionUser();
+    await insertOwnedFeedback(user.id, {
+      id: newId(),
+      category: parseFeedbackCategory(textField(formData, "category")),
+      status: "open",
+      body,
+      name: textField(formData, "name"),
+      createdAt: stamp,
+      updatedAt: stamp,
+      adminNote: "",
     });
   } catch (error) {
     return actionError(error, "送信できませんでした。");

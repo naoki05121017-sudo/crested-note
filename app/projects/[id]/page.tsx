@@ -11,7 +11,7 @@ import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import {
   getProject,
-  listAnimals,
+  listAnimalsForParents,
   listPredictions,
   projectMembers,
 } from "@/lib/db/queries";
@@ -34,8 +34,9 @@ export default async function ProjectDetailPage({
   const project = await getProject(id);
   if (!project) notFound();
   const members = await projectMembers(id);
-  const animals = await listAnimals();
-  const predictions = (await listPredictions()).filter((row) => row.projectId === id);
+  const animals = await listAnimalsForParents();
+  const predictions = await listPredictions();
+  const projectPredictions = predictions.filter((row) => row.projectId === id);
   const update = updateProject.bind(null, id);
   const addMember = addProjectMember.bind(null, id);
   const removeProject = deleteProject.bind(null, id);
@@ -120,13 +121,13 @@ export default async function ProjectDetailPage({
 
       <Card>
         <SectionTitle>保存した計算</SectionTitle>
-        {predictions.length === 0 ? (
+        {projectPredictions.length === 0 ? (
           <p className="text-sm leading-6 text-muted">
             シミュレーションや遺伝計算から、このプロジェクトを選んで保存できます。
           </p>
         ) : (
           <ul className="text-sm">
-            {predictions.map((row) => (
+            {projectPredictions.map((row) => (
               <li key={row.id}>
                 <Link href={`/predictions/${row.id}`} className="hover:underline">
                   {row.name}

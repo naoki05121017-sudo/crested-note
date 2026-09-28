@@ -1,13 +1,13 @@
 "use server";
 
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
-import { issueCrestLinkForAnimal } from "@/lib/crest-link/core";
 import { replaceGenes } from "@/lib/db/genes";
 import {
+  deleteOwnedAnimal,
   insertOwnedAnimal,
   issueNextAnimalCode,
-  patchOwnedAnimalCrestLinkId,
 } from "@/lib/db/animal-io";
+import { issueOwnedCrestLink } from "@/lib/db/crest-link-io";
 import { requireSessionUser } from "@/lib/auth/session";
 import { calculatePairing, genotypeFromCopies, type AlleleCopies } from "@/lib/genetics";
 import {
@@ -17,9 +17,19 @@ import {
   parseSex,
   textField,
 } from "@/lib/db/form";
-import { addDays, getAnimal, getBreeding } from "@/lib/db/queries";
-import { mutateDb, newId } from "@/lib/db/store";
-import type { AnimalRecord, ClutchRecord, EggRecord } from "@/lib/db/types";
+import { addDays, getAnimal, getBreeding, getSettings } from "@/lib/db/queries";
+import {
+  closeOwnedBreeding,
+  getEggContext,
+  insertOwnedBreeding,
+  insertOwnedClutchWithEggs,
+  insertOwnedPrediction,
+  markAnimalsBreeding,
+  markEggHatched,
+  updateOwnedEgg,
+} from "@/lib/db/owned-tables";
+import { newId } from "@/lib/db/store";
+import type { AnimalRecord } from "@/lib/db/types";
 import { animalTitle } from "@/lib/db/labels";
 
 export async function createBreeding(formData: FormData) {
@@ -47,38 +57,31 @@ export async function createBreeding(formData: FormData) {
     visualB: female.traits,
   });
   try {
-    await mutateDb((db) => {
-      db.predictions.push({
-        id: predictionId,
-        name: `${animalTitle(male)} × ${animalTitle(female)}`,
-        maleId,
-        femaleId,
-        parentA: male.genotype,
-        parentB: female.genotype,
-        pairing,
-        breedingId: id,
-        projectId: textField(formData, "projectId"),
-        createdAt: nowIso(),
-      });
-      db.breedings.push({
-        id,
-        maleId,
-        femaleId,
-        startedOn: startedOn || new Date().toISOString().slice(0, 10),
-        endedOn: "",
-        status: "active",
-        notes,
-        predictionId,
-        projectId: textField(formData, "projectId"),
-        createdAt: nowIso(),
-      });
-      const maleRecord = db.animals.find((animal) => animal.id === maleId);
-      const femaleRecord = db.animals.find((animal) => animal.id === femaleId);
-      if (maleRecord && maleRecord.status === "active") maleRecord.status = "breeding";
-      if (femaleRecord && femaleRecord.status === "active") {
-        femaleRecord.status = "breeding";
-      }
+    const user = await requireSessionUser();
+    const stamp = nowIso();
+    await insertOwnedPrediction(user.id, {
+      id: predictionId,
+      name: `${animalTitle(male)} × ${animalTitle(female)}`,
+      maleId,
+      femaleId,
+      parentA: male.genotype,
+      parentB: female.genotype,
+      pairing,
+      breedingId: id,
+      projectId: textField(formData, "projectId"),
+      createdAt: stamp,
     });
+    await insertOwnedBreeding(user.id, {
+      id,
+      maleId,
+      femaleId,
+      startedOn: startedOn || new Date().toISOString().slice(0, 10),
+      notes,
+      predictionId,
+      projectId: textField(formData, "projectId"),
+      createdAt: stamp,
+    });
+    await markAnimalsBreeding(user.id, [maleId, femaleId]);
   } catch (error) {
     return actionError(error, "ペアを作成できませんでした。");
   }
@@ -89,12 +92,8 @@ export async function createBreeding(formData: FormData) {
 
 export async function closeBreeding(id: string) {
   try {
-    await mutateDb((db) => {
-      const breeding = db.breedings.find((row) => row.id === id);
-      if (!breeding) throw new Error("ペアが見つかりません。");
-      breeding.status = "closed";
-      breeding.endedOn = new Date().toISOString().slice(0, 10);
-    });
+    const user = await requireSessionUser();
+    await closeOwnedBreeding(user.id, id);
   } catch (error) {
     return actionError(error, "終了できませんでした。");
   }
@@ -118,26 +117,16 @@ export async function addClutch(breedingId: string, formData: FormData) {
 
   const clutchId = newId();
   try {
-    await mutateDb((db) => {
-      const clutch: ClutchRecord = {
-        id: clutchId,
-        breedingId,
-        laidOn,
-        notes,
-      };
-      db.clutches.push(clutch);
-      for (let i = 0; i < eggCount; i += 1) {
-        const egg: EggRecord = {
-          id: newId(),
-          clutchId,
-          expectedHatchOn,
-          result: "incubating",
-          hatchAnimalId: "",
-          notes: "",
-        };
-        db.eggs.push(egg);
-      }
-    });
+    const user = await requireSessionUser();
+    await insertOwnedClutchWithEggs(
+      user.id,
+      breedingId,
+      { id: clutchId, laidOn, notes },
+      Array.from({ length: eggCount }, () => ({
+        id: newId(),
+        expectedHatchOn,
+      })),
+    );
   } catch (error) {
     return actionError(error, "追加できませんでした。");
   }
@@ -153,17 +142,11 @@ export async function updateEgg(eggId: string, formData: FormData) {
   let breedingId = "";
 
   try {
-    await mutateDb((db) => {
-      const egg = db.eggs.find((row) => row.id === eggId);
-      if (!egg) throw new Error("卵が見つかりません。");
-      const clutch = db.clutches.find((row) => row.id === egg.clutchId);
-      breedingId = clutch?.breedingId ?? "";
-      if (egg.result === "hatched" && egg.hatchAnimalId) {
-        return;
-      }
-      egg.result = result === "hatched" ? egg.result : result;
-      if (expectedHatchOn) egg.expectedHatchOn = expectedHatchOn;
-      egg.notes = notes;
+    const user = await requireSessionUser();
+    breedingId = await updateOwnedEgg(user.id, eggId, {
+      result,
+      expectedHatchOn,
+      notes,
     });
   } catch (error) {
     return actionError(error, "更新できませんでした。");
@@ -193,51 +176,43 @@ export async function hatchEgg(eggId: string, formData: FormData) {
   let breedingId = "";
 
   try {
-    await mutateDb(async (db) => {
-      const egg = db.eggs.find((row) => row.id === eggId);
-      if (!egg) throw new Error("卵が見つかりません。");
-      if (egg.hatchAnimalId) throw new Error("すでに孵化登録済みです。");
-
-      const clutch = db.clutches.find((row) => row.id === egg.clutchId);
-      if (!clutch) throw new Error("クラッチが見つかりません。");
-      const breeding = db.breedings.find((row) => row.id === clutch.breedingId);
-      if (!breeding) throw new Error("ペアが見つかりません。");
-      breedingId = breeding.id;
-
-      animalId = newId();
-      const stamp = nowIso();
-      const user = await requireSessionUser();
-      const record: AnimalRecord = {
-        id: animalId,
-        crestLinkId: "",
-        code: await issueNextAnimalCode(user.id),
-        name,
-        sex: parseSex(textField(formData, "sex")),
-        hatchDate:
-          textField(formData, "hatchDate") ||
-          new Date().toISOString().slice(0, 10),
-        status: "active",
-        sireId: breeding.maleId,
-        damId: breeding.femaleId,
-        morphLabel: textField(formData, "morphLabel"),
-        traits: [],
-        notes: "",
-        photoUrl: "",
-        isPublic: db.settings.publicByDefault,
-        shareSlug: db.settings.publicByDefault ? newId().slice(0, 8) : "",
-        prefecture: db.settings.prefecture,
-        createdAt: stamp,
-        updatedAt: stamp,
-      };
-      const genes = replaceGenes([], animalId, genotype);
-      await insertOwnedAnimal(user.id, record, genes);
-      db.animals.push(record);
-      const link = issueCrestLinkForAnimal(db, animalId);
-      db.genes = replaceGenes(db.genes, animalId, genotype);
-      await patchOwnedAnimalCrestLinkId(user.id, animalId, link.id);
-      egg.result = "hatched";
-      egg.hatchAnimalId = animalId;
-    });
+    const user = await requireSessionUser();
+    const { breeding } = await getEggContext(user.id, eggId);
+    breedingId = breeding.id;
+    animalId = newId();
+    const stamp = nowIso();
+    const settings = await getSettings();
+    const record: AnimalRecord = {
+      id: animalId,
+      crestLinkId: "",
+      code: await issueNextAnimalCode(user.id),
+      name,
+      sex: parseSex(textField(formData, "sex")),
+      hatchDate:
+        textField(formData, "hatchDate") ||
+        new Date().toISOString().slice(0, 10),
+      status: "active",
+      sireId: breeding.maleId,
+      damId: breeding.femaleId,
+      morphLabel: textField(formData, "morphLabel"),
+      traits: [],
+      notes: "",
+      photoUrl: "",
+      isPublic: settings.publicByDefault,
+      shareSlug: settings.publicByDefault ? newId().slice(0, 8) : "",
+      prefecture: settings.prefecture,
+      createdAt: stamp,
+      updatedAt: stamp,
+    };
+    const genes = replaceGenes([], animalId, genotype);
+    await insertOwnedAnimal(user.id, record, genes);
+    try {
+      await issueOwnedCrestLink(user.id, record);
+      await markEggHatched(user.id, eggId, animalId);
+    } catch (error) {
+      await deleteOwnedAnimal(user.id, animalId).catch(() => undefined);
+      throw error;
+    }
   } catch (error) {
     return actionError(error, "孵化登録できませんでした。");
   }

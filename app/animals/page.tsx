@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { CrestLinkRedeemCard } from "@/app/animals/crest-link-redeem";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Badge } from "@/app/components/ui";
@@ -85,9 +86,9 @@ export default async function AnimalsPage({
             </option>
           ))}
         </select>
-        <button type="submit" className="nc-btn-ghost w-full sm:col-span-2 lg:col-span-4 sm:w-fit">
+        <PendingSubmitButton pendingLabel="絞り込み中…" className="nc-btn-ghost w-full sm:col-span-2 lg:col-span-4 sm:w-fit">
           絞り込み
-        </button>
+        </PendingSubmitButton>
       </form>
 
       {animals.length === 0 ? (

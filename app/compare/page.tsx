@@ -4,10 +4,11 @@ import {
   visualMorphKey,
 } from "@/lib/stats/compare";
 import { fetchCompareCohort } from "@/lib/db/stats-rpc";
-import { listAnimals, weightsByAnimal } from "@/lib/db/queries";
+import { listAnimalsForParents, weightsByAnimal } from "@/lib/db/queries";
 import { GrowthChart } from "@/app/components/growth-chart";
 import { Card, EmptyState, PageHeader, Stat } from "@/app/components/ui";
 import { animalTitle } from "@/lib/db/labels";
+import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -19,11 +20,11 @@ export default async function ComparePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const animals = await listAnimals();
+  const animals = await listAnimalsForParents();
   const selectedId =
     typeof params.animalId === "string" ? params.animalId : animals[0]?.id ?? "";
   const animal = animals.find((row) => row.id === selectedId);
-  const byWeights = await weightsByAnimal(animals.map((row) => row.id));
+  const byWeights = await weightsByAnimal(animal ? [animal.id] : []);
   const logs = animal ? byWeights.get(animal.id) ?? [] : [];
   const cohort = animal
     ? await fetchCompareCohort({
@@ -72,9 +73,9 @@ export default async function ComparePage({
               ))}
             </select>
           </label>
-          <button type="submit" className="nc-btn w-full sm:w-auto">
+          <PendingSubmitButton pendingLabel="表示しています…" className="nc-btn w-full sm:w-auto">
             見る
-          </button>
+          </PendingSubmitButton>
         </form>
       )}
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { EmptyState, PageHeader, Badge } from "@/app/components/ui";
-import { listBreedings, getAnimal } from "@/lib/db/queries";
+import { listBreedings, getAnimalsByIds } from "@/lib/db/queries";
 import { BREEDING_STATUS_LABEL, animalTitle } from "@/lib/db/labels";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +8,10 @@ export const metadata = { title: "ブリード" };
 
 export default async function BreedingsPage() {
   const breedings = await listBreedings();
+  const partners = await getAnimalsByIds(
+    breedings.flatMap((breeding) => [breeding.maleId, breeding.femaleId]),
+  );
+  const byId = new Map(partners.map((animal) => [animal.id, animal]));
 
   return (
     <div className="flex flex-col gap-8">
@@ -33,10 +37,9 @@ export default async function BreedingsPage() {
         />
       ) : (
         <ul className="grid gap-4">
-          {await Promise.all(
-            breedings.map(async (breeding) => {
-              const male = await getAnimal(breeding.maleId);
-              const female = await getAnimal(breeding.femaleId);
+          {breedings.map((breeding) => {
+              const male = byId.get(breeding.maleId);
+              const female = byId.get(breeding.femaleId);
               const eggs = breeding.clutches.flatMap((clutch) => clutch.eggs);
               return (
                 <li key={breeding.id}>
@@ -65,8 +68,7 @@ export default async function BreedingsPage() {
                   </Link>
                 </li>
               );
-            }),
-          )}
+            })}
         </ul>
       )}
     </div>
