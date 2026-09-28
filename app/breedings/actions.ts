@@ -2,8 +2,14 @@
 
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
 import { issueCrestLinkForAnimal } from "@/lib/crest-link/core";
-import { issueAnimalCode } from "@/lib/db/animal-code";
-import { calculatePairing, genotypeFromCopies, type AlleleCopies, type GeneStatus } from "@/lib/genetics";
+import { replaceGenes } from "@/lib/db/genes";
+import {
+  insertOwnedAnimal,
+  issueNextAnimalCode,
+  patchOwnedAnimalCrestLinkId,
+} from "@/lib/db/animal-io";
+import { requireSessionUser } from "@/lib/auth/session";
+import { calculatePairing, genotypeFromCopies, type AlleleCopies } from "@/lib/genetics";
 import {
   nowIso,
   parseEggResult,
@@ -187,7 +193,7 @@ export async function hatchEgg(eggId: string, formData: FormData) {
   let breedingId = "";
 
   try {
-    await mutateDb((db) => {
+    await mutateDb(async (db) => {
       const egg = db.eggs.find((row) => row.id === eggId);
       if (!egg) throw new Error("卵が見つかりません。");
       if (egg.hatchAnimalId) throw new Error("すでに孵化登録済みです。");
@@ -200,10 +206,11 @@ export async function hatchEgg(eggId: string, formData: FormData) {
 
       animalId = newId();
       const stamp = nowIso();
+      const user = await requireSessionUser();
       const record: AnimalRecord = {
         id: animalId,
         crestLinkId: "",
-        code: issueAnimalCode(db),
+        code: await issueNextAnimalCode(user.id),
         name,
         sex: parseSex(textField(formData, "sex")),
         hatchDate:
@@ -222,12 +229,12 @@ export async function hatchEgg(eggId: string, formData: FormData) {
         createdAt: stamp,
         updatedAt: stamp,
       };
+      const genes = replaceGenes([], animalId, genotype);
+      await insertOwnedAnimal(user.id, record, genes);
       db.animals.push(record);
-      issueCrestLinkForAnimal(db, animalId);
-      for (const [locusId, status] of Object.entries(genotype)) {
-        if (!status || status === "wild" || locusId === "csh") continue;
-        db.genes.push({ animalId, locusId, status: status as GeneStatus });
-      }
+      const link = issueCrestLinkForAnimal(db, animalId);
+      db.genes = replaceGenes(db.genes, animalId, genotype);
+      await patchOwnedAnimalCrestLinkId(user.id, animalId, link.id);
       egg.result = "hatched";
       egg.hatchAnimalId = animalId;
     });

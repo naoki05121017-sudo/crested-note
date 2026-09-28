@@ -21,8 +21,26 @@ export default async function AnimalsPage({
   const q = typeof params.q === "string" ? params.q : "";
   const sex = typeof params.sex === "string" ? params.sex : "";
   const status = typeof params.status === "string" ? params.status : "";
-  const animals = await filterAnimals({ q, sex, status });
-  const byWeights = await weightsByAnimal();
+  const page = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
+  const listed = await filterAnimals({
+    q,
+    sex,
+    status,
+    page: Number.isFinite(page) ? page : 1,
+  });
+  const animals = listed.animals;
+  const byWeights = await weightsByAnimal(animals.map((row) => row.id));
+  const pageCount = Math.max(1, Math.ceil(listed.total / listed.pageSize));
+  const query = new URLSearchParams();
+  if (q) query.set("q", q);
+  if (sex) query.set("sex", sex);
+  if (status) query.set("status", status);
+  function pageHref(target: number) {
+    const next = new URLSearchParams(query);
+    if (target > 1) next.set("page", String(target));
+    const text = next.toString();
+    return text ? `/animals?${text}` : "/animals";
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -149,6 +167,27 @@ export default async function AnimalsPage({
           })}
         </ul>
       )}
+
+      {listed.total > listed.pageSize ? (
+        <nav className="flex flex-wrap items-center justify-between gap-3 text-sm text-white/70">
+          <p>
+            {listed.total}件中 {(listed.page - 1) * listed.pageSize + 1}–
+            {Math.min(listed.page * listed.pageSize, listed.total)}件
+          </p>
+          <div className="flex gap-2">
+            {listed.page > 1 ? (
+              <Link href={pageHref(listed.page - 1)} className="nc-btn-ghost">
+                前へ
+              </Link>
+            ) : null}
+            {listed.page < pageCount ? (
+              <Link href={pageHref(listed.page + 1)} className="nc-btn-ghost">
+                次へ
+              </Link>
+            ) : null}
+          </div>
+        </nav>
+      ) : null}
 
       <CrestLinkRedeemCard />
     </div>

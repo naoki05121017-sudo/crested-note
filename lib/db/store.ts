@@ -10,11 +10,11 @@ export const loadDb = cache(async function loadDb(): Promise<DatabaseFile> {
   return loadDatabaseFromSupabase(user.id);
 });
 
-export async function mutateDb<T>(fn: (db: DatabaseFile) => T): Promise<T> {
+export async function mutateDb<T>(fn: (db: DatabaseFile) => T | Promise<T>): Promise<T> {
   const user = await requireSessionUser();
   const db = await loadDatabaseFromSupabase(user.id);
   syncAnimalCodes(db);
-  const result = fn(db);
+  const result = await fn(db);
   syncCrestLinks(db);
   await saveDatabaseToSupabase(db, user.id);
   return result;

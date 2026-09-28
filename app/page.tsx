@@ -16,7 +16,7 @@ export default async function Home() {
   const stats = await dashboardStats();
   const settings = await getSettings();
   const animals = await listAnimals();
-  const byWeights = await weightsByAnimal();
+  const byWeights = await weightsByAnimal(animals.map((row) => row.id));
   const japan = await fetchJapanCrestStats();
   const asOf = todayIso();
 

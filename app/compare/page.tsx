@@ -23,7 +23,7 @@ export default async function ComparePage({
   const selectedId =
     typeof params.animalId === "string" ? params.animalId : animals[0]?.id ?? "";
   const animal = animals.find((row) => row.id === selectedId);
-  const byWeights = await weightsByAnimal();
+  const byWeights = await weightsByAnimal(animals.map((row) => row.id));
   const logs = animal ? byWeights.get(animal.id) ?? [] : [];
   const cohort = animal
     ? await fetchCompareCohort({

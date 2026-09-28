@@ -1,7 +1,17 @@
 import { crestLinkView, getAnimalByCrestLinkId as animalRecordByCrestLink, type CrestLinkView } from "@/lib/crest-link/core";
-import { formatGenotypeLabel, type Genotype } from "@/lib/genetics";
+import type { Genotype } from "@/lib/genetics";
+import { requireSessionUser } from "@/lib/auth/session";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { loadDb } from "./store";
 import { loadPublicAnimals } from "./supabase-io";
+import {
+  countOwnedAnimals,
+  getOwnedAnimal,
+  listGenesForAnimals,
+  listOwnedAnimalsAll,
+  listOwnedAnimalsPage,
+  listWeightsForAnimals,
+} from "./animal-io";
 import type {
   Animal,
   AnimalRecord,
@@ -29,17 +39,47 @@ export function hydrateAnimal(db: DatabaseFile, record: AnimalRecord): Animal {
   return { ...record, genotype: genotypeOf(db, record.id) };
 }
 
+function emptyGeneDb(records: AnimalRecord[], genes: DatabaseFile["genes"]): DatabaseFile {
+  return {
+    animals: records,
+    genes,
+    weights: [],
+    breedings: [],
+    clutches: [],
+    eggs: [],
+    projects: [],
+    projectMembers: [],
+    predictions: [],
+    settings: {
+      displayName: "",
+      collectionName: "",
+      prefecture: "",
+      publicByDefault: false,
+    },
+    feedback: [],
+    crestLinkSeq: 0,
+    animalCodeSeq: 0,
+    crestLinks: [],
+    crestLinkTransfers: [],
+  };
+}
+
 export async function listAnimals(): Promise<Animal[]> {
-  const db = await loadDb();
-  return db.animals
+  const user = await requireSessionUser();
+  const records = await listOwnedAnimalsAll(user.id);
+  const genes = await listGenesForAnimals(records.map((row) => row.id));
+  const db = emptyGeneDb(records, genes);
+  return records
     .map((record) => hydrateAnimal(db, record))
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export async function getAnimal(id: string): Promise<Animal | undefined> {
-  const db = await loadDb();
-  const record = db.animals.find((animal) => animal.id === id);
-  return record ? hydrateAnimal(db, record) : undefined;
+  const user = await requireSessionUser();
+  const record = await getOwnedAnimal(user.id, id);
+  if (!record) return undefined;
+  const genes = await listGenesForAnimals([record.id]);
+  return hydrateAnimal(emptyGeneDb([record], genes), record);
 }
 
 function publicSnapshotDb(snap: {
@@ -102,48 +142,57 @@ export async function publicWeightsByAnimal(): Promise<Map<string, WeightLogReco
 }
 
 export async function listPublicWeights(animalId: string): Promise<WeightLogRecord[]> {
-  const snap = await loadPublicAnimals();
-  return snap.weights
-    .filter((row) => row.animalId === animalId)
-    .sort((a, b) => a.weighedOn.localeCompare(b.weighedOn));
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("animals")
+    .select("id, is_public")
+    .eq("id", animalId)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`animals を読めません: ${error.message}`);
+  }
+  if (!data?.is_public) return [];
+  const logs = await listWeightsForAnimals([animalId]);
+  return logs.sort((a, b) => a.weighedOn.localeCompare(b.weighedOn));
 }
 
 export async function filterAnimals(params: {
   q?: string;
   sex?: string;
   status?: string;
-}): Promise<Animal[]> {
-  const q = params.q?.trim().toLowerCase() ?? "";
-  const animals = await listAnimals();
-  return animals.filter((animal) => {
-    if (params.sex && animal.sex !== params.sex) return false;
-    if (params.status && animal.status !== params.status) return false;
-    if (!q) return true;
-    const haystack = [
-      animal.name,
-      animal.code,
-      animal.crestLinkId,
-      animal.morphLabel,
-      formatGenotypeLabel(animal.genotype),
-      animal.notes,
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(q);
-  });
+  page?: number;
+}): Promise<{
+  animals: Animal[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
+  const user = await requireSessionUser();
+  const listed = await listOwnedAnimalsPage(user.id, params);
+  const genes = await listGenesForAnimals(listed.records.map((row) => row.id));
+  const db = emptyGeneDb(listed.records, genes);
+  return {
+    animals: listed.records.map((record) => hydrateAnimal(db, record)),
+    total: listed.total,
+    page: listed.page,
+    pageSize: listed.pageSize,
+  };
 }
 
 export async function listWeights(animalId: string): Promise<WeightLogRecord[]> {
-  const db = await loadDb();
-  return db.weights
-    .filter((row) => row.animalId === animalId)
-    .sort((a, b) => a.weighedOn.localeCompare(b.weighedOn));
+  const logs = await listWeightsForAnimals([animalId]);
+  return logs.sort((a, b) => a.weighedOn.localeCompare(b.weighedOn));
 }
 
-export async function weightsByAnimal(): Promise<Map<string, WeightLogRecord[]>> {
+export async function weightsByAnimal(
+  animalIds?: string[],
+): Promise<Map<string, WeightLogRecord[]>> {
   const map = new Map<string, WeightLogRecord[]>();
-  const db = await loadDb();
-  for (const row of db.weights) {
+  const ids =
+    animalIds ??
+    (await listOwnedAnimalsAll((await requireSessionUser()).id)).map((row) => row.id);
+  const logs = await listWeightsForAnimals(ids);
+  for (const row of logs) {
     const list = map.get(row.animalId) ?? [];
     list.push(row);
     map.set(row.animalId, list);
@@ -231,7 +280,8 @@ export async function listFeedbackForOperator(): Promise<FeedbackRecord[]> {
 }
 
 export async function dashboardStats() {
-  const animals = await listAnimals();
+  const user = await requireSessionUser();
+  const animalCount = await countOwnedAnimals(user.id, { excludeDeceased: true });
   const breedings = await listBreedings();
   const incubating = breedings.flatMap((breeding) =>
     breeding.clutches.flatMap((clutch) =>
@@ -250,7 +300,7 @@ export async function dashboardStats() {
   const projects = await listProjects();
 
   return {
-    animalCount: animals.filter((animal) => animal.status !== "deceased").length,
+    animalCount,
     activeBreedings: breedings.filter((breeding) => breeding.status === "active")
       .length,
     incubatingEggs: incubating.length,
