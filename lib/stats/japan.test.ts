@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { japanStats, MIN_MORPH_COUNT, MIN_STATS_FOR_AVERAGE } from "./japan";
+import { japanStats, MIN_MORPH_COUNT, MIN_STATS_FOR_AVERAGE, averageCollectionCopy } from "./japan";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 
 function stubAnimal(id: string, extras: Partial<Animal> = {}): Animal {
@@ -48,5 +48,17 @@ describe("japanStats", () => {
     expect(stats.weightSample).toBeLessThan(MIN_STATS_FOR_AVERAGE);
     expect(stats.meanLatestWeight).toBeNull();
     expect(stats.morphs.every((row) => row.count >= MIN_MORPH_COUNT)).toBe(true);
+  });
+
+  it("describes collection progress without exposing a small-n average", () => {
+    expect(averageCollectionCopy(0)).toEqual({
+      title: "データ収集中",
+      detail: "あと5匹で平均表示",
+    });
+    expect(averageCollectionCopy(1)).toEqual({
+      title: "データ収集中",
+      detail: "あと4匹で平均表示",
+    });
+    expect(averageCollectionCopy(5)).toBeNull();
   });
 });

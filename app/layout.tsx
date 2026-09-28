@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist } from "next/font/google";
+import { Suspense } from "react";
 import { AppShell } from "./components/app-shell";
 import { getSessionUser } from "@/lib/auth/session";
 import "./globals.css";
@@ -7,11 +8,8 @@ import "./globals.css";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  fallback: ["Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +23,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "クレスノート",
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "black",
   },
   icons: {
     icon: "/icon.svg",
@@ -33,15 +31,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
+export const viewport: Viewport = {
+  themeColor: "#17141c",
+  viewportFit: "cover",
+};
+
+function BootMain() {
+  return <p className="text-sm leading-6 text-white/50">読み込み中…</p>;
+}
+
+async function AppWithSession({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
+  return (
+    <AppShell email={user?.email ?? null}>
+      <Suspense fallback={<BootMain />}>{children}</Suspense>
+    </AppShell>
+  );
+}
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} h-full antialiased`}
+      style={{ backgroundColor: "#17141c" }}
     >
-      <body className="min-h-full flex flex-col">
-        <AppShell email={user?.email ?? null}>{children}</AppShell>
+      <body className="flex min-h-full flex-col bg-[#17141c]">
+        <Suspense
+          fallback={
+            <AppShell sessionPending>
+              <BootMain />
+            </AppShell>
+          }
+        >
+          <AppWithSession>{children}</AppWithSession>
+        </Suspense>
       </body>
     </html>
   );

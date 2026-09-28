@@ -1,12 +1,13 @@
 import { Card, PageHeader, SectionTitle, Stat } from "@/app/components/ui";
 import { fetchJapanCrestStats } from "@/lib/db/stats-rpc";
-import { JAPAN_STATS_SAMPLE_NOTE } from "@/lib/stats/japan";
+import { averageCollectionCopy, JAPAN_STATS_SAMPLE_NOTE } from "@/lib/stats/japan";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "日本のクレス統計" };
 
 export default async function StatsPage() {
   const stats = await fetchJapanCrestStats();
+  const meanCopy = averageCollectionCopy(stats.weightSample);
 
   return (
     <div className="flex flex-col gap-8">
@@ -22,15 +23,11 @@ export default async function StatsPage() {
         <Stat
           label="最新体重の平均"
           value={
-            stats.meanLatestWeight === null
-              ? "—"
-              : `${stats.meanLatestWeight.toFixed(1)}g`
+            meanCopy
+              ? meanCopy.title
+              : `${stats.meanLatestWeight!.toFixed(1)}g`
           }
-          hint={
-            stats.meanLatestWeight === null
-              ? `件数が足りないため平均は出していません（n=${stats.weightSample}）`
-              : `n=${stats.weightSample}`
-          }
+          hint={meanCopy ? meanCopy.detail : `n=${stats.weightSample}`}
           tone="mist"
         />
       </div>
@@ -56,19 +53,31 @@ export default async function StatsPage() {
       <Card>
         <SectionTitle>月齢別の平均体重</SectionTitle>
         <ul className="divide-y divide-line text-sm">
-          {stats.buckets.map((bucket) => (
+          {stats.buckets.map((bucket) => {
+            const copy = averageCollectionCopy(bucket.n);
+            return (
             <li key={bucket.id} className="flex items-center justify-between py-4">
               <span>{bucket.label}</span>
-              <span className="text-2xl font-semibold tabular-nums">
-                {bucket.average === null ? "—" : `${bucket.average.toFixed(1)}g`}
-                <span className="ml-2 text-sm font-normal text-muted">
-                  {bucket.average === null
-                    ? `件数不足 n=${bucket.n}`
-                    : `n=${bucket.n}`}
-                </span>
+              <span className="text-right">
+                {copy ? (
+                  <>
+                    <span className="block text-lg font-semibold">{copy.title}</span>
+                    <span className="mt-0.5 block text-sm font-normal text-muted">
+                      {copy.detail}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-2xl font-semibold tabular-nums">
+                    {`${bucket.average!.toFixed(1)}g`}
+                    <span className="ml-2 text-sm font-normal text-muted">
+                      {`n=${bucket.n}`}
+                    </span>
+                  </span>
+                )}
               </span>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </Card>
 

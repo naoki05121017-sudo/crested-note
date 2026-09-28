@@ -10,6 +10,19 @@ export const MIN_MORPH_COUNT = 3;
 export const JAPAN_STATS_SAMPLE_NOTE =
   "日本国内のクレスノートに蓄積された、匿名の集計です。公開・非公開にかかわらず、個体名・写真・飼い主は出しません。件数が少ない項目は平均を出さず、データが増えるほど参考にしやすくなります。全国の全頭数ではありません。";
 
+/** Progress copy when an average is withheld until MIN_STATS_FOR_AVERAGE samples. */
+export function averageCollectionCopy(
+  sampleSize: number,
+  min = MIN_STATS_FOR_AVERAGE,
+): { title: string; detail: string } | null {
+  const n = Number.isFinite(sampleSize) ? Math.max(0, Math.floor(sampleSize)) : 0;
+  if (n >= min) return null;
+  return {
+    title: "データ収集中",
+    detail: `あと${min - n}匹で平均表示`,
+  };
+}
+
 export function japanStats(
   animals: Animal[],
   weightsByAnimal: Map<string, WeightLogRecord[]>,

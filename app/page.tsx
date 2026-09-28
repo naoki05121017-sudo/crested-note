@@ -60,14 +60,28 @@ function asAnimals(records: AnimalRecord[], genes: DatabaseFile["genes"]): Anima
 
 export default async function Home() {
   const user = await requireSessionUser();
-  const settings = await getSettings();
-  const preview = await listOwnedAnimalsPage(user.id, {
-    page: 1,
-    pageSize: HOME_ANIMAL_PREVIEW,
-  });
-  const checkRecords = await listOwnedCheckAnimals(user.id);
-  const photoRecords = await listOwnedPhotoAnimals(user.id, 8);
-  const recentLogs = await listRecentOwnedWeights(user.id, 6);
+  const [
+    settings,
+    preview,
+    checkRecords,
+    photoRecords,
+    recentLogs,
+    japan,
+    animalCount,
+    rest,
+  ] = await Promise.all([
+    getSettings(),
+    listOwnedAnimalsPage(user.id, {
+      page: 1,
+      pageSize: HOME_ANIMAL_PREVIEW,
+    }),
+    listOwnedCheckAnimals(user.id),
+    listOwnedPhotoAnimals(user.id, 8),
+    listRecentOwnedWeights(user.id, 6),
+    fetchJapanCrestStats(),
+    countOwnedAnimals(user.id, { excludeDeceased: true }),
+    dashboardCounts(user.id),
+  ]);
   const homeRecords = [
     ...preview.records,
     ...checkRecords,
@@ -81,7 +95,10 @@ export default async function Home() {
     ...(await getOwnedAnimalsByIds(user.id, recentAnimalIds)),
   ];
   const records = [...new Map(neededRecords.map((row) => [row.id, row])).values()];
-  const genes = await listGenesForAnimals(records.map((row) => row.id));
+  const [genes, weightRows] = await Promise.all([
+    listGenesForAnimals(records.map((row) => row.id)),
+    listWeightsForAnimals(neededIds),
+  ]);
   const animals = asAnimals(
     preview.records,
     genes.filter((gene) => preview.records.some((row) => row.id === gene.animalId)),
@@ -89,16 +106,12 @@ export default async function Home() {
   const allHydrated = asAnimals(records, genes);
   const byId = new Map(allHydrated.map((row) => [row.id, row]));
   const byWeights = new Map<string, typeof recentLogs>();
-  const weightRows = await listWeightsForAnimals(neededIds);
   for (const row of weightRows) {
     const list = byWeights.get(row.animalId) ?? [];
     list.push(row);
     byWeights.set(row.animalId, list);
   }
-  const japan = await fetchJapanCrestStats();
   const asOf = todayIso();
-  const animalCount = await countOwnedAnimals(user.id, { excludeDeceased: true });
-  const rest = await dashboardCounts(user.id);
 
   const recentWeights = recentLogs.flatMap((log) => {
     const animal = byId.get(log.animalId);

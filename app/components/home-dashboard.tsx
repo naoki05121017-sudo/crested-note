@@ -6,6 +6,7 @@ import { IncludedFeatures } from "@/app/components/included-features";
 import { displayAnimalId } from "@/lib/db/animal-code";
 import { SEX_LABEL } from "@/lib/db/labels";
 import { formatGenotypeLabel } from "@/lib/genetics";
+import { averageCollectionCopy } from "@/lib/stats/japan";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 
 const crestTitle = Dela_Gothic_One({
@@ -155,6 +156,7 @@ export function HomeDashboard({
 }) {
   const star = animals[0];
   const rest = animals.slice(1, 6);
+  const japanMeanCopy = averageCollectionCopy(japanWeightSample);
 
   return (
     <div className="flex flex-col gap-12 sm:gap-14">
@@ -359,17 +361,15 @@ export function HomeDashboard({
           </div>
         </div>
         <p className="mt-4 text-sm text-ink/50">最新体重の平均</p>
-        {japanMeanWeight === null ? (
+        {japanMeanCopy ? (
           <>
-            <p className="mt-1 text-lg font-semibold">まだ平均は出していません</p>
-            <p className="mt-1 text-xs text-muted">
-              公開の体重データが揃うまで、断定的な数字は出しません（n={japanWeightSample}）
-            </p>
+            <p className="mt-1 text-lg font-semibold">{japanMeanCopy.title}</p>
+            <p className="mt-1 text-xs text-muted">{japanMeanCopy.detail}</p>
           </>
         ) : (
           <>
             <p className="mt-1 text-3xl font-semibold tabular-nums">
-              {`${japanMeanWeight.toFixed(1)}g`}
+              {`${japanMeanWeight!.toFixed(1)}g`}
             </p>
             <p className="mt-1 text-xs text-muted">n={japanWeightSample}</p>
           </>

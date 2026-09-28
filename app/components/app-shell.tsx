@@ -95,7 +95,14 @@ function NavLinks() {
   );
 }
 
-function AuthFooter({ email }: { email: string | null }) {
+function AuthFooter({
+  email,
+  sessionPending = false,
+}: {
+  email: string | null;
+  sessionPending?: boolean;
+}) {
+  if (sessionPending) return null;
   if (!email) {
     return (
       <div className="mt-8 px-3 text-sm">
@@ -147,8 +154,16 @@ function HeaderBell() {
   );
 }
 
-function TopBar({ email }: { email: string | null }) {
-  const initial = email?.trim().charAt(0).toUpperCase() || "?";
+function TopBar({
+  email,
+  sessionPending = false,
+}: {
+  email: string | null;
+  sessionPending?: boolean;
+}) {
+  const initial = sessionPending
+    ? ""
+    : email?.trim().charAt(0).toUpperCase() || "?";
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
       <form action="/animals" className="relative min-w-0 flex-[1_1_0]">
@@ -179,9 +194,11 @@ function TopBar({ email }: { email: string | null }) {
 export function AppShell({
   children,
   email = null,
+  sessionPending = false,
 }: {
   children: React.ReactNode;
   email?: string | null;
+  sessionPending?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -233,14 +250,14 @@ export function AppShell({
           </Link>
           <div className="mt-8 h-[calc(100vh-8rem)] overflow-y-auto pb-8">
             <NavLinks />
-            <AuthFooter email={email} />
+            <AuthFooter email={email} sessionPending={sessionPending} />
             <LegalNav className="mt-6 justify-start px-3 text-white/40" />
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 bg-[#17141c] px-3 py-3 sm:px-8">
             <div className="flex min-w-0 items-center gap-1 sm:gap-3">
-              <TopBar email={email} />
+              <TopBar email={email} sessionPending={sessionPending} />
               <button
                 type="button"
                 className="nc-btn-ghost h-9 w-9 shrink-0 border-white/20 bg-white/8 px-0 text-sm text-white hover:bg-white/12 sm:h-11 sm:w-auto sm:px-4 lg:hidden"
@@ -258,7 +275,7 @@ export function AppShell({
           {open ? (
             <div className="border-b border-line bg-[#17141c] px-4 py-4 text-white lg:hidden">
               <NavLinks />
-              <AuthFooter email={email} />
+              <AuthFooter email={email} sessionPending={sessionPending} />
             </div>
           ) : null}
           <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">{children}</main>

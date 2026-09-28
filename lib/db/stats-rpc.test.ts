@@ -27,8 +27,8 @@ describe("anonymous stats payloads", () => {
   it("keeps the home animal preview separate from nationwide Japan stats", () => {
     const home = readFileSync("app/page.tsx", "utf8");
     expect(home).toContain("pageSize: HOME_ANIMAL_PREVIEW");
-    expect(home).toContain("const japan = await fetchJapanCrestStats()");
-    expect(home).toContain("const animalCount = await countOwnedAnimals");
+    expect(home).toContain("fetchJapanCrestStats()");
+    expect(home).toContain("countOwnedAnimals");
     expect(home).toContain("japanRegistered={japan.registered}");
     expect(home).toContain("animalCount={animalCount}");
   });
