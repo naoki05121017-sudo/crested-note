@@ -8,7 +8,7 @@ export const MIN_STATS_FOR_AVERAGE = 5;
 export const MIN_MORPH_COUNT = 3;
 
 export const JAPAN_STATS_SAMPLE_NOTE =
-  "日本国内のクレスノートに蓄積された、全ユーザーの公開個体の匿名集計です。非公開個体は含めません。個体名・写真・飼い主は出しません。件数が少ない項目は平均を出さず、データが増えるほど参考にしやすくなります。全国の全頭数ではありません。";
+  "日本国内のクレスノートに蓄積された、匿名の集計です。公開・非公開にかかわらず、個体名・写真・飼い主は出しません。件数が少ない項目は平均を出さず、データが増えるほど参考にしやすくなります。全国の全頭数ではありません。";
 
 export function japanStats(
   animals: Animal[],

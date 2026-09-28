@@ -44,6 +44,15 @@ describe("anonymous stats payloads", () => {
     );
   });
 
+  it("does not filter Japan totals by is_public in the live SQL replacement", () => {
+    const sql = readFileSync(
+      "supabase/migrations/20260928_japan_crest_stats_all_animals.sql",
+      "utf8",
+    );
+    expect(sql).not.toContain("is_public");
+    expect(sql).toContain("set row_security = off");
+  });
+
   it("drops an average when the compare sample is too small", () => {
     const cohort = parseCompareCohort({
       sampleSize: 2,

@@ -24,25 +24,21 @@ describe("anonymous stats SQL", () => {
     expect(sql).toContain("animal_photos_select_if_animal_public");
   });
 
-  it("counts nationwide public animals only and turns row security off", () => {
-    const publicOnly = readFileSync(
-      "supabase/migrations/20260928_japan_crest_stats_public_only.sql",
+  it("counts every animal nationwide and turns row security off", () => {
+    const allAnimals = readFileSync(
+      "supabase/migrations/20260928_japan_crest_stats_all_animals.sql",
       "utf8",
     );
-    const fn = publicOnly.slice(
-      publicOnly.indexOf("create or replace function public.japan_crest_stats"),
+    const fn = allAnimals.slice(
+      allAnimals.indexOf("create or replace function public.japan_crest_stats"),
     );
     expect(fn).toContain("security definer");
     expect(fn).toContain("set row_security = off");
-    expect(fn).toContain("is_public = true");
+    expect(fn).not.toContain("is_public");
     expect(fn).not.toContain("auth.uid()");
     expect(fn).not.toMatch(/user_id\s*=/);
     expect(fn).toContain("grant execute on function public.japan_crest_stats() to service_role");
-    const registeredBlock = fn.slice(
-      fn.indexOf("into v_registered"),
-      fn.indexOf("into v_living"),
-    );
-    expect(registeredBlock).toContain("is_public = true");
+    expect(fn).toContain("select count(*)::integer into v_registered from public.animals;");
   });
 
   it("adds a month-level growth guide RPC without identity fields", () => {

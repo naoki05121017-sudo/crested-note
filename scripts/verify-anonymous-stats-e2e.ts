@@ -127,23 +127,34 @@ async function main() {
     if (publicWeightError) fail("public weight insert", publicWeightError.message);
 
     const after = await statsAs(emailB, password);
-    if (after.registered !== before.registered + 1) {
+    if (after.registered !== before.registered + 2) {
       fail(
-        "日本のクレス統計は公開個体だけを数える",
-        `registered ${before.registered} → ${after.registered}（公開+1 を期待。非公開は入れない）`,
+        "匿名統計に非公開個体が含まれる",
+        `registered ${before.registered} → ${after.registered}（+2 を期待。非公開+公開）`,
       );
     }
-    if (after.living !== before.living + 1) {
-      fail("日本のクレス統計 living", `${before.living} → ${after.living}`);
+    if (after.living < before.living + 2) {
+      fail("匿名統計 living", `${before.living} → ${after.living}`);
     }
     const afterA = await statsAs(emailA, password);
     if (afterA.registered !== after.registered) {
       fail(
-        "ユーザーAとBで全国公開個体数が一致しない",
+        "ユーザーAとBで全国件数が一致しない",
         `A=${afterA.registered} B=${after.registered}`,
       );
     }
-    ok("公開個体だけが日本のクレス統計に入った", `registered ${before.registered} → ${after.registered}`);
+    const asAdmin = await admin.rpc("japan_crest_stats");
+    if (asAdmin.error) fail("japan_crest_stats as service role", asAdmin.error.message);
+    const adminRegistered = Number(
+      (asAdmin.data as { registered?: number } | null)?.registered ?? NaN,
+    );
+    if (adminRegistered !== after.registered) {
+      fail(
+        "service role とログインユーザーで件数が違う",
+        `admin=${adminRegistered} user=${after.registered}`,
+      );
+    }
+    ok("非公開個体が匿名統計に入った", `registered ${before.registered} → ${after.registered}`);
 
     const sessionB = await signIn(emailB, password);
     const compare = await sessionB.rpc("compare_cohort_stats", {
