@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
-import { actionError, actionNotice } from "@/app/components/action-result";
+import { actionError, actionNotice, actionOk } from "@/app/components/action-result";
 import { textField } from "@/lib/db/form";
 import { appOriginFromRequest } from "@/lib/auth/request-origin";
 import { authEmailRedirectTo } from "@/lib/auth/app-origin";
@@ -30,14 +31,20 @@ export async function signIn(formData: FormData) {
   }
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error || !data.user) {
+  if (error || !data.user || !data.session) {
     return actionError(
       friendlyAuthError(error?.message ?? "", "ログインできませんでした。"),
     );
   }
-  await ensureProfile({ id: data.user.id, email: data.user.email ?? "" });
-  revalidatePath("/", "layout");
-  redirect(nextPath(formData));
+  const user = { id: data.user.id, email: data.user.email ?? "" };
+  after(async () => {
+    try {
+      await ensureProfile(user);
+    } catch {
+      // Signup/callback still create the row. Login must not wait on it.
+    }
+  });
+  return actionOk(nextPath(formData));
 }
 
 export async function signUp(formData: FormData) {

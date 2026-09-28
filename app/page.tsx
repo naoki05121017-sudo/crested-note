@@ -90,15 +90,14 @@ export default async function Home() {
   const uniqueHome = [...new Map(homeRecords.map((row) => [row.id, row])).values()];
   const recentAnimalIds = recentLogs.map((row) => row.animalId);
   const neededIds = [...new Set([...uniqueHome.map((row) => row.id), ...recentAnimalIds])];
-  const neededRecords = [
-    ...uniqueHome,
-    ...(await getOwnedAnimalsByIds(user.id, recentAnimalIds)),
-  ];
-  const records = [...new Map(neededRecords.map((row) => [row.id, row])).values()];
-  const [genes, weightRows] = await Promise.all([
-    listGenesForAnimals(records.map((row) => row.id)),
+  const [extraRecords, genes, weightRows] = await Promise.all([
+    getOwnedAnimalsByIds(user.id, recentAnimalIds),
+    listGenesForAnimals(neededIds),
     listWeightsForAnimals(neededIds),
   ]);
+  const records = [
+    ...new Map([...uniqueHome, ...extraRecords].map((row) => [row.id, row])).values(),
+  ];
   const animals = asAnimals(
     preview.records,
     genes.filter((gene) => preview.records.some((row) => row.id === gene.animalId)),
