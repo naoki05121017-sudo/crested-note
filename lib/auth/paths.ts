@@ -3,8 +3,15 @@ export function idsToDelete(existing: string[], keep: string[]): string[] {
   return existing.filter((id) => Boolean(id) && !keepSet.has(id));
 }
 
-const PUBLIC_PREFIXES = ["/login", "/signup", "/p/", "/auth/", "/legal/"];
-const PUBLIC_FILES = ["/manifest.webmanifest"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/signup",
+  "/p/",
+  "/auth/",
+  "/legal/",
+  "/api/animal-photos/",
+];
+const PUBLIC_FILES = ["/manifest.webmanifest", "/api/cron/crest-check"];
 
 export function isPublicAppPath(pathname: string): boolean {
   if (pathname === "/login" || pathname === "/signup") return true;
