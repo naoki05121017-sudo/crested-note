@@ -9,7 +9,11 @@ import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { Badge } from "@/app/components/ui";
 import { GrowthChart } from "@/app/components/growth-chart";
-import { cadenceLabel, checkReminder } from "@/lib/care/check-cadence";
+import { calendarDaysBetween, cadenceLabel, checkReminder } from "@/lib/care/check-cadence";
+import {
+  crestCheckItemFromReminder,
+  crestCheckStatusLabel,
+} from "@/lib/care/crest-check-list";
 import { growthGuideSeries } from "@/lib/care/growth-guide";
 import { fetchGrowthGuideMonths } from "@/lib/db/stats-rpc";
 import {
@@ -34,7 +38,7 @@ import {
 } from "@/lib/db/labels";
 import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
 import { growthPoints } from "@/lib/stats/compare";
-import { todayIso } from "@/lib/stats/math";
+import { ageInMonths, todayIso } from "@/lib/stats/math";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
@@ -90,6 +94,13 @@ export default async function AnimalDetailPage({
   const monthReport = latestMonthlyReport(weights, asOf);
   const justRecorded = query.recorded === "1";
   const growthGuide = growthGuideSeries(await fetchGrowthGuideMonths());
+  const ageMonths = ageInMonths(animal.hatchDate, asOf);
+  const daysSinceLatest = latest
+    ? calendarDaysBetween(latest.weighedOn, asOf)
+    : null;
+  const checkStatus = reminder
+    ? crestCheckStatusLabel(crestCheckItemFromReminder(animal, reminder))
+    : "間隔未設定";
 
   return (
     <div className="flex flex-col gap-8">
@@ -123,46 +134,103 @@ export default async function AnimalDetailPage({
               {animal.isPublic ? "公開中" : "非公開"}
             </Badge>
           </div>
-          <p className="mt-4 font-mono text-sm font-semibold tracking-wide text-ink/70">
-            {displayAnimalId(animal)}
-          </p>
-          <p className="mt-2 text-sm leading-7 text-ink/70">
-            {animal.morphLabel || formatGenotypeLabel(animal.genotype)}
-          </p>
-          {traitLabels.length > 0 ? (
-            <p className="mt-1 text-xs leading-5 text-muted">{traitLabels.join(" / ")}</p>
-          ) : null}
-          <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-xs text-muted">孵化日</dt>
-              <dd className="mt-1 font-medium">
-                {animal.hatchDate ? animal.hatchDate : "孵化日未登録"}
-              </dd>
-            </div>
-            {animal.prefecture ? (
-              <div>
-                <dt className="text-xs text-muted">都道府県</dt>
-                <dd className="mt-1 font-medium">{animal.prefecture}</dd>
-              </div>
-            ) : null}
-            <div>
-              <dt className="text-xs text-muted">記録の間隔</dt>
-              <dd className="mt-1 font-medium">
-                {cadenceLabel(animal.checkEveryDays) ?? "まだ決めていない"}
-              </dd>
-            </div>
-            {animal.isPublic && animal.shareSlug ? (
-              <div className="sm:col-span-2">
-                <dt className="text-xs text-muted">公開ページ</dt>
-                <dd className="mt-1">
-                  <Link href={`/p/${animal.shareSlug}`} className="underline underline-offset-2">
-                    公開ページを開く
-                  </Link>
-                </dd>
-              </div>
-            ) : null}
-          </dl>
         </div>
+      </section>
+
+      <section className={card}>
+        <p className="text-sm text-ink/50">現在の状態</p>
+        <dl className="mt-4 grid gap-4">
+          <div>
+            <dt className="text-xs text-muted">最新体重</dt>
+            <dd className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+              {latest ? formatGrams(latest.weightG) : "—"}
+            </dd>
+            <p className="mt-1 text-sm text-muted">
+              {latest ? latest.weighedOn : "記録がありません"}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <dt className="text-xs text-muted">前回比</dt>
+              <dd className="mt-1 text-xl font-semibold tabular-nums">
+                {!latest ? "—" : change ? formatDeltaGrams(change.deltaG) : "初回"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">月齢</dt>
+              <dd className="mt-1 text-xl font-semibold tabular-nums">
+                {ageMonths == null ? "孵化日未登録" : `${ageMonths}ヶ月`}
+              </dd>
+            </div>
+          </div>
+          <div>
+            <dt className="text-xs text-muted">クレスチェック</dt>
+            <dd
+              className={`mt-1 text-lg font-semibold ${
+                reminder?.due ? "text-[#b45309]" : "tracking-tight"
+              }`}
+            >
+              {checkStatus}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted">前回の体重記録から</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums">
+              {daysSinceLatest == null ? "未記録" : `${daysSinceLatest}日`}
+            </dd>
+          </div>
+        </dl>
+        <a href="#weight" className="nc-btn mt-5 w-full sm:w-auto">
+          体重を記録する
+        </a>
+        {!reminder ? (
+          <a href="#check-cadence" className="nc-btn-ghost mt-2 w-full sm:w-auto">
+            チェック間隔を設定する
+          </a>
+        ) : null}
+      </section>
+
+      <section className={card}>
+        <p className="text-sm text-ink/50">プロフィール</p>
+        <p className="mt-4 font-mono text-sm font-semibold tracking-wide text-ink/70">
+          {displayAnimalId(animal)}
+        </p>
+        <p className="mt-2 text-sm leading-7 text-ink/70">
+          {animal.morphLabel || formatGenotypeLabel(animal.genotype)}
+        </p>
+        {traitLabels.length > 0 ? (
+          <p className="mt-1 text-xs leading-5 text-muted">{traitLabels.join(" / ")}</p>
+        ) : null}
+        <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-muted">孵化日</dt>
+            <dd className="mt-1 font-medium">
+              {animal.hatchDate ? animal.hatchDate : "孵化日未登録"}
+            </dd>
+          </div>
+          {animal.prefecture ? (
+            <div>
+              <dt className="text-xs text-muted">都道府県</dt>
+              <dd className="mt-1 font-medium">{animal.prefecture}</dd>
+            </div>
+          ) : null}
+          <div>
+            <dt className="text-xs text-muted">記録の間隔</dt>
+            <dd className="mt-1 font-medium">
+              {cadenceLabel(animal.checkEveryDays) ?? "まだ決めていない"}
+            </dd>
+          </div>
+          {animal.isPublic && animal.shareSlug ? (
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-muted">公開ページ</dt>
+              <dd className="mt-1">
+                <Link href={`/p/${animal.shareSlug}`} className="underline underline-offset-2">
+                  公開ページを開く
+                </Link>
+              </dd>
+            </div>
+          ) : null}
+        </dl>
       </section>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -186,7 +254,7 @@ export default async function AnimalDetailPage({
         codeClassName="mt-2 font-mono text-3xl font-semibold tracking-wide text-ink sm:text-5xl"
       />
 
-      <section id="check-cadence" className={card}>
+      <section id="check-cadence" className={`${card} scroll-mt-24`}>
         <h2 className="text-lg font-semibold tracking-tight">クレスチェックの間隔</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
           この個体だけの記録ペースです。毎週・2週間ごと・1ヶ月ごと・カスタムから選べます。

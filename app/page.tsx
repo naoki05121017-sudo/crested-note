@@ -1,5 +1,5 @@
 import { HomeDashboard } from "@/app/components/home-dashboard";
-import { checkReminder } from "@/lib/care/check-cadence";
+import { cadenceIdFromDays, checkReminder } from "@/lib/care/check-cadence";
 import { crestCheckItemFromReminder, sortCrestCheckItems } from "@/lib/care/crest-check-list";
 import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
 import { HOME_ANIMAL_PREVIEW, HOME_CHECK_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
@@ -136,6 +136,20 @@ export default async function Home() {
     }),
   );
   const checks = allChecks.slice(0, HOME_CHECK_PREVIEW);
+  const unsetCadence = records.filter(
+    (row) =>
+      cadenceIdFromDays(row.checkEveryDays) === "unset" &&
+      row.status !== "sold" &&
+      row.status !== "deceased",
+  );
+  const unsetCadenceGuide =
+    unsetCadence[0]
+      ? {
+          id: unsetCadence[0].id,
+          name: unsetCadence[0].name,
+          more: unsetCadence.length - 1,
+        }
+      : null;
 
   const compareSource = animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0) ?? allHydrated.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
   const compareLogs = compareSource ? (byWeights.get(compareSource.id) ?? []) : [];
@@ -175,6 +189,7 @@ export default async function Home() {
       japanWeightSample={japan.weightSample}
       checks={checks}
       checkTotal={allChecks.length}
+      unsetCadenceGuide={unsetCadenceGuide}
       latestWeights={Object.fromEntries(
         [...new Map([...animals, ...photoAnimals].map((animal) => [animal.id, animal])).values()].map(
           (animal) => {

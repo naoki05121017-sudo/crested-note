@@ -73,6 +73,7 @@ export function HomeDashboard({
   japanWeightSample,
   checks,
   checkTotal,
+  unsetCadenceGuide,
   latestWeights,
   compare,
 }: {
@@ -91,6 +92,7 @@ export function HomeDashboard({
   japanWeightSample: number;
   checks: CrestCheckItem[];
   checkTotal: number;
+  unsetCadenceGuide: { id: string; name: string; more: number } | null;
   latestWeights: Record<string, { weightG: number; weighedOn: string } | null>;
   compare: {
     name: string;
@@ -145,8 +147,39 @@ export function HomeDashboard({
           <div className="mt-4">
             <HomeCheckList items={checks} />
           </div>
+          {unsetCadenceGuide ? (
+            <p className="mt-4 text-sm leading-6 text-ink/70">
+              <Link
+                href={`/animals/${unsetCadenceGuide.id}#check-cadence`}
+                className="font-medium underline-offset-2 hover:underline"
+              >
+                {unsetCadenceGuide.name}のチェック間隔を設定する
+              </Link>
+              {unsetCadenceGuide.more > 0 ? (
+                <span className="text-ink/50"> ほか{unsetCadenceGuide.more}匹</span>
+              ) : null}
+            </p>
+          ) : null}
         </HomeCard>
       )}
+
+      {checks.length === 0 && unsetCadenceGuide ? (
+        <HomeCard className="border-transparent bg-[#fff6e8]">
+          <h2 className="text-xl font-semibold tracking-tight">クレスチェック</h2>
+          <p className="mt-1 text-sm text-ink/55">
+            間隔を決めると、次回チェックと通知につながります。
+          </p>
+          <Link
+            href={`/animals/${unsetCadenceGuide.id}#check-cadence`}
+            className="nc-btn mt-4 w-full sm:w-auto"
+          >
+            チェック間隔を設定する
+          </Link>
+          {unsetCadenceGuide.more > 0 ? (
+            <p className="mt-3 text-sm text-ink/50">ほか{unsetCadenceGuide.more}匹が未設定です。</p>
+          ) : null}
+        </HomeCard>
+      ) : null}
 
       <HomeAnimalPreview animals={animals} latestWeights={latestWeights} />
 
