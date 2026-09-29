@@ -169,6 +169,9 @@ export function HomeAnimalPreview({
           <p className="text-base leading-7 text-muted">
             まだ個体がありません。登録すると、写真・体重・成長を残せます。
           </p>
+          <Link href="/animals/new" className="nc-btn mt-4 w-full sm:w-auto">
+            個体を登録
+          </Link>
         </section>
       ) : view === "list" ? (
         <ul className="flex flex-col gap-2">

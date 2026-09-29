@@ -55,8 +55,8 @@ export default async function AlbumPage({
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
             個体に写真を登録すると、ここに並びます。
           </p>
-          <Link href="/animals" className="nc-btn mt-6">
-            マイ個体を見る
+          <Link href="/animals/new" className="nc-btn mt-6">
+            個体を登録
           </Link>
         </section>
       ) : (

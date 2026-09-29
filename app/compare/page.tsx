@@ -57,6 +57,11 @@ export default async function ComparePage({
         <EmptyState
           title="先に個体を登録してください"
           body="体重を記録した個体があると、日本国内の近い条件の平均と比べられます。ランキングではありません。"
+          action={
+            <Link href="/animals/new" className="nc-btn">
+              個体を登録
+            </Link>
+          }
         />
       ) : (
         <form

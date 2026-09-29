@@ -161,9 +161,14 @@ export function HomeDashboard({
         <HomeCard>
           <h3 className="mb-4 text-lg font-semibold tracking-tight">最新の体重</h3>
           {recentWeights.length === 0 ? (
-            <p className="text-base leading-7 text-muted">
-              体重を記録すると、ここに成長が並びます。
-            </p>
+            <div>
+              <p className="text-base leading-7 text-muted">
+                体重を記録すると、ここに成長が並びます。
+              </p>
+              <Link href="/animals/new" className="nc-btn mt-4 w-full sm:w-auto">
+                個体を登録
+              </Link>
+            </div>
           ) : (
             <ul className="divide-y divide-line">
               {recentWeights.map(({ animal, log }) => (
@@ -188,7 +193,12 @@ export function HomeDashboard({
             </Link>
           </div>
           {photoAnimals.length === 0 ? (
-            <p className="text-base leading-7 text-muted">写真を登録すると、ここに並びます。</p>
+            <div>
+              <p className="text-base leading-7 text-muted">写真を登録すると、ここに並びます。</p>
+              <Link href="/animals/new" className="nc-btn mt-4 w-full sm:w-auto">
+                個体を登録
+              </Link>
+            </div>
           ) : (
             <PhotoAlbumGrid
               animals={photoAnimals.slice(0, HOME_PHOTO_PREVIEW)}
