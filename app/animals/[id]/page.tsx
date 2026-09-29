@@ -297,7 +297,7 @@ export default async function AnimalDetailPage({
         </section>
       ) : null}
 
-      <section className={card}>
+      <section id="weight" className={`${card} scroll-mt-24`}>
         <h2 className="text-lg font-semibold tracking-tight">体重・成長</h2>
         <p className="mt-2 text-sm leading-6 text-muted">
           参考目安には個体差があります

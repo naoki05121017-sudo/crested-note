@@ -3,9 +3,11 @@ import { Dela_Gothic_One } from "next/font/google";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { HomeAnimalPreview } from "@/app/components/home-animal-preview";
 import { PhotoAlbumGrid } from "@/app/components/photo-album-grid";
+import { HomeCheckList } from "@/app/components/home-check-list";
 import { HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { IncludedFeatures } from "@/app/components/included-features";
 import { averageCollectionCopy } from "@/lib/stats/japan";
+import type { CrestCheckItem } from "@/lib/care/crest-check-list";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 
 const crestTitle = Dela_Gothic_One({
@@ -70,6 +72,7 @@ export function HomeDashboard({
   japanMeanWeight,
   japanWeightSample,
   checks,
+  checkTotal,
   latestWeights,
   compare,
 }: {
@@ -86,13 +89,8 @@ export function HomeDashboard({
   japanLiving: number;
   japanMeanWeight: number | null;
   japanWeightSample: number;
-  checks: {
-    id: string;
-    name: string;
-    due: boolean;
-    headline: string;
-    body: string;
-  }[];
+  checks: CrestCheckItem[];
+  checkTotal: number;
   latestWeights: Record<string, { weightG: number; weighedOn: string } | null>;
   compare: {
     name: string;
@@ -133,24 +131,24 @@ export function HomeDashboard({
         </div>
       </section>
 
-      <HomeAnimalPreview animals={animals} latestWeights={latestWeights} />
-
       {checks.length > 0 && (
         <HomeCard className="border-transparent bg-[#fff6e8]">
-          <h2 className="mb-4 text-xl font-semibold tracking-tight">クレスチェック</h2>
-          <ul className="divide-y divide-line">
-            {checks.map((item) => (
-              <li key={item.id} className="py-3">
-                <Link href={`/animals/${item.id}`} className="block">
-                  <p className="font-semibold">{item.name}</p>
-                  <p className="mt-1 text-sm text-ink/80">{item.headline}</p>
-                  <p className="mt-1 text-sm text-muted">{item.body}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="mb-1 flex items-end justify-between gap-3">
+            <h2 className="text-xl font-semibold tracking-tight">クレスチェック</h2>
+            {checkTotal > checks.length ? (
+              <Link href="/checks" className="text-sm text-ink/40 underline-offset-2 hover:underline">
+                すべて見る
+              </Link>
+            ) : null}
+          </div>
+          <p className="text-sm text-ink/55">今日やることと、次の記録までの日数です。</p>
+          <div className="mt-4">
+            <HomeCheckList items={checks} />
+          </div>
         </HomeCard>
       )}
+
+      <HomeAnimalPreview animals={animals} latestWeights={latestWeights} />
 
       <HomeStat label="飼育中の個体" value={animalCount} href="/animals" tint="bg-[#fde8ef]" />
 

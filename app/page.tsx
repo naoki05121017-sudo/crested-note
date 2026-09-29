@@ -1,7 +1,8 @@
 import { HomeDashboard } from "@/app/components/home-dashboard";
 import { checkReminder } from "@/lib/care/check-cadence";
+import { crestCheckItemFromReminder, sortCrestCheckItems } from "@/lib/care/crest-check-list";
 import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
-import { HOME_ANIMAL_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
+import { HOME_ANIMAL_PREVIEW, HOME_CHECK_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   countOwnedAnimals,
@@ -124,25 +125,17 @@ export default async function Home() {
     checkRecords,
     genes.filter((gene) => checkRecords.some((row) => row.id === gene.animalId)),
   );
-  const checks = checkAnimals
-    .map((animal) => {
+  const allChecks = sortCrestCheckItems(
+    checkAnimals.flatMap((animal) => {
       const reminder = checkReminder({
         checkEveryDays: animal.checkEveryDays,
         lastWeighedOn: latestWeight(byWeights.get(animal.id) ?? [])?.weighedOn,
         asOf,
       });
-      if (!reminder) return null;
-      return {
-        id: animal.id,
-        name: animal.name,
-        due: reminder.due,
-        headline: reminder.headline,
-        body: reminder.body,
-      };
-    })
-    .filter((row): row is NonNullable<typeof row> => row !== null)
-    .sort((a, b) => Number(b.due) - Number(a.due))
-    .slice(0, 6);
+      return reminder ? [crestCheckItemFromReminder(animal, reminder)] : [];
+    }),
+  );
+  const checks = allChecks.slice(0, HOME_CHECK_PREVIEW);
 
   const compareSource = animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0) ?? allHydrated.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
   const compareLogs = compareSource ? (byWeights.get(compareSource.id) ?? []) : [];
@@ -181,6 +174,7 @@ export default async function Home() {
       japanMeanWeight={japan.meanLatestWeight}
       japanWeightSample={japan.weightSample}
       checks={checks}
+      checkTotal={allChecks.length}
       latestWeights={Object.fromEntries(
         [...new Map([...animals, ...photoAnimals].map((animal) => [animal.id, animal])).values()].map(
           (animal) => {
