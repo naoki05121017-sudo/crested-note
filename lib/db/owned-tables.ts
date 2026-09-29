@@ -3,6 +3,7 @@ import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 import { chunkIds, selectPagedAll } from "@/lib/db/supabase-page";
 import { postgresUuid } from "@/lib/db/pg-id";
 import { asAnimalRecord, getOwnedAnimal } from "@/lib/db/animal-io";
+import { PHOTO_ALBUM_PAGE_SIZE } from "@/lib/db/animal-search";
 import {
   EGG_RESULTS,
   type Breeding,
@@ -534,6 +535,33 @@ export async function listOwnedCheckAnimals(userId: string) {
     ),
   );
   return rows.map(asAnimalRecord);
+}
+
+export async function listOwnedPhotoAnimalsPage(
+  userId: string,
+  params: { page?: number; pageSize?: number } = {},
+) {
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.max(1, Math.min(params.pageSize ?? PHOTO_ALBUM_PAGE_SIZE, 100));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  const client = createAdminClient();
+  const { data, error, count } = await retryOnJwtIssuedAtFuture(() =>
+    client
+      .from("animals")
+      .select("*", { count: "exact" })
+      .eq("user_id", userId)
+      .neq("photo_url", "")
+      .order("updated_at", { ascending: false })
+      .range(from, to),
+  );
+  if (error) throw new Error(`animals を読めません: ${error.message}`);
+  return {
+    records: (data ?? []).map((row) => asAnimalRecord(row as Record<string, unknown>)),
+    total: count ?? 0,
+    page,
+    pageSize,
+  };
 }
 
 export async function listOwnedPhotoAnimals(userId: string, limit: number) {

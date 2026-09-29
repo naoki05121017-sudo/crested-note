@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Dela_Gothic_One } from "next/font/google";
-import { AnimalPhoto } from "@/app/components/animal-photo";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { HomeAnimalPreview } from "@/app/components/home-animal-preview";
+import { PhotoAlbumGrid } from "@/app/components/photo-album-grid";
+import { HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { IncludedFeatures } from "@/app/components/included-features";
 import { averageCollectionCopy } from "@/lib/stats/japan";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
@@ -182,34 +183,17 @@ export function HomeDashboard({
         <HomeCard>
           <div className="mb-5 flex items-end justify-between gap-3">
             <h3 className="text-lg font-semibold tracking-tight">成長アルバム</h3>
-            <Link href="/animals" className="text-sm text-ink/40 underline-offset-2 hover:underline">
+            <Link href="/album" className="text-sm text-ink/40 underline-offset-2 hover:underline">
               すべて
             </Link>
           </div>
           {photoAnimals.length === 0 ? (
             <p className="text-base leading-7 text-muted">写真を登録すると、ここに並びます。</p>
           ) : (
-            <ul className="grid gap-4">
-              {photoAnimals.slice(0, 4).map((animal) => (
-                <li key={animal.id}>
-                  <Link
-                    href={`/animals/${animal.id}`}
-                    className="block overflow-hidden rounded-[1.75rem] bg-[#f6f3f8]"
-                  >
-                    <div className="aspect-[4/5] sm:aspect-[16/10]">
-                      {animal.photoUrl ? (
-                        <AnimalPhoto
-                          src={animal.photoUrl}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : null}
-                    </div>
-                    <p className="px-4 py-3 text-base font-medium">{animal.name}</p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <PhotoAlbumGrid
+              animals={photoAnimals.slice(0, HOME_PHOTO_PREVIEW)}
+              latestWeights={latestWeights}
+            />
           )}
         </HomeCard>
       </section>

@@ -1,7 +1,7 @@
 import { HomeDashboard } from "@/app/components/home-dashboard";
 import { checkReminder } from "@/lib/care/check-cadence";
 import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
-import { HOME_ANIMAL_PREVIEW } from "@/lib/db/animal-search";
+import { HOME_ANIMAL_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { requireSessionUser } from "@/lib/auth/session";
 import {
   countOwnedAnimals,
@@ -76,7 +76,7 @@ export default async function Home() {
       pageSize: HOME_ANIMAL_PREVIEW,
     }),
     listOwnedCheckAnimals(user.id),
-    listOwnedPhotoAnimals(user.id, 8),
+    listOwnedPhotoAnimals(user.id, HOME_PHOTO_PREVIEW),
     listRecentOwnedWeights(user.id, 6),
     fetchJapanCrestStats(),
     countOwnedAnimals(user.id, { excludeDeceased: true }),
@@ -182,15 +182,17 @@ export default async function Home() {
       japanWeightSample={japan.weightSample}
       checks={checks}
       latestWeights={Object.fromEntries(
-        animals.map((animal) => {
-          const last = latestWeight(byWeights.get(animal.id) ?? []);
-          return [
-            animal.id,
-            last
-              ? { weightG: last.weightG, weighedOn: last.weighedOn }
-              : null,
-          ];
-        }),
+        [...new Map([...animals, ...photoAnimals].map((animal) => [animal.id, animal])).values()].map(
+          (animal) => {
+            const last = latestWeight(byWeights.get(animal.id) ?? []);
+            return [
+              animal.id,
+              last
+                ? { weightG: last.weightG, weighedOn: last.weighedOn }
+                : null,
+            ];
+          },
+        ),
       )}
       compare={
         compareSource && comparison
