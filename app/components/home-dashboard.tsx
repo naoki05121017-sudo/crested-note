@@ -2,10 +2,8 @@ import Link from "next/link";
 import { Dela_Gothic_One } from "next/font/google";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
+import { HomeAnimalPreview } from "@/app/components/home-animal-preview";
 import { IncludedFeatures } from "@/app/components/included-features";
-import { displayAnimalId } from "@/lib/db/animal-code";
-import { SEX_LABEL } from "@/lib/db/labels";
-import { formatGenotypeLabel } from "@/lib/genetics";
 import { averageCollectionCopy } from "@/lib/stats/japan";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 
@@ -52,54 +50,6 @@ function HomeStat({
       <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
         {value}
       </p>
-    </Link>
-  );
-}
-
-function AnimalHomeCard({
-  animal,
-  latest,
-  hero = false,
-}: {
-  animal: Animal;
-  latest: { weightG: number; weighedOn: string } | null;
-  hero?: boolean;
-}) {
-  return (
-    <Link
-      href={`/animals/${animal.id}`}
-      className="nc-lift block overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] text-ink"
-    >
-      <div className={hero ? "aspect-[4/5] bg-[#f6f3f8] sm:aspect-[5/4]" : "aspect-[4/5] bg-[#f6f3f8] sm:aspect-[4/3]"}>
-        {animal.photoUrl ? (
-          <AnimalPhoto
-            src={animal.photoUrl}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        ) : null}
-      </div>
-      <div className={hero ? "p-5 sm:p-6" : "p-4 sm:p-5"}>
-        <p className={hero ? "text-2xl font-semibold tracking-tight" : "text-lg font-semibold tracking-tight"}>
-          {animal.name}
-        </p>
-        <p className="mt-1 text-sm text-muted">{displayAnimalId(animal)}</p>
-        <p className="mt-1 text-sm text-ink/60">
-          {SEX_LABEL[animal.sex]}
-          {" / "}
-          {animal.morphLabel.trim() || formatGenotypeLabel(animal.genotype) || "モルフ未設定"}
-        </p>
-        <p
-          className={`mt-3 font-semibold tabular-nums ${
-            hero ? "text-[2.1rem] sm:text-5xl" : "text-3xl"
-          }`}
-        >
-          {latest ? `${latest.weightG}g` : "体重未記録"}
-        </p>
-        <p className="mt-1 text-sm text-muted">
-          {latest ? latest.weighedOn : "タップして記録する"}
-        </p>
-      </div>
     </Link>
   );
 }
@@ -154,8 +104,6 @@ export function HomeDashboard({
     tone: string;
   } | null;
 }) {
-  const star = animals[0];
-  const rest = animals.slice(1, 6);
   const japanMeanCopy = averageCollectionCopy(japanWeightSample);
 
   return (
@@ -184,40 +132,7 @@ export function HomeDashboard({
         </div>
       </section>
 
-      <section>
-        <div className="mb-5 flex items-end justify-between gap-3">
-          <h2 className="text-[1.7rem] font-semibold leading-tight tracking-tight sm:text-3xl">
-            マイ個体
-          </h2>
-          <Link href="/animals" className="text-sm text-white/50 underline-offset-2 hover:underline">
-            すべて見る
-          </Link>
-        </div>
-        {!star ? (
-          <HomeCard>
-            <p className="text-base leading-7 text-muted">
-              まだ個体がありません。登録すると、写真・体重・成長を残せます。
-            </p>
-          </HomeCard>
-        ) : (
-          <div className="flex flex-col gap-5">
-            <AnimalHomeCard
-              animal={star}
-              latest={latestWeights[star.id]}
-              hero
-            />
-            {rest.length > 0 && (
-              <ul className="grid gap-5 sm:grid-cols-2">
-                {rest.map((animal) => (
-                  <li key={animal.id}>
-                    <AnimalHomeCard animal={animal} latest={latestWeights[animal.id]} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </section>
+      <HomeAnimalPreview animals={animals} latestWeights={latestWeights} />
 
       {checks.length > 0 && (
         <HomeCard className="border-transparent bg-[#fff6e8]">
