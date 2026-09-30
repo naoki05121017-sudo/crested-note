@@ -6,6 +6,7 @@ describe("auth path and scoped deletes", () => {
     expect(isPublicAppPath("/login")).toBe(true);
     expect(isPublicAppPath("/signup")).toBe(true);
     expect(isPublicAppPath("/p/abc")).toBe(true);
+    expect(isPublicAppPath("/gallery")).toBe(true);
     expect(isPublicAppPath("/auth/callback")).toBe(true);
     expect(isPublicAppPath("/legal/terms")).toBe(true);
     expect(isPublicAppPath("/legal/privacy")).toBe(true);

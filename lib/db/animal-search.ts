@@ -10,3 +10,4 @@ export const HOME_ANIMAL_PREVIEW = 6;
 export const HOME_PHOTO_PREVIEW = 6;
 export const HOME_CHECK_PREVIEW = 3;
 export const PHOTO_ALBUM_PAGE_SIZE = 24;
+export const GALLERY_PAGE_SIZE = 24;

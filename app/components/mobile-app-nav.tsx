@@ -19,6 +19,7 @@ const tabs = [
 ] as const;
 
 const morePrimary = [
+  { href: "/gallery", label: "みんなのクレス", icon: IconGecko },
   { href: "/compare", label: "全国個体比較", icon: IconChart },
   { href: "/stats", label: "日本のクレス統計", icon: IconChart },
   { href: "/album", label: "成長アルバム", icon: IconGecko },

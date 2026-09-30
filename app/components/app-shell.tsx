@@ -25,6 +25,7 @@ const primaryItems = [
 ] as const;
 
 const moreItems = [
+  { href: "/gallery", label: "みんなのクレス", icon: IconGecko },
   { href: "/compare", label: "全国個体比較", icon: IconChart },
   { href: "/stats", label: "日本のクレス統計", icon: IconChart },
   { href: "/settings", label: "設定", icon: IconGear },

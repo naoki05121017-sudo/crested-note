@@ -27,7 +27,7 @@ export default async function SettingsPage({
       <PageHeader
         kicker="SETTINGS"
         title="設定"
-        description="コレクション名と、新規個体の公開初期値など。"
+        description="ニックネームと、新規個体の公開初期値など。"
       />
       <Card>
         <h2 className="mb-4 text-lg font-semibold">アカウント</h2>
@@ -40,7 +40,7 @@ export default async function SettingsPage({
       <Card tone="mist">
       <MutationForm action={saveSettings} className="flex max-w-xl flex-col gap-4">
         <label className="grid gap-1 text-sm">
-          <span>表示名</span>
+          <span>ニックネーム</span>
           <input name="displayName" defaultValue={settings.displayName} className="nc-input" />
         </label>
         <label className="grid gap-1 text-sm">

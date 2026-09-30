@@ -1,0 +1,60 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import {
+  mergeAlbumPhotos,
+  parseCommentBody,
+  parseCommentReportReason,
+  publicNickname,
+} from "./album-comments";
+
+describe("public album merge", () => {
+  it("keeps photo_url first and appends extra rows without duplicating", () => {
+    expect(mergeAlbumPhotos("https://a/cover.jpg", [])).toEqual([
+      { id: "cover", url: "https://a/cover.jpg", source: "cover" },
+    ]);
+    expect(
+      mergeAlbumPhotos("https://a/cover.jpg", [
+        { id: "2", url: "https://a/two.jpg", sortOrder: 2 },
+        { id: "1", url: "https://a/cover.jpg", sortOrder: 1 },
+        { id: "0", url: "https://a/one.jpg", sortOrder: 0 },
+      ]),
+    ).toEqual([
+      { id: "cover", url: "https://a/cover.jpg", source: "cover" },
+      { id: "0", url: "https://a/one.jpg", source: "extra" },
+      { id: "2", url: "https://a/two.jpg", source: "extra" },
+    ]);
+  });
+});
+
+describe("comment copy", () => {
+  it("uses a nickname fallback that is not an email", () => {
+    expect(publicNickname(" レオ  ")).toBe("レオ");
+    expect(publicNickname("")).toBe("ユーザー");
+    expect(publicNickname(null)).toBe("ユーザー");
+  });
+
+  it("rejects empty or overlong comment bodies", () => {
+    expect(parseCommentBody("  綺麗  ")).toBe("綺麗");
+    expect(parseCommentBody("")).toBeNull();
+    expect(parseCommentBody("x".repeat(501))).toBeNull();
+  });
+
+  it("parses report reasons", () => {
+    expect(parseCommentReportReason("spam")).toBe("spam");
+    expect(parseCommentReportReason("nope")).toBe("other");
+  });
+});
+
+describe("community migration", () => {
+  it("adds extra photos and comments without comments_blocked_until", () => {
+    const sql = readFileSync(
+      "supabase/migrations/20260930_community_gallery_comments.sql",
+      "utf8",
+    );
+    expect(sql).toContain("create table if not exists public.animal_photos");
+    expect(sql).toContain("author_nickname");
+    expect(sql).toContain("animal_comment_reports");
+    expect(sql).not.toMatch(/comments_blocked_until/);
+    expect(sql).toContain("animals.photo_url");
+  });
+});
