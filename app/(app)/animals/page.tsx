@@ -1,0 +1,96 @@
+import Link from "next/link";
+import { AnimalsCollection } from "@/app/(app)/animals/animals-collection";
+import { AnimalsFilter } from "@/app/(app)/animals/animals-filter";
+import { CrestLinkRedeemCard } from "@/app/(app)/animals/crest-link-redeem";
+import { filterAnimals, weightsByAnimal } from "@/lib/db/queries";
+
+export const dynamic = "force-dynamic";
+export const metadata = { title: "個体" };
+
+export default async function AnimalsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const q = typeof params.q === "string" ? params.q : "";
+  const sex = typeof params.sex === "string" ? params.sex : "";
+  const status = typeof params.status === "string" ? params.status : "";
+  const page = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
+  const listed = await filterAnimals({
+    q,
+    sex,
+    status,
+    page: Number.isFinite(page) ? page : 1,
+  });
+  const animals = listed.animals;
+  const byWeights = await weightsByAnimal(animals.map((row) => row.id));
+  const latestById: Record<string, { weightG: number } | undefined> = {};
+  for (const animal of animals) {
+    const logs = byWeights.get(animal.id) ?? [];
+    const latest = logs[logs.length - 1];
+    latestById[animal.id] = latest ? { weightG: latest.weightG } : undefined;
+  }
+  const pageCount = Math.max(1, Math.ceil(listed.total / listed.pageSize));
+  const query = new URLSearchParams();
+  if (q) query.set("q", q);
+  if (sex) query.set("sex", sex);
+  if (status) query.set("status", status);
+  function pageHref(target: number) {
+    const next = new URLSearchParams(query);
+    if (target > 1) next.set("page", String(target));
+    const text = next.toString();
+    return text ? `/animals?${text}` : "/animals";
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+          個体
+        </h1>
+        <Link href="/animals/new" className="nc-btn h-10 min-h-10 px-4 text-sm">
+          新規登録
+        </Link>
+      </div>
+      <AnimalsFilter q={q} sex={sex} status={status} />
+
+      {animals.length === 0 ? (
+        <section className="nc-panel px-5 py-10 text-center text-ink sm:p-12">
+          <p className="text-lg font-semibold">まだ個体がありません</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+            最初の1匹を登録すると、遺伝計算や繁殖につなげられます。
+          </p>
+          <Link href="/animals/new" className="nc-btn mt-6">
+            個体を登録
+          </Link>
+        </section>
+      ) : (
+        <AnimalsCollection animals={animals} latestById={latestById} />
+      )}
+
+      {listed.total > listed.pageSize ? (
+        <nav className="flex flex-wrap items-center justify-between gap-3 text-sm text-white/70">
+          <p>
+            {listed.total}件中 {(listed.page - 1) * listed.pageSize + 1}–
+            {Math.min(listed.page * listed.pageSize, listed.total)}件
+          </p>
+          <div className="flex gap-2">
+            {listed.page > 1 ? (
+              <Link href={pageHref(listed.page - 1)} className="nc-btn-ghost">
+                前へ
+              </Link>
+            ) : null}
+            {listed.page < pageCount ? (
+              <Link href={pageHref(listed.page + 1)} className="nc-btn-ghost">
+                次へ
+              </Link>
+            ) : null}
+          </div>
+        </nav>
+      ) : null}
+
+      <CrestLinkRedeemCard />
+    </div>
+  );
+}

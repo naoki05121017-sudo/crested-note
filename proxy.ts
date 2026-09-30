@@ -1,12 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isPublicAppPath } from "@/lib/auth/paths";
+import { hasSupabaseAuthCookie } from "@/lib/auth/supabase-auth-cookie";
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
   const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
   if (!url || !publishable) return response;
+
+  if (!hasSupabaseAuthCookie(request.cookies.getAll())) {
+    if (isPublicAppPath(pathname)) return response;
+    const login = request.nextUrl.clone();
+    login.pathname = "/login";
+    login.searchParams.set("next", pathname);
+    return NextResponse.redirect(login);
+  }
 
   const supabase = createServerClient(url, publishable, {
     cookies: {
@@ -28,7 +38,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { pathname } = request.nextUrl;
   if (!user && !isPublicAppPath(pathname)) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";

@@ -25,7 +25,7 @@ describe("anonymous stats payloads", () => {
   });
 
   it("keeps the home animal preview separate from nationwide Japan stats", () => {
-    const home = readFileSync("app/page.tsx", "utf8");
+    const home = readFileSync("app/(app)/page.tsx", "utf8");
     expect(home).toContain("pageSize: HOME_ANIMAL_PREVIEW");
     expect(home).toContain("fetchJapanCrestStats()");
     expect(home).toContain("countOwnedAnimals");

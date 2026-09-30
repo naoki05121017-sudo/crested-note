@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Dela_Gothic_One } from "next/font/google";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { HomeAnimalPreview } from "@/app/components/home-animal-preview";
+import { HomeSectionTitle } from "@/app/components/home-section-title";
 import { PhotoAlbumGrid } from "@/app/components/photo-album-grid";
 import { HomeCheckList } from "@/app/components/home-check-list";
 import { HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
-import { IncludedFeatures } from "@/app/components/included-features";
 import { averageCollectionCopy } from "@/lib/stats/japan";
 import type { CrestCheckItem } from "@/lib/care/crest-check-list";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
@@ -17,49 +17,9 @@ const crestTitle = Dela_Gothic_One({
   adjustFontFallback: false,
 });
 
-function HomeCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section
-      className={`nc-lift rounded-[2rem] border-transparent bg-gradient-to-br from-[#fff8fb] via-[#f7f2f8] to-[#eef6fb] p-5 text-ink sm:p-6 ${className}`}
-    >
-      {children}
-    </section>
-  );
-}
-
-function HomeStat({
-  label,
-  value,
-  href,
-  tint,
-}: {
-  label: string;
-  value: string | number;
-  href: string;
-  tint: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`nc-lift block rounded-[2rem] p-5 text-ink ${tint}`}
-    >
-      <p className="text-sm text-ink/60">{label}</p>
-      <p className="mt-3 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
-        {value}
-      </p>
-    </Link>
-  );
-}
-
 export function HomeDashboard({
   collectionName: _collectionName,
-  animalCount,
+  animalCount: _animalCount,
   activeBreedings,
   incubatingEggs,
   projectCount,
@@ -106,267 +66,212 @@ export function HomeDashboard({
   } | null;
 }) {
   const japanMeanCopy = averageCollectionCopy(japanWeightSample);
+  const showBreeding =
+    activeBreedings > 0 ||
+    incubatingEggs > 0 ||
+    projectCount > 0 ||
+    upcomingHatches.length > 0;
+  const emptyCollection = animals.length === 0;
+  const careItems = checks.slice(0, 3);
+  const latestLogs = recentWeights.slice(0, 2);
+  const growthAnimal = latestLogs[0]?.animal ?? animals[0];
+
+  const careLine = unsetCadenceGuide ? (
+    <p className="mt-2 text-sm leading-6 text-white/38">
+      今日のケアは未設定です。
+      <Link
+        href={`/animals/${unsetCadenceGuide.id}#check-cadence`}
+        className="ml-1 underline-offset-2 hover:underline"
+      >
+        間隔を決める
+      </Link>
+      {unsetCadenceGuide.more > 0 ? (
+        <span className="text-white/26"> ・ほか{unsetCadenceGuide.more}匹</span>
+      ) : null}
+    </p>
+  ) : null;
 
   return (
-    <div className="flex flex-col gap-12 sm:gap-14">
-      <section className="nc-hero nc-crest-stage nc-home-title">
-        <CrestPhoto />
-        <div className="nc-home-title-copy">
-          <div className="nc-home-title-brand">
-            <TitleCrown />
-            <h1 className={`nc-home-title-word ${crestTitle.className}`}>
-              クレスノート
-            </h1>
-            <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
-          </div>
-          <p className="nc-hero-copy mt-4 max-w-[16.5rem] text-[15px] leading-7 sm:max-w-sm">
-            自分のクレスの体重と成長を、かんたんに残そう。
-          </p>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            <Link href="/animals/new" className="nc-btn w-full sm:w-auto">
+    <div className="flex min-w-0 max-w-full flex-col">
+      {emptyCollection ? (
+        <section className="nc-hero nc-crest-stage nc-home-title">
+          <CrestPhoto />
+          <div className="nc-home-title-copy">
+            <div className="nc-home-title-brand">
+              <TitleCrown />
+              <h1 className={`nc-home-title-word ${crestTitle.className}`}>
+                クレスノート
+              </h1>
+              <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
+            </div>
+            <p className="nc-hero-copy mt-4 max-w-[16.5rem] text-[15px] leading-7 sm:max-w-sm">
+              自分のクレスの体重と成長を、かんたんに残そう。
+            </p>
+            <Link href="/animals/new" className="nc-btn mt-5 w-full sm:w-auto">
               個体を登録
             </Link>
-            <Link href="/animals" className="nc-btn-ghost w-full sm:w-auto">
-              マイ個体を見る
-            </Link>
           </div>
-        </div>
-      </section>
-
-      {checks.length > 0 && (
-        <HomeCard className="border-transparent bg-[#fff6e8]">
-          <div className="mb-1 flex items-end justify-between gap-3">
-            <h2 className="text-xl font-semibold tracking-tight">クレスチェック</h2>
-            {checkTotal > checks.length ? (
-              <Link href="/checks" className="text-sm text-ink/40 underline-offset-2 hover:underline">
-                すべて見る
-              </Link>
-            ) : null}
-          </div>
-          <p className="text-sm text-ink/55">今日やることと、次の記録までの日数です。</p>
-          <div className="mt-4">
-            <HomeCheckList items={checks} />
-          </div>
-          {unsetCadenceGuide ? (
-            <p className="mt-4 text-sm leading-6 text-ink/70">
-              <Link
-                href={`/animals/${unsetCadenceGuide.id}#check-cadence`}
-                className="font-medium underline-offset-2 hover:underline"
-              >
-                {unsetCadenceGuide.name}のチェック間隔を設定する
-              </Link>
-              {unsetCadenceGuide.more > 0 ? (
-                <span className="text-ink/50"> ほか{unsetCadenceGuide.more}匹</span>
-              ) : null}
-            </p>
-          ) : null}
-        </HomeCard>
+        </section>
+      ) : (
+        <HomeAnimalPreview animals={animals} latestWeights={latestWeights} />
       )}
 
-      {checks.length === 0 && unsetCadenceGuide ? (
-        <HomeCard className="border-transparent bg-[#fff6e8]">
-          <h2 className="text-xl font-semibold tracking-tight">クレスチェック</h2>
-          <p className="mt-1 text-sm text-ink/55">
-            間隔を決めると、次回チェックと通知につながります。
+      <div className="mt-1 border-t border-white/10 pt-5">
+      <section className="min-w-0">
+        <HomeSectionTitle kicker="WEIGHT" title="最新の体重" tone="mint" />
+        {latestLogs.length === 0 ? (
+          <p className="text-sm leading-6 text-white/40">
+            体重を記録すると、ここに並びます。
+            {emptyCollection ? (
+              <>
+                {" "}
+                <Link href="/animals/new" className="underline-offset-2 hover:underline">
+                  個体を登録
+                </Link>
+              </>
+            ) : null}
           </p>
-          <Link
-            href={`/animals/${unsetCadenceGuide.id}#check-cadence`}
-            className="nc-btn mt-4 w-full sm:w-auto"
-          >
-            チェック間隔を設定する
-          </Link>
-          {unsetCadenceGuide.more > 0 ? (
-            <p className="mt-3 text-sm text-ink/50">ほか{unsetCadenceGuide.more}匹が未設定です。</p>
-          ) : null}
-        </HomeCard>
-      ) : null}
-
-      <HomeAnimalPreview animals={animals} latestWeights={latestWeights} />
-
-      <HomeStat label="飼育中の個体" value={animalCount} href="/animals" tint="bg-[#fde8ef]" />
-
-      <section className="flex flex-col gap-5">
-        <h2 className="text-[1.7rem] font-semibold leading-tight tracking-tight sm:text-3xl">
-          成長
-        </h2>
-        <HomeCard>
-          <h3 className="mb-4 text-lg font-semibold tracking-tight">最新の体重</h3>
-          {recentWeights.length === 0 ? (
-            <div>
-              <p className="text-base leading-7 text-muted">
-                体重を記録すると、ここに成長が並びます。
-              </p>
-              <Link href="/animals/new" className="nc-btn mt-4 w-full sm:w-auto">
-                個体を登録
-              </Link>
-            </div>
-          ) : (
-            <ul className="divide-y divide-line">
-              {recentWeights.map(({ animal, log }) => (
-                <li key={log.id} className="flex items-center justify-between gap-3 py-4">
+        ) : (
+          <ul>
+            {latestLogs.map(({ animal, log }) => (
+              <li key={log.id} className="border-b border-white/8 last:border-0">
+                <Link
+                  href={`/animals/${animal.id}`}
+                  className="flex min-h-12 min-w-0 items-center justify-between gap-3 py-2.5 active:opacity-70"
+                >
                   <div className="min-w-0">
-                    <Link href={`/animals/${animal.id}`} className="text-lg font-medium hover:underline">
-                      {animal.name}
-                    </Link>
-                    <p className="mt-1 text-sm text-muted">{log.weighedOn}</p>
+                    <p className="truncate text-[15px] text-white/80">{animal.name}</p>
+                    <p className="mt-0.5 text-xs text-white/32">{log.weighedOn}</p>
                   </div>
-                  <p className="text-3xl font-semibold tabular-nums sm:text-4xl">{log.weightG}g</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </HomeCard>
-        <HomeCard>
-          <div className="mb-5 flex items-end justify-between gap-3">
-            <h3 className="text-lg font-semibold tracking-tight">成長アルバム</h3>
-            <Link href="/album" className="text-sm text-ink/40 underline-offset-2 hover:underline">
-              すべて
-            </Link>
-          </div>
-          {photoAnimals.length === 0 ? (
-            <div>
-              <p className="text-base leading-7 text-muted">写真を登録すると、ここに並びます。</p>
-              <Link href="/animals/new" className="nc-btn mt-4 w-full sm:w-auto">
-                個体を登録
-              </Link>
-            </div>
-          ) : (
-            <PhotoAlbumGrid
-              animals={photoAnimals.slice(0, HOME_PHOTO_PREVIEW)}
-              latestWeights={latestWeights}
-            />
-          )}
-        </HomeCard>
+                  <p className="shrink-0 text-[1.65rem] font-semibold tabular-nums leading-none nc-tone-mint">
+                    {log.weightG}g
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
-      <HomeCard className="border-transparent bg-[#e7f3fb]">
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <h2 className="text-lg font-semibold tracking-tight">全国個体比較</h2>
-          <Link href="/compare" className="text-sm text-ink/40 underline-offset-2 hover:underline">
-            開く
+      <section className="mt-4 min-w-0">
+        <HomeSectionTitle kicker="GROWTH" title="成長" tone="lilac" compact />
+        {growthAnimal ? (
+          <Link
+            href={`/animals/${growthAnimal.id}`}
+            className="flex min-h-9 items-center justify-between gap-3 py-0 active:opacity-70"
+          >
+            <p className="min-w-0 truncate text-[15px] text-white/70">{growthAnimal.name}</p>
+            <p className="shrink-0 text-sm text-white/38">グラフを見る →</p>
           </Link>
-        </div>
+        ) : (
+          <p className="text-sm leading-6 text-white/40">記録を続けると、成長が見えます。</p>
+        )}
+      </section>
+      </div>
+
+      {careItems.length > 0 ? (
+        <section className="mt-8 min-w-0">
+          <HomeSectionTitle
+            kicker="CARE"
+            title="今日のケア"
+            tone="care"
+            href={checkTotal > careItems.length ? "/checks" : undefined}
+          />
+          <HomeCheckList items={careItems} compact />
+          {careLine}
+        </section>
+      ) : (
+        careLine ? <div className="mt-8">{careLine}</div> : null
+      )}
+
+      <section className="mt-9 min-w-0">
+        <HomeSectionTitle kicker="ALBUM" title="アルバム" tone="mist" href="/album" />
+        {photoAnimals.length === 0 ? (
+          <p className="text-sm leading-6 text-white/40">写真を登録すると、ここに並びます。</p>
+        ) : (
+          <PhotoAlbumGrid
+            animals={photoAnimals.slice(0, HOME_PHOTO_PREVIEW)}
+            latestWeights={latestWeights}
+            tone="light"
+          />
+        )}
+      </section>
+
+      <section className="mt-8 min-w-0">
+        <HomeSectionTitle kicker="JAPAN" title="自分と全国" tone="blush" href="/compare" action="比較" />
         {compare ? (
-          <div>
-            <p className="text-sm text-muted">{compare.name}</p>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-ink/50">あなたの個体</p>
-                <p className="mt-1 text-3xl font-semibold tabular-nums">
+          <div className="min-w-0">
+            <p className="truncate text-[11px] text-white/32">{compare.name}</p>
+            <div className="mt-2.5 grid grid-cols-2 gap-3">
+              <div className="min-w-0 border-r border-white/10 pr-3">
+                <p className="text-[1.7rem] font-semibold tabular-nums leading-none nc-tone-mint">
                   {compare.mineWeight === null ? "—" : `${compare.mineWeight.toFixed(1)}g`}
                 </p>
+                <p className="mt-2 text-[11px] leading-4 text-white/40">この子</p>
               </div>
-              <div>
-                <p className="text-sm text-ink/50">同条件の平均</p>
-                <p className="mt-1 text-3xl font-semibold tabular-nums">
+              <div className="min-w-0">
+                <p className="text-[1.7rem] font-semibold tabular-nums leading-none text-white/75">
                   {compare.comparable && compare.average !== null
                     ? `${compare.average.toFixed(1)}g`
                     : "—"}
                 </p>
-                {compare.comparable && (
-                  <>
-                    <p className="mt-1 text-sm text-ink/80">{compare.vsAverage}</p>
-                    <p className="mt-1 text-xs text-muted">n={compare.sampleSize}</p>
-                  </>
-                )}
+                <p className="mt-2 text-[11px] leading-4 text-white/40">近い条件の平均</p>
               </div>
             </div>
-            <p className="mt-3 text-sm text-muted">{compare.tone}</p>
-            <Link href={compare.href} className="nc-btn mt-4">
-              この個体で比較
-            </Link>
+            <p className="mt-3 text-sm text-white/35">{compare.tone}</p>
           </div>
         ) : (
-          <p className="text-base leading-7 text-muted">
+          <p className="text-sm leading-6 text-white/40">
             体重を記録した個体があると、近い条件の平均と比べられます。
           </p>
         )}
-      </HomeCard>
-
-      <HomeCard className="border-transparent bg-[#eef6f1]">
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <h2 className="text-lg font-semibold tracking-tight">日本のクレス統計</h2>
-          <Link href="/stats" className="text-sm text-ink/40 underline-offset-2 hover:underline">
-            開く
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-ink/50">公開の登録個体</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{japanRegistered}</p>
-          </div>
-          <div>
-            <p className="text-sm text-ink/50">飼育中</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{japanLiving}</p>
-          </div>
-        </div>
-        <p className="mt-4 text-sm text-ink/50">最新体重の平均</p>
-        {japanMeanCopy ? (
-          <>
-            <p className="mt-1 text-lg font-semibold">{japanMeanCopy.title}</p>
-            <p className="mt-1 text-xs text-muted">{japanMeanCopy.detail}</p>
-          </>
-        ) : (
-          <>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">
-              {`${japanMeanWeight!.toFixed(1)}g`}
-            </p>
-            <p className="mt-1 text-xs text-muted">n={japanWeightSample}</p>
-          </>
-        )}
-      </HomeCard>
-
-      <section className="flex flex-col gap-5">
-        <h2 className="text-lg font-semibold tracking-tight text-white/80">
-          遺伝計算・ブリード
-        </h2>
-        <p className="text-sm leading-6 text-white/45">
-          ペアリングや卵の記録が必要なときだけ使います。
+        <p className="mt-5 text-[11px] text-white/28">
+          登録 {japanRegistered} ・飼育中 {japanLiving}
+          {japanMeanCopy
+            ? ` ・${japanMeanCopy.title}`
+            : japanMeanWeight != null
+              ? ` ・平均 ${japanMeanWeight.toFixed(1)}g`
+              : ""}
         </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <HomeStat label="進行中のペア" value={activeBreedings} href="/breedings" tint="bg-[#e7f3fb]" />
-          <HomeStat label="孵化待ちの卵" value={incubatingEggs} href="/breedings" tint="bg-[#ece6fb]" />
-          <HomeStat label="進行中のプロジェクト" value={projectCount} href="/projects" tint="bg-[#e7f6ee]" />
-        </div>
-        <HomeCard className="border-transparent bg-[#e7f3fb]">
-          <h3 className="mb-4 text-lg font-semibold tracking-tight">近日の孵化予定</h3>
-          {upcomingHatches.length === 0 ? (
-            <p className="text-sm text-muted">予定日が入っている卵はありません。</p>
-          ) : (
-            <ul className="divide-y divide-line">
+        <Link href="/stats" className="mt-2 inline-block text-sm text-white/32 underline-offset-2 hover:underline">
+          日本のクレス統計
+        </Link>
+      </section>
+
+      {showBreeding ? (
+        <section className="mt-9 min-w-0">
+          <HomeSectionTitle kicker="BREED" title="進行中のブリード" tone="lilac" href="/breedings" />
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <Link href="/breedings" className="min-w-0">
+              <p className="text-[11px] text-white/32">ペア</p>
+              <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{activeBreedings}</p>
+            </Link>
+            <Link href="/breedings" className="min-w-0">
+              <p className="text-[11px] text-white/32">孵化待ち</p>
+              <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{incubatingEggs}</p>
+            </Link>
+            <Link href="/projects" className="min-w-0">
+              <p className="text-[11px] text-white/32">プロジェクト</p>
+              <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{projectCount}</p>
+            </Link>
+          </div>
+          {upcomingHatches.length > 0 ? (
+            <ul className="mt-2">
               {upcomingHatches.map(({ egg, breedingId }) => (
                 <li
                   key={egg.id}
-                  className="flex min-h-14 flex-wrap items-center justify-between gap-2 py-3"
+                  className="flex min-h-11 min-w-0 items-center justify-between gap-2 border-b border-white/8 py-2 last:border-0"
                 >
-                  <span className="text-lg font-semibold tabular-nums">{egg.expectedHatchOn}</span>
-                  <Link href={`/breedings/${breedingId}`} className="nc-btn-ghost">
+                  <span className="tabular-nums text-white/75">{egg.expectedHatchOn}</span>
+                  <Link href={`/breedings/${breedingId}`} className="text-sm text-white/35">
                     ペアを見る
                   </Link>
                 </li>
               ))}
             </ul>
-          )}
-        </HomeCard>
-        <div className="grid gap-3">
-          <Link href="/calculator" className="nc-lift block rounded-[1.75rem] bg-[#ece6fb]/90 p-5 text-ink">
-            <h3 className="font-semibold">遺伝計算</h3>
-            <p className="mt-1 text-sm leading-6 text-ink/60">ペアの遺伝を計算します。</p>
-          </Link>
-          <Link href="/simulate" className="nc-lift block rounded-[1.75rem] bg-[#fde8ef]/90 p-5 text-ink">
-            <h3 className="font-semibold">シミュレーション</h3>
-            <p className="mt-1 text-sm leading-6 text-ink/60">複数世代の遺伝を見ます。</p>
-          </Link>
-          <Link href="/breedings" className="nc-lift block rounded-[1.75rem] bg-[#e7f6ee]/90 p-5 text-ink">
-            <h3 className="font-semibold">ブリード</h3>
-            <p className="mt-1 text-sm leading-6 text-ink/60">ペアと卵の記録へ進みます。</p>
-          </Link>
-        </div>
-      </section>
-
-      <HomeCard className="opacity-90">
-        <IncludedFeatures compact />
-      </HomeCard>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }

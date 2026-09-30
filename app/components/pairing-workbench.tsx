@@ -16,8 +16,8 @@ import { SEX_LABEL, animalTitle } from "@/lib/db/labels";
 import { PairingResults } from "@/app/components/pairing-results";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
-import { savePrediction } from "@/app/predictions/actions";
-import type { CalculatorAnimal } from "@/app/calculator/types";
+import { savePrediction } from "@/app/(app)/predictions/actions";
+import type { CalculatorAnimal } from "@/app/(app)/calculator/types";
 import { Hint } from "@/app/components/ui";
 import { TraitCategoryPicker } from "@/app/components/trait-category-picker";
 import {

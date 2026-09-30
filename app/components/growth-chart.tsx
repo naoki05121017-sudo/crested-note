@@ -56,7 +56,7 @@ export function GrowthChart({
         viewBox={`0 0 ${width} ${height}`}
         className="h-auto w-full max-w-full"
       >
-        <rect width={width} height={height} rx="28" fill="#f7f2f8" />
+        <rect width={width} height={height} rx="20" fill="#f6f3f6" />
         {[0.25, 0.5, 0.75].map((frac) => (
           <line
             key={frac}
@@ -64,7 +64,7 @@ export function GrowthChart({
             x2={width - pad}
             y1={pad + (height - pad * 2) * frac}
             y2={pad + (height - pad * 2) * frac}
-            stroke="#e4d7ea"
+            stroke="#e8dde8"
           />
         ))}
         <text x={pad} y={22} fontSize="11" fill="#6d675f">
@@ -86,7 +86,7 @@ export function GrowthChart({
           />
         ) : null}
         {mine.length > 1 ? (
-          <path d={path(mine)} fill="none" stroke="#5a4a78" strokeWidth="3.2" />
+          <path d={path(mine)} fill="none" stroke="#17141c" strokeWidth="2.6" />
         ) : null}
         {mine.map((point) => (
           <circle
@@ -94,7 +94,7 @@ export function GrowthChart({
             cx={x(point.month)}
             cy={y(point.weightG)}
             r="4.5"
-            fill="#5a4a78"
+            fill="#17141c"
           />
         ))}
         {average.map((point) => (

@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #161318;
+  --background: #141218;
   --foreground: #f4eee8;
-  --surface: #fff8fb;
+  --surface: #f7f3f6;
   --muted: #7a736c;
-  --line: rgba(255, 255, 255, 0.14);
+  --line: rgba(255, 255, 255, 0.12);
   --ink: #17141c;
   --accent: #d9efe6;
   --accent-strong: #7eb8a4;
@@ -15,6 +15,11 @@
   --danger: #c45c4a;
   --warn: #b5813c;
   --lilac: #ece6fb;
+  --panel: #f7f3f6;
+  --panel-edge: rgba(246, 223, 216, 0.55);
+  --radius-panel: 1.25rem;
+  --radius-control: 0.9rem;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
@@ -29,6 +34,7 @@
   --color-blush: var(--blush);
   --color-mist: var(--mist);
   --color-sand: var(--sand);
+  --color-panel: var(--panel);
   --font-sans: var(--font-geist-sans);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -37,37 +43,44 @@ a,
 button,
 summary {
   touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(111, 157, 136, 0.18);
+  -webkit-tap-highlight-color: rgba(246, 223, 216, 0.22);
 }
 
-a:active {
-  opacity: 0.82;
+html {
+  overflow-x: clip;
 }
 
 html,
 body {
-  background:
-    radial-gradient(900px 420px at 8% -12%, rgba(246, 223, 216, 0.16), transparent 54%),
-    radial-gradient(760px 380px at 100% 0%, rgba(176, 196, 240, 0.14), transparent 50%),
-    radial-gradient(640px 320px at 70% 100%, rgba(157, 224, 196, 0.08), transparent 46%),
-    #141218;
+  background: #141218;
   color: var(--foreground);
+  max-width: 100%;
 }
 
 body {
+  overflow-x: clip;
   font-family: var(--font-geist-sans), "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+@media (min-width: 1024px) {
+  html,
+  body {
+    background:
+      radial-gradient(720px 340px at 6% -10%, rgba(246, 223, 216, 0.1), transparent 52%),
+      #141218;
+  }
 }
 
 .nc-input {
   width: 100%;
+  min-width: 0;
   min-height: 48px;
-  border-radius: 1.15rem;
+  border-radius: var(--radius-control);
   border: 1px solid rgba(23, 20, 28, 0.1);
-  background: rgba(255, 255, 255, 0.78);
+  background: #fff;
   padding: 0.7rem 0.95rem;
   font-size: 1rem;
   color: var(--ink);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .nc-input:focus {
@@ -94,28 +107,30 @@ body {
   justify-content: center;
   gap: 0.4rem;
   min-height: 48px;
-  border-radius: 999px;
-  padding: 0.7rem 1.25rem;
-  font-size: 0.98rem;
+  border-radius: var(--radius-control);
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
   font-weight: 600;
   text-align: center;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out);
 }
 
 .nc-btn {
-  background: linear-gradient(180deg, #f8e4ec 0%, #ead6f4 100%);
+  background: #f4d5e2;
   color: #17141c;
-  box-shadow: 0 10px 24px rgba(18, 12, 22, 0.28);
 }
 
 .nc-btn:hover {
-  background: linear-gradient(180deg, #ffeef4 0%, #f0e0fa 100%);
+  background: #f8e0ea;
 }
 
 .nc-btn:active,
 .nc-btn-ghost:active,
 .nc-btn-danger:active {
-  transform: scale(0.98);
-  opacity: 0.88;
+  transform: scale(0.985);
 }
 
 .nc-btn:disabled,
@@ -161,14 +176,14 @@ body {
 }
 
 .nc-hero {
-  border-radius: 2rem;
+  border-radius: var(--radius-panel);
   background:
     radial-gradient(420px 180px at 90% -20%, rgba(246, 223, 216, 0.22), transparent 55%),
     radial-gradient(280px 160px at 0% 120%, rgba(176, 196, 240, 0.16), transparent 50%),
     linear-gradient(155deg, #221c28 0%, #141218 58%, #0e0c12 100%);
   color: #f7f4f2;
   padding: 1.35rem 1.35rem 1.5rem;
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
 }
 
 @media (min-width: 640px) {
@@ -192,12 +207,12 @@ body {
 }
 
 .nc-hero .nc-btn {
-  background: linear-gradient(180deg, #f8e4ec 0%, #ead6f4 100%);
+  background: #f4d5e2;
   color: #17141c;
 }
 
 .nc-hero .nc-btn:hover {
-  background: linear-gradient(180deg, #ffeef4 0%, #f0e0fa 100%);
+  background: #f8e0ea;
 }
 
 .nc-hero .nc-btn-ghost {
@@ -276,7 +291,7 @@ body {
 .nc-home-title-word {
   margin: 0;
   color: #f7f1ea;
-  font-size: 1.72rem;
+  font-size: 1.45rem;
   line-height: 1.26;
   letter-spacing: 0.08em;
   font-weight: 400;
@@ -340,7 +355,7 @@ body {
   }
 
   .nc-home-title-word {
-    font-size: 2.5rem;
+    font-size: 2.1rem;
     letter-spacing: 0.09em;
   }
 
@@ -350,11 +365,193 @@ body {
   }
 }
 
-.nc-lift {
-  border: 1px solid rgba(255, 255, 255, 0.22);
+.nc-section-title {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.nc-section-title h2 {
+  margin: 0;
+  color: #f4eee8;
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.nc-section-kicker {
+  margin: 0 0 0.4rem;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.nc-section-title-compact {
+  margin-bottom: 0.35rem;
+}
+
+.nc-hero-photo img {
+  animation: nc-photo-in 0.6s var(--ease-out) both;
+  transform-origin: center center;
+}
+
+@keyframes nc-photo-in {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.nc-home-star .nc-hero-photo img {
+  animation: none;
+}
+
+.nc-home-enter .nc-hero-photo img {
+  animation: nc-home-photo-in 0.62s var(--ease-out) both;
+  transform-origin: center center;
+}
+
+@keyframes nc-home-photo-in {
+  from {
+    transform: scale(1.015);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.nc-home-enter .nc-home-enter-name {
+  animation: nc-home-copy-in 0.5s var(--ease-out) both;
+}
+
+.nc-home-enter .nc-home-enter-weight {
+  animation: nc-home-copy-in 0.52s 0.12s var(--ease-out) both;
+}
+
+@keyframes nc-home-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nc-saved {
+  animation: nc-saved-in 0.55s var(--ease-out) both;
+}
+
+@keyframes nc-saved-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nc-section-more {
+  flex-shrink: 0;
+  padding-bottom: 0.1rem;
+  color: rgba(244, 238, 232, 0.4);
+  font-size: 0.8125rem;
+}
+
+.nc-section-more:hover {
+  color: rgba(244, 238, 232, 0.72);
+}
+
+.nc-tone-mint {
+  color: #8fbfae;
+}
+
+.nc-tone-lilac {
+  color: #c3b4e2;
+}
+
+.nc-tone-mist {
+  color: #9db0d4;
+}
+
+.nc-tone-blush {
+  color: #e4b6c6;
+}
+
+.nc-tone-care {
+  color: #d9a57a;
+}
+
+.nc-num-mint {
+  color: #5f9a88;
+}
+
+.nc-lift,
+.nc-panel {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
   box-shadow:
-    0 18px 46px rgba(6, 4, 10, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    0 1px 0 var(--panel-edge),
+    0 10px 28px rgba(6, 4, 10, 0.18);
+}
+
+.nc-panel {
+  overflow: hidden;
+}
+
+.nc-skel {
+  background: linear-gradient(
+    90deg,
+    rgba(247, 243, 246, 0.08) 0%,
+    rgba(246, 223, 216, 0.16) 46%,
+    rgba(247, 243, 246, 0.08) 100%
+  );
+  background-size: 180% 100%;
+  animation: nc-skel 1.15s var(--ease-out) infinite;
+}
+
+@keyframes nc-skel {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+
+.nc-page-in {
+  animation: nc-page-in 320ms var(--ease-out);
+}
+
+@keyframes nc-page-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nc-tab-bar {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.nc-tab-bar svg {
+  width: 22px;
+  height: 22px;
 }
 
 .nc-table {
@@ -386,11 +583,9 @@ body {
 
 .nc-table-wrap {
   overflow-x: auto;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 2rem;
-  background: linear-gradient(180deg, #fff8fb, #f4eef8);
+  border-radius: var(--radius-panel);
+  background: var(--panel);
   color: var(--ink);
-  box-shadow: 0 18px 46px rgba(6, 4, 10, 0.38);
 }
 
 .nc-check {
@@ -399,12 +594,26 @@ body {
   accent-color: var(--accent-strong);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .nc-skel,
+  .nc-page-in,
+  .nc-hero-photo img,
+  .nc-saved,
+  .nc-home-enter .nc-hero-photo img,
+  .nc-home-enter .nc-home-enter-name,
+  .nc-home-enter .nc-home-enter-weight {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}
+
 @media (max-width: 640px) {
   .nc-actions {
     width: 100%;
   }
 
   .nc-actions > * {
-    flex: 1 1 calc(50% - 0.5rem);
+    flex: 1 1 100%;
   }
 }

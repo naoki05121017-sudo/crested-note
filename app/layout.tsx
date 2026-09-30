@@ -1,8 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
-import { Suspense } from "react";
-import { AppShell } from "./components/app-shell";
-import { getSessionUser } from "@/lib/auth/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,37 +36,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-function BootMain() {
-  return <p className="text-sm leading-6 text-white/50">読み込み中…</p>;
-}
-
-async function AppWithSession({ children }: { children: React.ReactNode }) {
-  const user = await getSessionUser();
-  return (
-    <AppShell email={user?.email ?? null}>
-      <Suspense fallback={<BootMain />}>{children}</Suspense>
-    </AppShell>
-  );
-}
-
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="ja"
       className={`${geistSans.variable} h-full antialiased`}
       style={{ backgroundColor: "#17141c" }}
     >
-      <body className="flex min-h-full flex-col bg-[#17141c]">
-        <Suspense
-          fallback={
-            <AppShell sessionPending>
-              <BootMain />
-            </AppShell>
-          }
-        >
-          <AppWithSession>{children}</AppWithSession>
-        </Suspense>
-      </body>
+      <body className="flex min-h-full flex-col bg-[#17141c]">{children}</body>
     </html>
   );
 }

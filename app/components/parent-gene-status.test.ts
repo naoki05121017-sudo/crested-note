@@ -60,7 +60,7 @@ describe("parent gene status UI (CSH vs recessive)", () => {
   });
 
   it("本番の遺伝計算ページは PairingWorkbench の親入力を使い、セーブル選択肢に het を出さない", () => {
-    const calculatorPage = readFileSync("app/calculator/page.tsx", "utf8");
+    const calculatorPage = readFileSync("app/(app)/calculator/page.tsx", "utf8");
     const workbench = readFileSync("app/components/pairing-workbench.tsx", "utf8");
     expect(calculatorPage).toContain('from "@/app/components/pairing-workbench"');
     expect(workbench).toContain("parentStatusOptions(id, alleleLocus)");

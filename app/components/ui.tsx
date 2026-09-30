@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { BrandMark } from "@/app/components/icons";
 
-const cardBase = "nc-lift rounded-[2rem] p-5 sm:p-6";
+const cardBase = "p-5 sm:p-6";
 
 const cardTones = {
-  white:
-    "bg-gradient-to-br from-[#fff8fb] via-[#f7f2f8] to-[#eef6fb] text-ink",
-  ink: "bg-gradient-to-br from-[#f3eadc] to-[#f7f2f8] text-ink",
-  blush: "bg-gradient-to-br from-[#fde8ef] to-[#f7f2f8] text-ink",
-  mist: "bg-gradient-to-br from-[#e7f3fb] to-[#f4eef8] text-ink",
-  sage: "bg-gradient-to-br from-[#eef6f1] to-[#e7f3fb] text-ink",
-  lilac: "bg-gradient-to-br from-[#ece6fb] to-[#fde8ef] text-ink",
+  white: "nc-panel text-ink",
+  ink: "nc-panel text-ink",
+  blush: "nc-panel text-ink ring-1 ring-[#f6dfd8]/80",
+  mist: "nc-panel text-ink ring-1 ring-[#e3eaf7]/80",
+  sage: "nc-panel text-ink ring-1 ring-[#d9efe6]/80",
+  lilac: "nc-panel text-ink ring-1 ring-[#ece6fb]/80",
   glass:
-    "border-white/12 bg-[#1c1822]/78 text-[#f4eee8] shadow-[0_22px_50px_rgba(0,0,0,0.4)] backdrop-blur-xl",
+    "rounded-[1.25rem] border border-white/12 bg-[#1c1822]/78 text-[#f4eee8] shadow-[0_22px_50px_rgba(0,0,0,0.4)] backdrop-blur-xl",
 };
 
 export function PageHeader({
@@ -34,7 +33,7 @@ export function PageHeader({
             {kicker}
           </p>
         ) : null}
-        <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight tracking-tight text-white sm:text-4xl">
+        <h1 className="mt-2 text-[1.7rem] font-semibold leading-tight tracking-tight text-white sm:text-3xl">
           {title}
         </h1>
         {description ? (
@@ -121,7 +120,7 @@ export function Stat({
   const inner = (
     <>
       <p className={`text-sm ${muted}`}>{label}</p>
-      <p className="mt-3 text-[1.7rem] font-semibold tracking-tight tabular-nums sm:text-5xl">
+      <p className="mt-3 text-[1.55rem] font-semibold tracking-tight tabular-nums sm:text-3xl">
         {value}
       </p>
       {hint ? <p className={`mt-2 text-sm ${muted}`}>{hint}</p> : null}
@@ -148,7 +147,7 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <Card tone="blush" className="py-14 text-center">
+    <Card className="py-12 text-center">
       <div className="mx-auto mb-4 flex justify-center">
         <BrandMark size={48} />
       </div>

@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 describe("legal pages wiring", () => {
   it("footer, settings, login, and signup link to the three legal pages", () => {
     const shell = readFileSync("app/components/app-shell.tsx", "utf8");
-    const settings = readFileSync("app/settings/page.tsx", "utf8");
-    const login = readFileSync("app/login/page.tsx", "utf8");
-    const signup = readFileSync("app/signup/page.tsx", "utf8");
+    const settings = readFileSync("app/(app)/settings/page.tsx", "utf8");
+    const login = readFileSync("app/(public)/login/page.tsx", "utf8");
+    const signup = readFileSync("app/(public)/signup/page.tsx", "utf8");
     expect(shell).toContain("LegalNav");
     expect(settings).toContain("LegalNav");
     expect(login).toContain("LegalNav");
@@ -15,7 +15,7 @@ describe("legal pages wiring", () => {
   });
 
   it("privacy policy describes anonymous stats without publishing private animals", () => {
-    const privacy = readFileSync("app/legal/privacy/page.tsx", "utf8");
+    const privacy = readFileSync("app/(public)/legal/privacy/page.tsx", "utf8");
     expect(privacy).toContain("匿名集計");
     expect(privacy).toContain("非公開にした個体のページや写真");
     expect(privacy).not.toContain("非公開の個体は集計対象にしません");
@@ -23,7 +23,7 @@ describe("legal pages wiring", () => {
   });
 
   it("tokushoho page reads operator fields instead of hard-coded identity", () => {
-    const page = readFileSync("app/legal/tokushoho/page.tsx", "utf8");
+    const page = readFileSync("app/(public)/legal/tokushoho/page.tsx", "utf8");
     expect(page).toContain("legalOperator");
     expect(page).not.toContain("株式会社");
     expect(page).not.toContain("090-");
