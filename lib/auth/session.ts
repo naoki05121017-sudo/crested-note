@@ -1,8 +1,11 @@
 import { cache } from "react";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { storedDisplayName } from "@/lib/community/album-comments";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hasSupabaseAuthCookie } from "@/lib/auth/supabase-auth-cookie";
+import { readVerifiedSessionUser } from "@/lib/auth/verified-request-user";
 
 export type SessionUser = {
   id: string;
@@ -10,6 +13,11 @@ export type SessionUser = {
 };
 
 export const getSessionUser = cache(async function getSessionUser(): Promise<SessionUser | null> {
+  const headerList = await headers();
+  const verified = readVerifiedSessionUser(headerList);
+  if (verified !== undefined) return verified;
+  const cookieStore = await cookies();
+  if (!hasSupabaseAuthCookie(cookieStore.getAll())) return null;
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
