@@ -10,7 +10,9 @@ describe("first-look guest pitch", () => {
     expect(login).toContain("クレスの飼育・成長・繁殖をひとつに。");
     expect(login).toContain("記録 → 成長 → 比較 → 繁殖");
     expect(login).toContain("無料ではじめる");
-    expect(login).toContain("実際のクレスを見てみる");
+    expect(login).toContain("みんなのクレスを見る");
+    expect(login).toContain("nc-login-enter");
+    expect(login.match(/href="\/signup"/g)?.length).toBe(1);
     expect(login).toContain("すでにアカウントをお持ちですか？");
     expect(login).toContain("<details");
     expect(login).toContain('href="/signup"');

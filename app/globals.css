@@ -359,6 +359,56 @@ body {
     linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.94) 12%, rgba(0, 0, 0, 0.9) 78%, transparent 100%);
 }
 
+.nc-login-enter {
+  min-height: 26rem;
+  padding-bottom: 1rem;
+}
+
+.nc-login-enter::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(16, 14, 20, 0.42) 0%,
+    rgba(16, 14, 20, 0.12) 42%,
+    transparent 68%
+  );
+}
+
+.nc-login-enter .nc-home-title-brand {
+  background: none;
+  padding: 0;
+}
+
+.nc-login-enter .nc-home-title-word {
+  text-shadow:
+    0 1px 1px rgba(14, 12, 18, 0.55),
+    0 6px 22px rgba(14, 12, 18, 0.38);
+}
+
+.nc-login-enter .nc-crest-photo {
+  top: -10%;
+  right: -18%;
+  bottom: auto;
+  left: 22%;
+  height: 24.5rem;
+}
+
+.nc-login-enter .nc-crest-photo-img {
+  opacity: 1;
+  object-position: 8% 38% !important;
+  filter: brightness(1.28) contrast(1.1) saturate(1.06);
+  -webkit-mask-image:
+    linear-gradient(to left, #000 48%, rgba(0, 0, 0, 0.55) 78%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 10%, #000 86%, transparent 100%);
+  mask-image:
+    linear-gradient(to left, #000 48%, rgba(0, 0, 0, 0.55) 78%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 10%, #000 86%, transparent 100%);
+}
+
 .nc-login-details summary {
   list-style: none;
 }
@@ -405,6 +455,12 @@ body {
   .nc-login-stage .nc-crest-photo {
     height: 24rem;
     left: 28%;
+  }
+
+  .nc-login-enter .nc-crest-photo {
+    height: 30rem;
+    left: 28%;
+    right: -12%;
   }
 }
 

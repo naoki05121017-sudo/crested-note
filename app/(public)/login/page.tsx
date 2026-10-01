@@ -19,7 +19,7 @@ export const metadata = { title: "ログイン" };
 
 export default function LoginPage() {
   return (
-    <div className="nc-hero nc-crest-stage nc-login-stage flex flex-col">
+    <div className="nc-hero nc-crest-stage nc-login-stage nc-login-enter flex flex-col">
       <CrestPhoto />
       <div className="nc-crest-stage-copy">
         <div className="nc-home-title-brand">
@@ -27,10 +27,10 @@ export default function LoginPage() {
           <h1 className={`nc-home-title-word ${crestTitle.className}`}>クレスノート</h1>
           <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
         </div>
-        <p className="nc-hero-copy mt-8 max-w-[12.5rem] text-[15px] leading-7">
+        <p className="nc-hero-copy mt-7 max-w-[12.75rem] text-[15px] leading-7">
           クレスの飼育・成長・繁殖をひとつに。
         </p>
-        <p className="mt-3 text-sm tracking-wide text-white/40">
+        <p className="mt-3 text-sm tracking-wide text-white/42">
           記録 → 成長 → 比較 → 繁殖
         </p>
         <Link href="/signup" className="nc-btn mt-6 w-full max-w-md min-h-12">
@@ -38,14 +38,16 @@ export default function LoginPage() {
         </Link>
         <p className="mt-4 text-sm text-white/45">
           <Link href="/gallery" className="underline underline-offset-2">
-            実際のクレスを見てみる
+            みんなのクレスを見る
           </Link>
         </p>
-        <div className="mt-14 max-w-md">
+        <div className="mt-12 max-w-md">
           <Suspense>
             <LoginCheckNotice />
           </Suspense>
-          <p className="text-sm text-white/40">すでにアカウントをお持ちですか？</p>
+          <p className="text-sm text-white/40">
+            すでにアカウントをお持ちですか？
+          </p>
           <details className="nc-login-details mt-2">
             <summary className="cursor-pointer text-sm text-white/70 underline underline-offset-4">
               ログイン
@@ -83,7 +85,7 @@ export default function LoginPage() {
             </MutationForm>
           </details>
         </div>
-        <LegalNav className="mt-10 max-w-md justify-start text-white/45" />
+        <LegalNav className="mt-5 max-w-md justify-start text-white/45" />
       </div>
     </div>
   );

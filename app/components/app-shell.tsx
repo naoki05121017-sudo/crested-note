@@ -336,7 +336,7 @@ export function AppShell({
   } else if (pathname === "/login") {
     tree = (
       <div className="min-h-full min-w-0 bg-background">
-        <main className="mx-auto w-full min-w-0 max-w-4xl px-4 py-8 sm:px-8">
+        <main className="mx-auto w-full min-w-0 max-w-4xl px-4 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
           {children}
         </main>
       </div>
