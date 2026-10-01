@@ -3,8 +3,7 @@ import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { getSettings } from "@/lib/db/queries";
 
-export async function CrestLinkRedeemCard() {
-  const settings = await getSettings();
+function CrestLinkRedeemForm({ displayName }: { displayName: string }) {
   return (
     <details className="rounded-[1.75rem] border border-line bg-[#f7f4f2] px-5 py-4 text-ink sm:px-6">
       <summary className="cursor-pointer text-sm font-medium text-ink/70">
@@ -29,7 +28,7 @@ export async function CrestLinkRedeemCard() {
           <input
             name="ownerLabel"
             required
-            defaultValue={settings.displayName}
+            defaultValue={displayName}
             placeholder="受け取り後の表示名"
             className="nc-input"
           />
@@ -40,4 +39,13 @@ export async function CrestLinkRedeemCard() {
       </MutationForm>
     </details>
   );
+}
+
+export function CrestLinkRedeemFallback() {
+  return <CrestLinkRedeemForm displayName="" />;
+}
+
+export async function CrestLinkRedeemCard() {
+  const settings = await getSettings();
+  return <CrestLinkRedeemForm displayName={settings.displayName} />;
 }

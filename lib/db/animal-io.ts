@@ -371,16 +371,22 @@ export async function replaceOwnedAnimalGenes(
   return next;
 }
 
+function asWeightLogRecord(row: Record<string, unknown>): WeightLogRecord {
+  return {
+    id: String(row.id),
+    animalId: String(row.animal_id),
+    weighedOn: String(row.weighed_on ?? ""),
+    weightG: Number(row.weight_g),
+    notes: String(row.notes ?? ""),
+  };
+}
+
+const LATEST_WEIGHT_BATCH = 24;
+
 export async function listWeightsForAnimals(animalIds: string[]) {
   if (animalIds.length === 0) return [];
   const client = createAdminClient();
-  const rows: {
-    id: string;
-    animalId: string;
-    weighedOn: string;
-    weightG: number;
-    notes: string;
-  }[] = [];
+  const rows: WeightLogRecord[] = [];
   for (const chunk of chunkIds(animalIds)) {
     const page = await selectPagedAll((from, to) =>
       retryOnJwtIssuedAtFuture(() =>
@@ -391,21 +397,65 @@ export async function listWeightsForAnimals(animalIds: string[]) {
           .range(from, to),
       ),
     );
-    rows.push(
-      ...page.map((row) => ({
-        id: String(row.id),
-        animalId: String(row.animal_id),
-        weighedOn: String(row.weighed_on ?? ""),
-        weightG: Number(row.weight_g),
-        notes: String(row.notes ?? ""),
-      })),
-    );
+    rows.push(...page.map(asWeightLogRecord));
   }
   return rows.sort(
     (a, b) =>
       a.animalId.localeCompare(b.animalId) ||
       a.weighedOn.localeCompare(b.weighedOn),
   );
+}
+
+export async function listLatestWeightsForAnimals(animalIds: string[]) {
+  const wanted = [...new Set(animalIds.filter(Boolean))];
+  if (wanted.length === 0) return [];
+  const client = createAdminClient();
+  const rows: WeightLogRecord[] = [];
+  for (let i = 0; i < wanted.length; i += LATEST_WEIGHT_BATCH) {
+    const batch = wanted.slice(i, i + LATEST_WEIGHT_BATCH);
+    const found = await Promise.all(
+      batch.map(async (animalId) => {
+        const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+          client
+            .from("weight_logs")
+            .select("id, animal_id, weighed_on, weight_g, notes")
+            .eq("animal_id", animalId)
+            .order("weighed_on", { ascending: false })
+            .limit(1),
+        );
+        if (error) throw new Error(`weight_logs を読めません: ${error.message}`);
+        const row = data?.[0] as Record<string, unknown> | undefined;
+        return row ? asWeightLogRecord(row) : null;
+      }),
+    );
+    rows.push(...found.filter((row): row is WeightLogRecord => row !== null));
+  }
+  return rows;
+}
+
+export async function listRecentWeightsForAnimals(animalIds: string[], limit: number) {
+  const wanted = [...new Set(animalIds.filter(Boolean))];
+  const cap = Math.max(0, limit);
+  if (wanted.length === 0 || cap === 0) return [];
+  const client = createAdminClient();
+  const batches = await Promise.all(
+    chunkIds(wanted).map(async (part) => {
+      const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+        client
+          .from("weight_logs")
+          .select("id, animal_id, weighed_on, weight_g, notes")
+          .in("animal_id", part)
+          .order("weighed_on", { ascending: false })
+          .limit(cap),
+      );
+      if (error) throw new Error(`weight_logs を読めません: ${error.message}`);
+      return ((data ?? []) as Record<string, unknown>[]).map(asWeightLogRecord);
+    }),
+  );
+  return batches
+    .flat()
+    .sort((a, b) => b.weighedOn.localeCompare(a.weighedOn))
+    .slice(0, cap);
 }
 
 type AnimalFilterQuery = {

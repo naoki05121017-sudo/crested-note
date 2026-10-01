@@ -1,11 +1,47 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { AnimalsCollection } from "@/app/(app)/animals/animals-collection";
 import { AnimalsFilter } from "@/app/(app)/animals/animals-filter";
-import { CrestLinkRedeemCard } from "@/app/(app)/animals/crest-link-redeem";
-import { filterAnimals, weightsByAnimal } from "@/lib/db/queries";
+import {
+  CrestLinkRedeemCard,
+  CrestLinkRedeemFallback,
+} from "@/app/(app)/animals/crest-link-redeem";
+import { requireAppUser } from "@/lib/auth/session";
+import {
+  listGenesForAnimals,
+  listLatestWeightsForAnimals,
+  listOwnedAnimalsPage,
+} from "@/lib/db/animal-io";
+import { hydrateAnimal } from "@/lib/db/queries";
+import type { AnimalRecord, DatabaseFile } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体" };
+
+function emptyGeneDb(records: AnimalRecord[], genes: DatabaseFile["genes"]): DatabaseFile {
+  return {
+    animals: records,
+    genes,
+    weights: [],
+    breedings: [],
+    clutches: [],
+    eggs: [],
+    projects: [],
+    projectMembers: [],
+    predictions: [],
+    settings: {
+      displayName: "",
+      collectionName: "",
+      prefecture: "",
+      publicByDefault: false,
+    },
+    feedback: [],
+    crestLinkSeq: 0,
+    animalCodeSeq: 0,
+    crestLinks: [],
+    crestLinkTransfers: [],
+  };
+}
 
 export default async function AnimalsPage({
   searchParams,
@@ -17,19 +53,23 @@ export default async function AnimalsPage({
   const sex = typeof params.sex === "string" ? params.sex : "";
   const status = typeof params.status === "string" ? params.status : "";
   const page = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
-  const listed = await filterAnimals({
+  const user = await requireAppUser();
+  const listed = await listOwnedAnimalsPage(user.id, {
     q,
     sex,
     status,
     page: Number.isFinite(page) ? page : 1,
   });
-  const animals = listed.animals;
-  const byWeights = await weightsByAnimal(animals.map((row) => row.id));
+  const ids = listed.records.map((row) => row.id);
+  const [genes, latestRows] = await Promise.all([
+    listGenesForAnimals(ids),
+    listLatestWeightsForAnimals(ids),
+  ]);
+  const db = emptyGeneDb(listed.records, genes);
+  const animals = listed.records.map((record) => hydrateAnimal(db, record));
   const latestById: Record<string, { weightG: number } | undefined> = {};
-  for (const animal of animals) {
-    const logs = byWeights.get(animal.id) ?? [];
-    const latest = logs[logs.length - 1];
-    latestById[animal.id] = latest ? { weightG: latest.weightG } : undefined;
+  for (const row of latestRows) {
+    latestById[row.animalId] = { weightG: row.weightG };
   }
   const pageCount = Math.max(1, Math.ceil(listed.total / listed.pageSize));
   const query = new URLSearchParams();
@@ -90,7 +130,9 @@ export default async function AnimalsPage({
         </nav>
       ) : null}
 
-      <CrestLinkRedeemCard />
+      <Suspense fallback={<CrestLinkRedeemFallback />}>
+        <CrestLinkRedeemCard />
+      </Suspense>
     </div>
   );
 }

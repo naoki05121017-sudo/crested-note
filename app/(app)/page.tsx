@@ -11,11 +11,10 @@ import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
 import { HOME_ANIMAL_PREVIEW, HOME_CHECK_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { requireAppUser } from "@/lib/auth/session";
 import {
-  countOwnedAnimals,
   getOwnedAnimalsByIds,
   listGenesForAnimals,
+  listLatestWeightsForAnimals,
   listOwnedAnimalsPage,
-  listWeightsForAnimals,
 } from "@/lib/db/animal-io";
 import {
   dashboardCounts,
@@ -23,7 +22,7 @@ import {
   listOwnedPhotoAnimals,
   listRecentOwnedWeights,
 } from "@/lib/db/owned-tables";
-import { getSettings, hydrateAnimal } from "@/lib/db/queries";
+import { hydrateAnimal } from "@/lib/db/queries";
 import {
   compareAgeFilterMonths,
   latestWeight,
@@ -71,23 +70,14 @@ type HomeCompareSource = {
 } | null;
 
 async function loadHomePrimary(userId: string) {
-  const [
-    settings,
-    preview,
-    checkRecords,
-    photoRecords,
-    recentLogs,
-    animalCount,
-  ] = await Promise.all([
-    getSettings(),
+  const recentPromise = listRecentOwnedWeights(userId, 6);
+  const [preview, checkRecords, photoRecords] = await Promise.all([
     listOwnedAnimalsPage(userId, {
       page: 1,
       pageSize: HOME_ANIMAL_PREVIEW,
     }),
     listOwnedCheckAnimals(userId),
     listOwnedPhotoAnimals(userId, HOME_PHOTO_PREVIEW),
-    listRecentOwnedWeights(userId, 6),
-    countOwnedAnimals(userId, { excludeDeceased: true }),
   ]);
   const homeRecords = [
     ...preview.records,
@@ -95,13 +85,21 @@ async function loadHomePrimary(userId: string) {
     ...photoRecords,
   ];
   const uniqueHome = [...new Map(homeRecords.map((row) => [row.id, row])).values()];
-  const recentAnimalIds = recentLogs.map((row) => row.animalId);
-  const neededIds = [...new Set([...uniqueHome.map((row) => row.id), ...recentAnimalIds])];
-  const [extraRecords, genes, weightRows] = await Promise.all([
-    getOwnedAnimalsByIds(userId, recentAnimalIds),
-    listGenesForAnimals(neededIds),
-    listWeightsForAnimals(neededIds),
+  const homeIds = uniqueHome.map((row) => row.id);
+  const [homeGenes, weightRows, recentLogs] = await Promise.all([
+    listGenesForAnimals(homeIds),
+    listLatestWeightsForAnimals(homeIds),
+    recentPromise,
   ]);
+  const known = new Set(homeIds);
+  const extraIds = [...new Set(recentLogs.map((row) => row.animalId).filter((id) => !known.has(id)))];
+  const [extraRecords, extraGenes] = extraIds.length
+    ? await Promise.all([
+        getOwnedAnimalsByIds(userId, extraIds),
+        listGenesForAnimals(extraIds),
+      ])
+    : [[], [] as typeof homeGenes];
+  const genes = [...homeGenes, ...extraGenes];
   const records = [
     ...new Map([...uniqueHome, ...extraRecords].map((row) => [row.id, row])).values(),
   ];
@@ -111,11 +109,19 @@ async function loadHomePrimary(userId: string) {
   );
   const allHydrated = asAnimals(records, genes);
   const byId = new Map(allHydrated.map((row) => [row.id, row]));
-  const byWeights = new Map<string, typeof recentLogs>();
+  const byWeights = new Map<string, WeightLogRecord[]>();
   for (const row of weightRows) {
-    const list = byWeights.get(row.animalId) ?? [];
-    list.push(row);
-    byWeights.set(row.animalId, list);
+    byWeights.set(row.animalId, [row]);
+  }
+  for (const row of recentLogs) {
+    const current = byWeights.get(row.animalId);
+    if (!current) {
+      byWeights.set(row.animalId, [row]);
+      continue;
+    }
+    if (row.weighedOn.localeCompare(current[0]?.weighedOn ?? "") > 0) {
+      byWeights.set(row.animalId, [row]);
+    }
   }
   const asOf = todayIso();
 
@@ -165,8 +171,6 @@ async function loadHomePrimary(userId: string) {
     : null;
 
   return {
-    settings,
-    animalCount,
     animals,
     recentWeights,
     photoAnimals,
@@ -266,8 +270,8 @@ export default async function Home() {
 
   return (
     <HomeDashboard
-      collectionName={primary.settings.collectionName || "クレスノート"}
-      animalCount={primary.animalCount}
+      collectionName="クレスノート"
+      animalCount={0}
       animals={primary.animals}
       recentWeights={primary.recentWeights}
       photoAnimals={primary.photoAnimals}

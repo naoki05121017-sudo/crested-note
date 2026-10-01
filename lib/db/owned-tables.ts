@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 import { chunkIds, selectPagedAll } from "@/lib/db/supabase-page";
 import { postgresUuid } from "@/lib/db/pg-id";
-import { asAnimalRecord, getOwnedAnimal } from "@/lib/db/animal-io";
+import { asAnimalRecord, getOwnedAnimal, listRecentWeightsForAnimals } from "@/lib/db/animal-io";
 import { PHOTO_ALBUM_PAGE_SIZE } from "@/lib/db/animal-search";
 import { nicknameError, storedDisplayName } from "@/lib/community/album-comments";
 import {
@@ -615,36 +615,10 @@ export async function listRecentOwnedWeights(userId: string, limit: number) {
       client.from("animals").select("id").eq("user_id", userId).range(from, to),
     ),
   );
-  const ids = animals.map((row) => String(row.id));
-  if (ids.length === 0) return [];
-  const logs: {
-    id: string;
-    animalId: string;
-    weighedOn: string;
-    weightG: number;
-    notes: string;
-  }[] = [];
-  for (const part of chunkIds(ids)) {
-    const page = await selectPagedAll((from, to) =>
-      retryOnJwtIssuedAtFuture(() =>
-        client
-          .from("weight_logs")
-          .select("id, animal_id, weighed_on, weight_g, notes")
-          .in("animal_id", part)
-          .range(from, to),
-      ),
-    );
-    logs.push(
-      ...page.map((row) => ({
-        id: String(row.id),
-        animalId: String(row.animal_id),
-        weighedOn: String(row.weighed_on ?? ""),
-        weightG: Number(row.weight_g),
-        notes: String(row.notes ?? ""),
-      })),
-    );
-  }
-  return logs.sort((a, b) => b.weighedOn.localeCompare(a.weighedOn)).slice(0, limit);
+  return listRecentWeightsForAnimals(
+    animals.map((row) => String(row.id)),
+    limit,
+  );
 }
 
 export async function dashboardCounts(userId: string) {

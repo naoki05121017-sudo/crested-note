@@ -29,9 +29,9 @@ describe("anonymous stats payloads", () => {
     const dashboard = readFileSync("app/components/home-dashboard.tsx", "utf8");
     expect(home).toContain("pageSize: HOME_ANIMAL_PREVIEW");
     expect(home).toContain("fetchJapanCrestStats()");
-    expect(home).toContain("countOwnedAnimals");
+    expect(home).not.toContain("countOwnedAnimals");
     expect(home).toContain("japanRegistered={japan.registered}");
-    expect(home).toContain("animalCount={primary.animalCount}");
+    expect(home).toContain("animalCount={0}");
     expect(home).toContain("<Suspense");
     expect(dashboard).toContain("HomeJapanBlock");
   });

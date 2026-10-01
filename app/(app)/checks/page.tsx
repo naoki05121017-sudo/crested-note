@@ -4,9 +4,8 @@ import { PageHeader } from "@/app/components/ui";
 import { requireAppUser } from "@/lib/auth/session";
 import { checkReminder } from "@/lib/care/check-cadence";
 import { crestCheckItemFromReminder, sortCrestCheckItems } from "@/lib/care/crest-check-list";
-import { listWeightsForAnimals } from "@/lib/db/animal-io";
+import { listLatestWeightsForAnimals } from "@/lib/db/animal-io";
 import { listOwnedCheckAnimals } from "@/lib/db/owned-tables";
-import { latestWeight } from "@/lib/stats/compare";
 import { todayIso } from "@/lib/stats/math";
 
 export const dynamic = "force-dynamic";
@@ -15,19 +14,14 @@ export const metadata = { title: "クレスチェック" };
 export default async function ChecksPage() {
   const user = await requireAppUser();
   const checkRecords = await listOwnedCheckAnimals(user.id);
-  const weightRows = await listWeightsForAnimals(checkRecords.map((row) => row.id));
-  const byWeights = new Map<string, typeof weightRows>();
-  for (const row of weightRows) {
-    const list = byWeights.get(row.animalId) ?? [];
-    list.push(row);
-    byWeights.set(row.animalId, list);
-  }
+  const latestRows = await listLatestWeightsForAnimals(checkRecords.map((row) => row.id));
+  const lastWeighedOn = new Map(latestRows.map((row) => [row.animalId, row.weighedOn]));
   const asOf = todayIso();
   const checks = sortCrestCheckItems(
     checkRecords.flatMap((animal) => {
       const reminder = checkReminder({
         checkEveryDays: animal.checkEveryDays,
-        lastWeighedOn: latestWeight(byWeights.get(animal.id) ?? [])?.weighedOn,
+        lastWeighedOn: lastWeighedOn.get(animal.id),
         asOf,
       });
       return reminder ? [crestCheckItemFromReminder(animal, reminder)] : [];

@@ -27,5 +27,27 @@ describe("app tab loading and prefetch", () => {
     expect(home).toContain("fetchJapanCrestStats()");
     expect(home).toContain("dashboardCounts(user.id)");
     expect(home).toContain("<Suspense");
+    expect(home).not.toContain("getSettings");
+    expect(home).not.toContain("listWeightsForAnimals");
+    expect(home).toContain("listLatestWeightsForAnimals");
+    expect(home).toContain("listRecentOwnedWeights");
+  });
+
+  it("loads tab lists with latest weights instead of full weight histories", () => {
+    const animals = readFileSync("app/(app)/animals/page.tsx", "utf8");
+    const checks = readFileSync("app/(app)/checks/page.tsx", "utf8");
+    const owned = readFileSync("lib/db/owned-tables.ts", "utf8");
+    const io = readFileSync("lib/db/animal-io.ts", "utf8");
+    expect(animals).toContain("listLatestWeightsForAnimals");
+    expect(animals).toContain("Promise.all");
+    expect(animals).toContain("<Suspense");
+    expect(animals).not.toContain("weightsByAnimal");
+    expect(animals).not.toContain("listWeightsForAnimals");
+    expect(checks).toContain("listLatestWeightsForAnimals");
+    expect(checks).not.toContain("listWeightsForAnimals");
+    expect(io).toContain("listLatestWeightsForAnimals");
+    expect(io).toContain("listRecentWeightsForAnimals");
+    expect(io).toContain('.order("weighed_on", { ascending: false })');
+    expect(owned).toContain("listRecentWeightsForAnimals(");
   });
 });
