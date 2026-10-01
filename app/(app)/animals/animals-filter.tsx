@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
+import { SoftNavForm } from "@/app/components/soft-nav-form";
 import { ANIMAL_STATUS_LABEL, SEX_LABEL } from "@/lib/db/labels";
 import { ANIMAL_STATUSES, SEXES } from "@/lib/db/types";
 
@@ -28,7 +29,7 @@ export function AnimalsFilter({
         {open ? "閉じる" : active ? "検索・絞り込み中" : "検索・絞り込み"}
       </button>
       {open ? (
-        <form action="/animals" className="nc-panel mt-3 grid gap-3 p-4 text-ink">
+        <SoftNavForm action="/animals" className="nc-panel mt-3 grid gap-3 p-4 text-ink">
           <input
             name="q"
             defaultValue={q}
@@ -56,7 +57,7 @@ export function AnimalsFilter({
           <PendingSubmitButton pendingLabel="絞り込み中…" className="nc-btn-ghost w-full sm:w-fit">
             絞り込み
           </PendingSubmitButton>
-        </form>
+        </SoftNavForm>
       ) : null}
     </div>
   );

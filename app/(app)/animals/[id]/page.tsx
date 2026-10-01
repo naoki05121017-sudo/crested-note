@@ -1,6 +1,14 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addWeight, deleteWeight, updateCheckCadence } from "@/app/(app)/animals/actions";
+import { addWeight, updateCheckCadence } from "@/app/(app)/animals/actions";
+import {
+  AnimalDetailDeferredFallback,
+  AnimalGrowthChart,
+  AnimalHeroDeltas,
+  AnimalPedigreeAndBreedings,
+  AnimalWeightHistory,
+} from "@/app/(app)/animals/animal-detail-deferred";
 import { CheckCadenceFields } from "@/app/(app)/animals/check-cadence-fields";
 import { AnimalMore } from "@/app/(app)/animals/animal-more";
 import { DeleteAnimalForm } from "@/app/(app)/animals/delete-animal-form";
@@ -9,52 +17,26 @@ import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { AnimalCodeBlock } from "@/app/components/animal-code-block";
 import { HomeSectionTitle } from "@/app/components/home-section-title";
 import { AnimalPhoto } from "@/app/components/animal-photo";
-import { GrowthChart } from "@/app/components/growth-chart";
 import { calendarDaysBetween, cadenceLabel, checkReminder } from "@/lib/care/check-cadence";
 import {
   crestCheckItemFromReminder,
   crestCheckStatusLabel,
 } from "@/lib/care/crest-check-list";
-import { growthGuideSeries } from "@/lib/care/growth-guide";
-import { fetchGrowthGuideMonths } from "@/lib/db/stats-rpc";
+import { formatGrams } from "@/lib/care/weight-growth";
+import { listLatestWeightsForAnimals } from "@/lib/db/animal-io";
 import {
-  formatDeltaGrams,
-  formatGrams,
-  growthAlbumSteps,
-  latestMonthlyReport,
-  latestWeightChange,
-} from "@/lib/care/weight-growth";
-import {
-  breedingsForAnimal,
   getAnimal,
   listWeights,
-  pedigreeOf,
 } from "@/lib/db/queries";
 import {
   ANIMAL_STATUS_LABEL,
-  BREEDING_STATUS_LABEL,
   SEX_LABEL,
-  animalTitle,
 } from "@/lib/db/labels";
 import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
-import { growthPoints } from "@/lib/stats/compare";
 import { ageInMonths, todayIso } from "@/lib/stats/math";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
-
-function PedigreeLink({
-  animal,
-}: {
-  animal?: { id: string; name: string; code: string };
-}) {
-  if (!animal) return <span className="text-muted">未登録</span>;
-  return (
-    <Link href={`/animals/${animal.id}`} className="font-medium hover:underline">
-      {animalTitle(animal)}
-    </Link>
-  );
-}
 
 export default async function AnimalDetailPage({
   params,
@@ -65,12 +47,14 @@ export default async function AnimalDetailPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const animal = await getAnimal(id);
+  const [animal, latestRows] = await Promise.all([
+    getAnimal(id),
+    listLatestWeightsForAnimals([id]),
+  ]);
   if (!animal) notFound();
 
-  const tree = await pedigreeOf(animal.id);
-  const weights = await listWeights(animal.id);
-  const breedings = await breedingsForAnimal(animal.id);
+  const latest = latestRows[0];
+  const weightsPromise = listWeights(animal.id);
   const traitLabels = animal.traits.map((tid) =>
     visualTraitName(tid, animal.traitLevels?.[tid]),
   );
@@ -79,18 +63,13 @@ export default async function AnimalDetailPage({
   );
   const addWeightAction = addWeight.bind(null, animal.id);
   const updateCadence = updateCheckCadence.bind(null, animal.id);
-  const latest = weights.at(-1);
   const asOf = todayIso();
   const reminder = checkReminder({
     checkEveryDays: animal.checkEveryDays,
     lastWeighedOn: latest?.weighedOn,
     asOf,
   });
-  const change = latestWeightChange(weights);
-  const album = growthAlbumSteps(weights);
-  const monthReport = latestMonthlyReport(weights, asOf);
   const justRecorded = query.recorded === "1";
-  const growthGuide = growthGuideSeries(await fetchGrowthGuideMonths());
   const ageMonths = ageInMonths(animal.hatchDate, asOf);
   const daysSinceLatest = latest
     ? calendarDaysBetween(latest.weighedOn, asOf)
@@ -134,9 +113,11 @@ export default async function AnimalDetailPage({
           )}
           {justRecorded ? (
             <p className="nc-saved mt-2 text-sm text-white/50">✓ 記録しました</p>
-          ) : change ? (
-            <p className="mt-2 text-sm text-white/40">前回比 {formatDeltaGrams(change.deltaG)}</p>
-          ) : null}
+          ) : (
+            <Suspense fallback={null}>
+              <AnimalHeroDeltas weightsPromise={weightsPromise} />
+            </Suspense>
+          )}
           <p className="mt-3 text-xs text-white/32">
             {ANIMAL_STATUS_LABEL[animal.status]}
             {" · "}
@@ -146,25 +127,12 @@ export default async function AnimalDetailPage({
             {checkStatus}
             {daysSinceLatest != null ? ` · 前回から${daysSinceLatest}日` : ""}
           </p>
-          {monthReport ? (
-            <p className="mt-1 text-xs text-white/28">
-              {monthReport.label} {formatDeltaGrams(monthReport.deltaG)}
-            </p>
-          ) : null}
         </div>
       </section>
 
-      <section className="min-w-0">
-        <HomeSectionTitle kicker="GROWTH" title="成長" tone="lilac" />
-        <p className="mb-3 text-sm leading-6 text-white/40">参考目安には個体差があります</p>
-        <div className="nc-panel p-4 text-ink">
-          <GrowthChart
-            mine={growthPoints(animal, weights)}
-            average={[]}
-            guide={growthGuide}
-          />
-        </div>
-      </section>
+      <Suspense fallback={<AnimalDetailDeferredFallback />}>
+        <AnimalGrowthChart animal={animal} weightsPromise={weightsPromise} />
+      </Suspense>
 
       <section id="weight" className="min-w-0 scroll-mt-24">
         <HomeSectionTitle kicker="WEIGHT" title="体重記録" tone="mint" />
@@ -188,43 +156,9 @@ export default async function AnimalDetailPage({
             記録する
           </PendingSubmitButton>
         </MutationForm>
-        {album.length > 0 ? (
-          <ol className="mt-5">
-            {album.map((step, index) => {
-              const remove = deleteWeight.bind(null, animal.id, step.log.id);
-              return (
-                <li key={step.log.id} className="flex flex-col">
-                  {index > 0 ? (
-                    <p className="py-1 text-center text-white/20" aria-hidden>
-                      ↓
-                    </p>
-                  ) : null}
-                  <div className="flex items-center justify-between gap-3 border-b border-white/8 py-3">
-                    <div className="min-w-0">
-                      <p className="text-2xl font-semibold tabular-nums nc-tone-mint">
-                        {formatGrams(step.log.weightG)}
-                      </p>
-                      <p className="mt-1 text-sm text-white/38">{step.log.weighedOn}</p>
-                      {step.deltaG != null ? (
-                        <p className="mt-1 text-sm text-white/50">
-                          {formatDeltaGrams(step.deltaG)}
-                          {step.daysSincePrev != null ? ` / ${step.daysSincePrev}日` : ""}
-                        </p>
-                      ) : null}
-                    </div>
-                    <MutationForm action={remove}>
-                      <PendingSubmitButton pendingLabel="削除中…" className="nc-btn-danger">
-                        削除
-                      </PendingSubmitButton>
-                    </MutationForm>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        ) : (
-          <p className="mt-4 text-sm text-white/40">まだ体重記録がありません。</p>
-        )}
+        <Suspense fallback={<AnimalDetailDeferredFallback />}>
+          <AnimalWeightHistory animal={animal} weightsPromise={weightsPromise} />
+        </Suspense>
       </section>
 
       <section className="min-w-0">
@@ -309,52 +243,6 @@ export default async function AnimalDetailPage({
           </section>
 
           <section>
-            <h2 className="text-base font-semibold tracking-tight">血統</h2>
-            <div className="mt-3 grid gap-4 text-sm md:grid-cols-2">
-              <div>
-                <p className="text-xs text-muted">父 / 父方</p>
-                <p className="mt-1">
-                  <PedigreeLink animal={tree?.sire} />
-                </p>
-                <p className="mt-1 text-muted">
-                  <PedigreeLink animal={tree?.sireSire} /> / <PedigreeLink animal={tree?.sireDam} />
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted">母 / 母方</p>
-                <p className="mt-1">
-                  <PedigreeLink animal={tree?.dam} />
-                </p>
-                <p className="mt-1 text-muted">
-                  <PedigreeLink animal={tree?.damSire} /> / <PedigreeLink animal={tree?.damDam} />
-                </p>
-              </div>
-            </div>
-            {tree?.sire && tree.dam ? (
-              <Link
-                href={`/calculator?a=${tree.sire.id}&b=${tree.dam.id}`}
-                className="nc-btn-ghost mt-4 inline-flex w-full sm:w-auto"
-              >
-                父母の組み合わせを計算
-              </Link>
-            ) : null}
-            {tree?.children.length ? (
-              <div className="mt-4">
-                <p className="text-sm text-muted">子</p>
-                <ul className="mt-2 text-sm">
-                  {tree.children.map((child) => (
-                    <li key={child.id}>
-                      <Link href={`/animals/${child.id}`} className="hover:underline">
-                        {animalTitle(child)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </section>
-
-          <section>
             <h2 className="text-base font-semibold tracking-tight">モルフ・遺伝情報</h2>
             <p className="mt-2 text-sm">{morph || formatGenotypeLabel(animal.genotype)}</p>
             {traitLabels.length > 0 ? (
@@ -387,20 +275,9 @@ export default async function AnimalDetailPage({
             </section>
           ) : null}
 
-          {breedings.length > 0 ? (
-            <section>
-              <h2 className="text-base font-semibold tracking-tight">繁殖履歴</h2>
-              <ul className="mt-2 text-sm">
-                {breedings.map((breeding) => (
-                  <li key={breeding.id}>
-                    <Link href={`/breedings/${breeding.id}`} className="hover:underline">
-                      {breeding.startedOn}（{BREEDING_STATUS_LABEL[breeding.status]}）
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+          <Suspense fallback={<AnimalDetailDeferredFallback />}>
+            <AnimalPedigreeAndBreedings animalId={animal.id} />
+          </Suspense>
 
           <section>
             <p className="text-sm text-ink/70">この個体を削除</p>

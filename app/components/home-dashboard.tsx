@@ -1,9 +1,10 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Dela_Gothic_One } from "next/font/google";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { HomeAnimalPreview } from "@/app/components/home-animal-preview";
 import { HomeSectionTitle } from "@/app/components/home-section-title";
-import { PhotoAlbumGrid } from "@/app/components/photo-album-grid";
+import { PhotoAlbumGrid, type PhotoAlbumItem } from "@/app/components/photo-album-grid";
 import { HomeCheckList } from "@/app/components/home-check-list";
 import { HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { averageCollectionCopy } from "@/lib/stats/japan";
@@ -148,36 +149,28 @@ export function HomeBreedingBlock({
   );
 }
 
-export function HomeDashboard({
-  collectionName: _collectionName,
-  animalCount: _animalCount,
-  animals,
-  recentWeights,
+export function HomeBelowFoldFallback() {
+  return (
+    <div className="mt-8" aria-hidden>
+      <div className="nc-skel h-28 w-full rounded-[1rem]" />
+    </div>
+  );
+}
+
+export function HomeCareAlbumBlocks({
   photoAnimals,
   checks,
   checkTotal,
   unsetCadenceGuide,
   latestWeights,
-  japanSection,
-  breedingSection,
 }: {
-  collectionName: string;
-  animalCount: number;
-  animals: Animal[];
-  recentWeights: { animal: Animal; log: WeightLogRecord }[];
-  photoAnimals: Animal[];
+  photoAnimals: PhotoAlbumItem[];
   checks: CrestCheckItem[];
   checkTotal: number;
   unsetCadenceGuide: { id: string; name: string; more: number } | null;
   latestWeights: Record<string, { weightG: number; weighedOn: string } | null>;
-  japanSection: React.ReactNode;
-  breedingSection: React.ReactNode;
 }) {
-  const emptyCollection = animals.length === 0;
   const careItems = checks.slice(0, 3);
-  const latestLogs = recentWeights.slice(0, 2);
-  const growthAnimal = latestLogs[0]?.animal ?? animals[0];
-
   const careLine = unsetCadenceGuide ? (
     <p className="mt-2 text-sm leading-6 text-white/38">
       今日のケアは未設定です。
@@ -192,6 +185,62 @@ export function HomeDashboard({
       ) : null}
     </p>
   ) : null;
+
+  return (
+    <>
+      {careItems.length > 0 ? (
+        <section className="mt-8 min-w-0">
+          <HomeSectionTitle
+            kicker="CARE"
+            title="今日のケア"
+            tone="care"
+            href={checkTotal > careItems.length ? "/checks" : undefined}
+          />
+          <HomeCheckList items={careItems} compact />
+          {careLine}
+        </section>
+      ) : careLine ? (
+        <div className="mt-8">{careLine}</div>
+      ) : null}
+
+      <section className="mt-9 min-w-0">
+        <HomeSectionTitle kicker="ALBUM" title="アルバム" tone="mist" href="/album" />
+        {photoAnimals.length === 0 ? (
+          <p className="text-sm leading-6 text-white/40">写真を登録すると、ここに並びます。</p>
+        ) : (
+          <PhotoAlbumGrid
+            animals={photoAnimals.slice(0, HOME_PHOTO_PREVIEW)}
+            latestWeights={latestWeights}
+            tone="light"
+          />
+        )}
+      </section>
+    </>
+  );
+}
+
+export function HomeDashboard({
+  collectionName: _collectionName,
+  animalCount: _animalCount,
+  animals,
+  recentWeights,
+  latestWeights,
+  careAlbumSection,
+  japanSection,
+  breedingSection,
+}: {
+  collectionName: string;
+  animalCount: number;
+  animals: Animal[];
+  recentWeights: { animal: Animal; log: WeightLogRecord }[];
+  latestWeights: Record<string, { weightG: number; weighedOn: string } | null>;
+  careAlbumSection: ReactNode;
+  japanSection: ReactNode;
+  breedingSection: ReactNode;
+}) {
+  const emptyCollection = animals.length === 0;
+  const latestLogs = recentWeights.slice(0, 2);
+  const growthAnimal = latestLogs[0]?.animal ?? animals[0];
 
   return (
     <div className="flex min-w-0 max-w-full flex-col">
@@ -271,34 +320,7 @@ export function HomeDashboard({
       </section>
       </div>
 
-      {careItems.length > 0 ? (
-        <section className="mt-8 min-w-0">
-          <HomeSectionTitle
-            kicker="CARE"
-            title="今日のケア"
-            tone="care"
-            href={checkTotal > careItems.length ? "/checks" : undefined}
-          />
-          <HomeCheckList items={careItems} compact />
-          {careLine}
-        </section>
-      ) : (
-        careLine ? <div className="mt-8">{careLine}</div> : null
-      )}
-
-      <section className="mt-9 min-w-0">
-        <HomeSectionTitle kicker="ALBUM" title="アルバム" tone="mist" href="/album" />
-        {photoAnimals.length === 0 ? (
-          <p className="text-sm leading-6 text-white/40">写真を登録すると、ここに並びます。</p>
-        ) : (
-          <PhotoAlbumGrid
-            animals={photoAnimals.slice(0, HOME_PHOTO_PREVIEW)}
-            latestWeights={latestWeights}
-            tone="light"
-          />
-        )}
-      </section>
-
+      {careAlbumSection}
       {japanSection}
       {breedingSection}
     </div>

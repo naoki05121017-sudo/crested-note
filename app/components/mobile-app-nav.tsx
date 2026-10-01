@@ -1,7 +1,7 @@
 "use client";
 
 import Link, { useLinkStatus } from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import {
   IconChart,
@@ -84,7 +84,9 @@ function TabLabel({
 
 export function MobileAppNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
   const titleId = useId();
   const moreActive =
     !tabs.some((tab) => isActivePath(pathname, tab.href)) &&
@@ -92,16 +94,20 @@ export function MobileAppNav() {
 
   useEffect(() => {
     setOpen(false);
+    setPendingHref(null);
   }, [pathname]);
 
   useEffect(() => {
     if (!open) return;
+    for (const item of [...morePrimary, ...moreBreed]) {
+      router.prefetch(item.href);
+    }
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
     };
-  }, [open]);
+  }, [open, router]);
 
   return (
     <>
@@ -166,13 +172,14 @@ export function MobileAppNav() {
       >
         <ul className="mx-auto grid max-w-lg grid-cols-4">
           {tabs.map((tab) => {
-            const active = isActivePath(pathname, tab.href);
+            const active = isActivePath(pendingHref ?? pathname, tab.href);
             return (
               <li key={tab.href} className="min-w-0">
                 <Link
                   href={tab.href}
                   prefetch
-                  className={`flex min-h-[52px] flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] tracking-wide transition-colors duration-150 ${
+                  onPointerDown={() => setPendingHref(tab.href)}
+                  className={`flex min-h-[52px] flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] tracking-wide ${
                     active ? "text-[#f4d5e2]" : "text-white/40"
                   }`}
                 >
@@ -184,7 +191,7 @@ export function MobileAppNav() {
           <li className="min-w-0">
             <button
               type="button"
-              className={`flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] tracking-wide transition-colors duration-150 ${
+              className={`flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] tracking-wide ${
                 moreActive || open ? "text-[#f4d5e2]" : "text-white/40"
               }`}
               aria-expanded={open}

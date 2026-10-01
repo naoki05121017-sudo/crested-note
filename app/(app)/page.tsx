@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import {
+  HomeBelowFoldFallback,
   HomeBreedingBlock,
+  HomeCareAlbumBlocks,
   HomeDashboard,
   HomeJapanBlock,
   HomeJapanFallback,
@@ -11,7 +13,6 @@ import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
 import { HOME_ANIMAL_PREVIEW, HOME_CHECK_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
 import { requireAppUser } from "@/lib/auth/session";
 import {
-  getOwnedAnimalsByIds,
   listGenesForAnimals,
   listLatestWeightsForAnimals,
   listOwnedAnimalsPage,
@@ -20,7 +21,6 @@ import {
   dashboardCounts,
   listOwnedCheckAnimals,
   listOwnedPhotoAnimals,
-  listRecentOwnedWeights,
 } from "@/lib/db/owned-tables";
 import { hydrateAnimal } from "@/lib/db/queries";
 import {
@@ -69,76 +69,96 @@ type HomeCompareSource = {
   logs: WeightLogRecord[];
 } | null;
 
-async function loadHomePrimary(userId: string) {
-  const recentPromise = listRecentOwnedWeights(userId, 6);
-  const [preview, checkRecords, photoRecords] = await Promise.all([
-    listOwnedAnimalsPage(userId, {
-      page: 1,
-      pageSize: HOME_ANIMAL_PREVIEW,
-    }),
-    listOwnedCheckAnimals(userId),
-    listOwnedPhotoAnimals(userId, HOME_PHOTO_PREVIEW),
+async function loadHomeHero(userId: string) {
+  const preview = await listOwnedAnimalsPage(userId, {
+    page: 1,
+    pageSize: HOME_ANIMAL_PREVIEW,
+  });
+  const previewIds = preview.records.map((row) => row.id);
+  const [homeGenes, weightRows] = await Promise.all([
+    listGenesForAnimals(previewIds),
+    listLatestWeightsForAnimals(previewIds),
   ]);
-  const homeRecords = [
-    ...preview.records,
-    ...checkRecords,
-    ...photoRecords,
-  ];
-  const uniqueHome = [...new Map(homeRecords.map((row) => [row.id, row])).values()];
-  const homeIds = uniqueHome.map((row) => row.id);
-  const [homeGenes, weightRows, recentLogs] = await Promise.all([
-    listGenesForAnimals(homeIds),
-    listLatestWeightsForAnimals(homeIds),
-    recentPromise,
-  ]);
-  const known = new Set(homeIds);
-  const extraIds = [...new Set(recentLogs.map((row) => row.animalId).filter((id) => !known.has(id)))];
-  const [extraRecords, extraGenes] = extraIds.length
-    ? await Promise.all([
-        getOwnedAnimalsByIds(userId, extraIds),
-        listGenesForAnimals(extraIds),
-      ])
-    : [[], [] as typeof homeGenes];
-  const genes = [...homeGenes, ...extraGenes];
-  const records = [
-    ...new Map([...uniqueHome, ...extraRecords].map((row) => [row.id, row])).values(),
-  ];
-  const animals = asAnimals(
-    preview.records,
-    genes.filter((gene) => preview.records.some((row) => row.id === gene.animalId)),
-  );
-  const allHydrated = asAnimals(records, genes);
-  const byId = new Map(allHydrated.map((row) => [row.id, row]));
+  const animals = asAnimals(preview.records, homeGenes);
+  const byId = new Map(animals.map((row) => [row.id, row]));
   const byWeights = new Map<string, WeightLogRecord[]>();
   for (const row of weightRows) {
     byWeights.set(row.animalId, [row]);
   }
-  for (const row of recentLogs) {
-    const current = byWeights.get(row.animalId);
-    if (!current) {
-      byWeights.set(row.animalId, [row]);
-      continue;
-    }
-    if (row.weighedOn.localeCompare(current[0]?.weighedOn ?? "") > 0) {
-      byWeights.set(row.animalId, [row]);
+  const recentWeights = weightRows
+    .slice()
+    .sort((a, b) => b.weighedOn.localeCompare(a.weighedOn))
+    .flatMap((log) => {
+      const animal = byId.get(log.animalId);
+      return animal ? [{ animal, log }] : [];
+    });
+  const compareAnimal = animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
+
+  return {
+    animals,
+    previewRecords: preview.records,
+    recentWeights,
+    latestWeights: Object.fromEntries(
+      animals.map((animal) => {
+        const last = latestWeight(byWeights.get(animal.id) ?? []);
+        return [
+          animal.id,
+          last ? { weightG: last.weightG, weighedOn: last.weighedOn } : null,
+        ];
+      }),
+    ),
+    compareSource: compareAnimal
+      ? { animal: compareAnimal, logs: byWeights.get(compareAnimal.id) ?? [] }
+      : null,
+  };
+}
+
+async function HomeCareAlbumSection({
+  userId,
+  previewRecords,
+  heroLatest,
+}: {
+  userId: string;
+  previewRecords: AnimalRecord[];
+  heroLatest: Record<string, { weightG: number; weighedOn: string } | null>;
+}) {
+  const [checkRecords, photoRecords] = await Promise.all([
+    listOwnedCheckAnimals(userId),
+    listOwnedPhotoAnimals(userId, HOME_PHOTO_PREVIEW),
+  ]);
+  const extraIds = [
+    ...new Set(
+      [...checkRecords, ...photoRecords]
+        .map((row) => row.id)
+        .filter((id) => !previewRecords.some((row) => row.id === id)),
+    ),
+  ];
+  const extraWeights = extraIds.length ? await listLatestWeightsForAnimals(extraIds) : [];
+  const byWeights = new Map<string, WeightLogRecord[]>();
+  for (const [animalId, last] of Object.entries(heroLatest)) {
+    if (last) {
+      byWeights.set(animalId, [
+        {
+          id: `${animalId}-latest`,
+          animalId,
+          weighedOn: last.weighedOn,
+          weightG: last.weightG,
+          notes: "",
+        },
+      ]);
     }
   }
+  for (const row of extraWeights) {
+    byWeights.set(row.animalId, [row]);
+  }
+  const photoAnimals = photoRecords.map((row) => ({
+    id: row.id,
+    name: row.name,
+    photoUrl: row.photoUrl,
+  }));
   const asOf = todayIso();
-
-  const recentWeights = recentLogs.flatMap((log) => {
-    const animal = byId.get(log.animalId);
-    return animal ? [{ animal, log }] : [];
-  });
-  const photoAnimals = asAnimals(
-    photoRecords,
-    genes.filter((gene) => photoRecords.some((row) => row.id === gene.animalId)),
-  );
-  const checkAnimals = asAnimals(
-    checkRecords,
-    genes.filter((gene) => checkRecords.some((row) => row.id === gene.animalId)),
-  );
   const allChecks = sortCrestCheckItems(
-    checkAnimals.flatMap((animal) => {
+    checkRecords.flatMap((animal) => {
       const reminder = checkReminder({
         checkEveryDays: animal.checkEveryDays,
         lastWeighedOn: latestWeight(byWeights.get(animal.id) ?? [])?.weighedOn,
@@ -147,7 +167,9 @@ async function loadHomePrimary(userId: string) {
       return reminder ? [crestCheckItemFromReminder(animal, reminder)] : [];
     }),
   );
-  const checks = allChecks.slice(0, HOME_CHECK_PREVIEW);
+  const records = [
+    ...new Map([...previewRecords, ...checkRecords, ...photoRecords].map((row) => [row.id, row])).values(),
+  ];
   const unsetCadence = records.filter(
     (row) =>
       cadenceIdFromDays(row.checkEveryDays) === "unset" &&
@@ -162,36 +184,22 @@ async function loadHomePrimary(userId: string) {
           more: unsetCadence.length - 1,
         }
       : null;
-
-  const compareAnimal =
-    animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0) ??
-    allHydrated.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
-  const compareSource: HomeCompareSource = compareAnimal
-    ? { animal: compareAnimal, logs: byWeights.get(compareAnimal.id) ?? [] }
-    : null;
-
-  return {
-    animals,
-    recentWeights,
-    photoAnimals,
-    checks,
-    checkTotal: allChecks.length,
-    unsetCadenceGuide,
-    latestWeights: Object.fromEntries(
-      [...new Map([...animals, ...photoAnimals].map((animal) => [animal.id, animal])).values()].map(
-        (animal) => {
-          const last = latestWeight(byWeights.get(animal.id) ?? []);
-          return [
-            animal.id,
-            last
-              ? { weightG: last.weightG, weighedOn: last.weighedOn }
-              : null,
-          ];
-        },
-      ),
-    ),
-    compareSource,
+  const latestWeights: Record<string, { weightG: number; weighedOn: string } | null> = {
+    ...heroLatest,
   };
+  for (const row of extraWeights) {
+    latestWeights[row.animalId] = { weightG: row.weightG, weighedOn: row.weighedOn };
+  }
+
+  return (
+    <HomeCareAlbumBlocks
+      photoAnimals={photoAnimals}
+      checks={allChecks.slice(0, HOME_CHECK_PREVIEW)}
+      checkTotal={allChecks.length}
+      unsetCadenceGuide={unsetCadenceGuide}
+      latestWeights={latestWeights}
+    />
+  );
 }
 
 async function HomeJapanSection({
@@ -266,22 +274,26 @@ export default async function Home() {
   const user = await requireAppUser();
   const japanPromise = fetchJapanCrestStats();
   const countsPromise = dashboardCounts(user.id);
-  const primary = await loadHomePrimary(user.id);
-
+  const hero = await loadHomeHero(user.id);
   return (
     <HomeDashboard
       collectionName="クレスノート"
       animalCount={0}
-      animals={primary.animals}
-      recentWeights={primary.recentWeights}
-      photoAnimals={primary.photoAnimals}
-      checks={primary.checks}
-      checkTotal={primary.checkTotal}
-      unsetCadenceGuide={primary.unsetCadenceGuide}
-      latestWeights={primary.latestWeights}
+      animals={hero.animals}
+      recentWeights={hero.recentWeights}
+      latestWeights={hero.latestWeights}
+      careAlbumSection={
+        <Suspense fallback={<HomeBelowFoldFallback />}>
+          <HomeCareAlbumSection
+            userId={user.id}
+            previewRecords={hero.previewRecords}
+            heroLatest={hero.latestWeights}
+          />
+        </Suspense>
+      }
       japanSection={
         <Suspense fallback={<HomeJapanFallback />}>
-          <HomeJapanSection japanPromise={japanPromise} compareSource={primary.compareSource} />
+          <HomeJapanSection japanPromise={japanPromise} compareSource={hero.compareSource} />
         </Suspense>
       }
       breedingSection={

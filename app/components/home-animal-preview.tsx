@@ -23,7 +23,12 @@ function RestRow({
     >
       <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[0.95rem] bg-[#efeaf0]">
         {animal.photoUrl ? (
-          <AnimalPhoto src={animal.photoUrl} alt="" className="h-full w-full object-cover" />
+          <AnimalPhoto
+            src={animal.photoUrl}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
         ) : null}
       </div>
       <div className="min-w-0 flex-1">
@@ -77,7 +82,12 @@ export function HomeAnimalPreview({
         <div className="nc-hero-photo overflow-hidden rounded-[1.25rem] bg-[#efeaf0]">
           <div className="h-[min(52dvh,28rem)] min-h-[16rem] bg-[#efeaf0]">
             {star.photoUrl ? (
-              <AnimalPhoto src={star.photoUrl} alt="" className="h-full w-full object-cover" />
+              <AnimalPhoto
+                src={star.photoUrl}
+                alt=""
+                loading="eager"
+                className="h-full w-full object-cover"
+              />
             ) : (
               <p className="p-5 text-sm text-ink/40">写真はまだありません</p>
             )}

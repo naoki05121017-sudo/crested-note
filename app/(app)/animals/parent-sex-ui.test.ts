@@ -26,9 +26,11 @@ describe("animal parent sex and delete confirm wiring", () => {
 
   it("labels the growth guide as 参考目安, not 平均", () => {
     const page = readFileSync("app/(app)/animals/[id]/page.tsx", "utf8");
-    expect(page).toContain("参考目安には個体差があります");
-    expect(page).toContain("growthGuideSeries");
+    const deferred = readFileSync("app/(app)/animals/animal-detail-deferred.tsx", "utf8");
+    expect(deferred).toContain("参考目安には個体差があります");
+    expect(deferred).toContain("growthGuideSeries");
     expect(page).not.toContain("標準体重");
+    expect(deferred).not.toContain("標準体重");
     const chart = readFileSync("app/components/growth-chart.tsx", "utf8");
     expect(chart).toContain("あなたのクレス");
     expect(chart).toContain("参考目安");

@@ -17,6 +17,8 @@ import {
 } from "@/app/components/icons";
 import { LegalNav } from "@/app/components/legal-nav";
 import { MobileAppNav } from "@/app/components/mobile-app-nav";
+import { PressRoot } from "@/app/components/press-root";
+import { SoftNavForm } from "@/app/components/soft-nav-form";
 
 const primaryItems = [
   { href: "/", label: "ホーム", icon: IconHome },
@@ -62,17 +64,27 @@ function NavItemLabel({
 
 function NavLinks() {
   const pathname = usePathname();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
+
+  function tabActive(href: string) {
+    return isActivePath(pendingHref ?? pathname, href);
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         {primaryItems.map((item) => {
-          const active = isActivePath(pathname, item.href);
+          const active = tabActive(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               prefetch
+              onPointerDown={() => setPendingHref(item.href)}
               className={`flex min-h-11 items-center gap-2 rounded-[0.9rem] px-3 text-sm ${
                 active ? "bg-white/12 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
               }`}
@@ -86,12 +98,13 @@ function NavLinks() {
         <p className="px-3 text-xs text-white/35">記録と全国</p>
         <div className="mt-2 flex flex-col gap-1">
           {moreItems.map((item) => {
-            const active = isActivePath(pathname, item.href);
+            const active = tabActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 prefetch={false}
+                onPointerDown={() => setPendingHref(item.href)}
                 className={`flex min-h-11 items-center gap-2 rounded-[0.9rem] px-3 text-sm ${
                   active ? "bg-white/12 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
@@ -106,12 +119,13 @@ function NavLinks() {
         <p className="px-3 text-xs text-white/35">ブリード</p>
         <div className="mt-2 flex flex-col gap-1">
           {breedItems.map((item) => {
-            const active = isActivePath(pathname, item.href);
+            const active = tabActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 prefetch={false}
+                onPointerDown={() => setPendingHref(item.href)}
                 className={`flex min-h-11 items-center gap-2 rounded-[0.9rem] px-3 text-sm ${
                   active ? "bg-white/12 text-white" : "text-white/55 hover:bg-white/10 hover:text-white"
                 }`}
@@ -218,7 +232,7 @@ function HeaderSearch({ quiet }: { quiet: boolean }) {
   }
 
   return (
-    <form action="/animals" className="relative min-w-0 flex-1">
+    <SoftNavForm action="/animals" className="relative min-w-0 flex-1">
       <span className="pointer-events-none absolute left-3 top-1/2 hidden -translate-y-1/2 text-white/40 sm:block">
         <IconSearch />
       </span>
@@ -237,7 +251,7 @@ function HeaderSearch({ quiet }: { quiet: boolean }) {
       >
         閉じる
       </button>
-    </form>
+    </SoftNavForm>
   );
 }
 
@@ -298,8 +312,9 @@ export function AppShell({
   const chromeHidden = hideChrome(pathname);
   const homeQuiet = pathname === "/";
 
+  let tree: React.ReactNode;
   if (pathname === "/nickname") {
-    return (
+    tree = (
       <div className="min-h-full min-w-0 bg-background">
         <header className="bg-[#17141c] text-white">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-4">
@@ -315,10 +330,8 @@ export function AppShell({
         <main className="mx-auto w-full min-w-0 max-w-4xl px-4 py-8">{children}</main>
       </div>
     );
-  }
-
-  if (publicView) {
-    return (
+  } else if (publicView) {
+    tree = (
       <div className="min-h-full min-w-0 bg-background">
         <header className="bg-[#17141c] text-white">
           <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
@@ -338,9 +351,8 @@ export function AppShell({
         </footer>
       </div>
     );
-  }
-
-  return (
+  } else {
+    tree = (
     <div className="min-h-full min-w-0 bg-background">
       <div className="mx-auto flex min-h-full max-w-[92rem]">
         <aside className="sticky top-0 hidden h-screen w-[16.5rem] shrink-0 bg-[#17141c] px-4 py-6 text-white lg:block">
@@ -388,5 +400,13 @@ export function AppShell({
       </div>
       {chromeHidden ? null : <MobileAppNav />}
     </div>
+    );
+  }
+
+  return (
+    <>
+      <PressRoot />
+      {tree}
+    </>
   );
 }

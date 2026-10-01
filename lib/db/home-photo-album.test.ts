@@ -12,7 +12,7 @@ describe("home growth album compaction", () => {
     const home = readFileSync("app/(app)/page.tsx", "utf8");
     const owned = readFileSync("lib/db/owned-tables.ts", "utf8");
     expect(home).toContain("listOwnedPhotoAnimals(userId, HOME_PHOTO_PREVIEW)");
-    expect(home).toContain("[...animals, ...photoAnimals]");
+    expect(home).toContain("[...previewRecords, ...checkRecords, ...photoRecords]");
     expect(owned).toContain('.neq("photo_url", "")');
     expect(owned).not.toContain("photo_history");
   });

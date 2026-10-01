@@ -41,9 +41,45 @@
 
 a,
 button,
-summary {
+summary,
+[data-nc-press] {
   touch-action: manipulation;
   -webkit-tap-highlight-color: rgba(246, 223, 216, 0.22);
+  cursor: pointer;
+}
+
+a:active:not(.nc-btn):not(.nc-btn-ghost):not(.nc-btn-danger),
+button:active:not(.nc-btn):not(.nc-btn-ghost):not(.nc-btn-danger):not(:disabled),
+summary:active,
+[data-nc-press]:active,
+a.nc-press-on:not(.nc-btn):not(.nc-btn-ghost):not(.nc-btn-danger),
+button.nc-press-on:not(.nc-btn):not(.nc-btn-ghost):not(.nc-btn-danger),
+summary.nc-press-on,
+[data-nc-press].nc-press-on {
+  opacity: 0.7;
+}
+
+.nc-tab-bar a:active,
+.nc-tab-bar a.nc-press-on {
+  opacity: 1;
+}
+
+.nc-btn,
+.nc-btn-ghost,
+.nc-btn-danger {
+  transition:
+    transform 70ms var(--ease-out),
+    background-color 80ms var(--ease-out),
+    border-color 80ms var(--ease-out);
+}
+
+.nc-btn:active,
+.nc-btn-ghost:active,
+.nc-btn-danger:active,
+.nc-btn.nc-press-on,
+.nc-btn-ghost.nc-press-on,
+.nc-btn-danger.nc-press-on {
+  transform: scale(0.985);
 }
 
 html {
@@ -112,10 +148,6 @@ body {
   font-size: 0.95rem;
   font-weight: 600;
   text-align: center;
-  transition:
-    transform 160ms var(--ease-out),
-    background-color 160ms var(--ease-out),
-    border-color 160ms var(--ease-out);
 }
 
 .nc-btn {
@@ -125,12 +157,6 @@ body {
 
 .nc-btn:hover {
   background: #f8e0ea;
-}
-
-.nc-btn:active,
-.nc-btn-ghost:active,
-.nc-btn-danger:active {
-  transform: scale(0.985);
 }
 
 .nc-btn:disabled,

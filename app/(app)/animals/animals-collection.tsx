@@ -26,7 +26,7 @@ function AnimalListRow({
   return (
     <Link
       href={`/animals/${animal.id}`}
-      className="flex min-h-[4.75rem] min-w-0 items-center gap-3.5 py-2.5 transition-opacity duration-200 ease-out active:opacity-70"
+      className="flex min-h-[4.75rem] min-w-0 items-center gap-3.5 py-2.5"
     >
       <div className="h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-[1.1rem] bg-[#efeaf0]">
         {animal.photoUrl ? (

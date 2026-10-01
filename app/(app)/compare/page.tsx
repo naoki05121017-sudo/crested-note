@@ -9,6 +9,7 @@ import { GrowthChart } from "@/app/components/growth-chart";
 import { Card, EmptyState, PageHeader, Stat } from "@/app/components/ui";
 import { animalTitle } from "@/lib/db/labels";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
+import { SoftNavForm } from "@/app/components/soft-nav-form";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +65,7 @@ export default async function ComparePage({
           }
         />
       ) : (
-        <form
+        <SoftNavForm
           className="nc-lift grid max-w-xl gap-3 rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] p-5 text-ink sm:grid-cols-[1fr_auto] sm:items-end sm:p-6"
           action="/compare"
         >
@@ -81,7 +82,7 @@ export default async function ComparePage({
           <PendingSubmitButton pendingLabel="表示しています…" className="nc-btn w-full sm:w-auto">
             見る
           </PendingSubmitButton>
-        </form>
+        </SoftNavForm>
       )}
 
       {animal && comparison ? (

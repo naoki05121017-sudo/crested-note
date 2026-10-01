@@ -13,21 +13,13 @@ function BootMain() {
 async function AppWithSession({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   if (!hasSupabaseAuthCookie(cookieStore.getAll())) {
-    return (
-      <AppShell email={null}>
-        <Suspense fallback={<BootMain />}>{children}</Suspense>
-      </AppShell>
-    );
+    return <AppShell email={null}>{children}</AppShell>;
   }
   const user = await getSessionUser();
   if (user && !(await getOwnStoredDisplayName(user.id))) {
     redirect("/nickname");
   }
-  return (
-    <AppShell email={user?.email ?? null}>
-      <Suspense fallback={<BootMain />}>{children}</Suspense>
-    </AppShell>
-  );
+  return <AppShell email={user?.email ?? null}>{children}</AppShell>;
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
