@@ -19,6 +19,7 @@ describe("auth path and scoped deletes", () => {
     expect(isPublicAppPath("/api/push/subscribe")).toBe(false);
     expect(isPublicAppPath("/api/push/vapid")).toBe(false);
     expect(isPublicAppPath("/animals")).toBe(false);
+    expect(isPublicAppPath("/nickname")).toBe(false);
     expect(isPublicAppPath("/animals/x/edit")).toBe(false);
     expect(isPublicAppPath("/")).toBe(false);
   });

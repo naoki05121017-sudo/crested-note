@@ -38,7 +38,11 @@ export function revalidateApp(...paths: string[]) {
   try {
     revalidatePath("/", "layout");
     for (const path of paths) {
-      revalidatePath(path);
+      if (path.includes("[")) {
+        revalidatePath(path, "page");
+      } else {
+        revalidatePath(path);
+      }
     }
   } catch {
     // Next request 外では cache store が無い。保存自体は完了している。

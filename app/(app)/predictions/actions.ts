@@ -5,7 +5,7 @@ import { calculatePairing, type Genotype } from "@/lib/genetics";
 import { nowIso, textField } from "@/lib/db/form";
 import { getAnimal } from "@/lib/db/queries";
 import { insertOwnedPrediction } from "@/lib/db/owned-tables";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { newId } from "@/lib/db/store";
 
 function parseJsonGenotype(raw: string): Genotype {
@@ -42,7 +42,7 @@ export async function savePrediction(formData: FormData) {
 
   const id = newId();
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await insertOwnedPrediction(user.id, {
       id,
       name,

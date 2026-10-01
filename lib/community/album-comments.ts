@@ -30,6 +30,29 @@ export function publicNickname(displayName: string | null | undefined): string {
   return text || "ユーザー";
 }
 
+export const NICKNAME_MAX_LEN = 32;
+
+export function nicknameError(displayName: string | null | undefined): string | null {
+  const text = String(displayName ?? "").trim();
+  if (!text) return "ニックネームを入力してください。";
+  if (text.length > NICKNAME_MAX_LEN) return "32文字以内にしてください。";
+  if (text.includes("@")) return "メールアドレスは使えません。";
+  if (text === "クレスノート") return "コレクション名は使えません。";
+  if (text === "ユーザー") return "別のニックネームにしてください。";
+  return null;
+}
+
+/** Persist only an explicit nickname. Never copy email or the default collection name. */
+export function storedDisplayName(displayName: string | null | undefined): string {
+  if (nicknameError(displayName)) return "";
+  return String(displayName ?? "").trim();
+}
+
+/** Live gallery / public owner label from profiles.display_name. */
+export function livePublicNickname(displayName: string | null | undefined): string {
+  return publicNickname(storedDisplayName(displayName));
+}
+
 export const COMMENT_MAX_LEN = 500;
 
 export function parseCommentBody(raw: string): string | null {

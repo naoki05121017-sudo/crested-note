@@ -1,24 +1,32 @@
 "use server";
 
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
+import { nicknameError } from "@/lib/community/album-comments";
 import { parseFeedbackCategory, textField } from "@/lib/db/form";
 import { insertOwnedFeedback, updateOwnedSettings } from "@/lib/db/owned-tables";
+import { listPublicShareSlugsForUser, settingsRevalidatePaths } from "@/lib/db/public-gallery";
 import { newId } from "@/lib/db/store";
 
 export async function saveSettings(formData: FormData) {
+  const displayName = textField(formData, "displayName");
+  const invalid = nicknameError(displayName);
+  if (invalid) return actionError(invalid);
+
+  let publicPaths: string[] = [];
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await updateOwnedSettings(user.id, {
-      displayName: textField(formData, "displayName"),
+      displayName,
       collectionName: textField(formData, "collectionName") || "クレスノート",
       prefecture: textField(formData, "prefecture"),
       publicByDefault: formData.get("publicByDefault") === "on",
     });
+    publicPaths = settingsRevalidatePaths(await listPublicShareSlugsForUser(user.id));
   } catch (error) {
     return actionError(error, "保存できませんでした。");
   }
-  revalidateApp("/settings");
+  revalidateApp(...publicPaths);
   return actionOk("/settings");
 }
 
@@ -30,7 +38,7 @@ export async function submitFeedback(formData: FormData) {
 
   const stamp = new Date().toISOString();
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await insertOwnedFeedback(user.id, {
       id: newId(),
       category: parseFeedbackCategory(textField(formData, "category")),

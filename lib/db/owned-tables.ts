@@ -4,6 +4,7 @@ import { chunkIds, selectPagedAll } from "@/lib/db/supabase-page";
 import { postgresUuid } from "@/lib/db/pg-id";
 import { asAnimalRecord, getOwnedAnimal } from "@/lib/db/animal-io";
 import { PHOTO_ALBUM_PAGE_SIZE } from "@/lib/db/animal-search";
+import { nicknameError, storedDisplayName } from "@/lib/community/album-comments";
 import {
   EGG_RESULTS,
   type Breeding,
@@ -493,7 +494,7 @@ export async function updateOwnedSettings(userId: string, settings: SettingsReco
     client.from("profiles").upsert(
       {
         id: userId,
-        display_name: settings.displayName ?? "",
+        display_name: storedDisplayName(settings.displayName),
         collection_name: settings.collectionName || "クレスノート",
         prefecture: settings.prefecture ?? "",
         public_by_default: Boolean(settings.publicByDefault),
@@ -502,6 +503,34 @@ export async function updateOwnedSettings(userId: string, settings: SettingsReco
     ),
   );
   if (error) throw new Error(`profiles を保存できません: ${error.message}`);
+}
+
+export async function updateOwnedDisplayName(userId: string, displayName: string): Promise<string> {
+  const name = storedDisplayName(displayName);
+  if (!name) {
+    throw new Error(nicknameError(displayName) || "ニックネームを入力してください。");
+  }
+  const client = createAdminClient();
+  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+    client.from("profiles").update({ display_name: name }).eq("id", userId).select("id").maybeSingle(),
+  );
+  if (error) throw new Error(`profiles を保存できません: ${error.message}`);
+  if (!data?.id) {
+    const { error: insertError } = await retryOnJwtIssuedAtFuture(() =>
+      client.from("profiles").upsert(
+        {
+          id: userId,
+          display_name: name,
+          collection_name: "クレスノート",
+          prefecture: "",
+          public_by_default: false,
+        },
+        { onConflict: "id" },
+      ),
+    );
+    if (insertError) throw new Error(`profiles を保存できません: ${insertError.message}`);
+  }
+  return name;
 }
 
 export async function insertOwnedFeedback(userId: string, row: FeedbackRecord): Promise<void> {

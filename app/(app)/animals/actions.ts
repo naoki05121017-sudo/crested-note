@@ -41,7 +41,7 @@ import {
   syncOwnedCrestLinkParents,
 } from "@/lib/db/crest-link-io";
 import { newId, newSlug } from "@/lib/db/store";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { parseCheckEveryDays } from "@/lib/care/check-cadence";
 import type { AnimalRecord } from "@/lib/db/types";
 
@@ -113,7 +113,7 @@ export async function createAnimal(formData: FormData) {
     return actionError(parsed.error ?? "登録できませんでした。");
   }
   const fields = parsed.data;
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
 
   const id = newId();
   const stamp = nowIso();
@@ -203,7 +203,7 @@ export async function updateAnimal(id: string, formData: FormData) {
     const photo = await photoUrlFromForm(id, formData, previousPhotoUrl);
     if (photo.error) return actionError(photo.error);
     uploaded = photo.uploaded;
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const parents = await getOwnedAnimalsByIds(user.id, [
       fields.sireId,
       fields.damId,
@@ -261,7 +261,7 @@ export async function deleteAnimal(
   if (!id) return { error: "削除できませんでした。", deleted: false };
   let previousPhotoUrl = "";
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     if (await animalIsReferenced(user.id, id)) {
       throw new Error(
         "血統または繁殖ペアで参照されているため削除できません。先に紐付けを外してください。",
@@ -299,7 +299,7 @@ export async function addWeight(animalId: string, formData: FormData) {
     textField(formData, "weighedOn") || new Date().toISOString().slice(0, 10);
 
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await insertOwnedWeight(user.id, {
       id: newId(),
       animalId,
@@ -326,7 +326,7 @@ export async function updateCheckCadence(id: string, formData: FormData) {
   }
 
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await patchOwnedAnimalCadence(user.id, id, cadence.days);
   } catch (error) {
     return actionError(error, "保存できませんでした。");
@@ -338,7 +338,7 @@ export async function updateCheckCadence(id: string, formData: FormData) {
 
 export async function deleteWeight(animalId: string, weightId: string) {
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await deleteOwnedWeight(user.id, animalId, weightId);
   } catch (error) {
     return actionError(error, "削除できませんでした。");

@@ -1,7 +1,7 @@
 "use server";
 
 import { actionError, actionOk, revalidateApp } from "@/app/components/action-result";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { textField } from "@/lib/db/form";
 import { getOwnedSettings } from "@/lib/db/animal-io";
 import {
@@ -18,7 +18,7 @@ export async function addPublicComment(formData: FormData) {
   const animalId = textField(formData, "animalId");
   const slug = textField(formData, "slug");
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const settings = await getOwnedSettings(user.id);
     await insertPublicComment({
       animalId,
@@ -37,7 +37,7 @@ export async function addPublicComment(formData: FormData) {
 export async function deletePublicComment(formData: FormData) {
   const slug = textField(formData, "slug");
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const nextSlug = await softDeletePublicComment({
       commentId: textField(formData, "commentId"),
       userId: user.id,
@@ -52,7 +52,7 @@ export async function deletePublicComment(formData: FormData) {
 export async function reportPublicCommentAction(formData: FormData) {
   const slug = textField(formData, "slug");
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const nextSlug = await reportPublicComment({
       commentId: textField(formData, "commentId"),
       reporterId: user.id,

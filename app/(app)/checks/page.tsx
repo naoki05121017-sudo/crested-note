@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HomeCheckList } from "@/app/components/home-check-list";
 import { PageHeader } from "@/app/components/ui";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { checkReminder } from "@/lib/care/check-cadence";
 import { crestCheckItemFromReminder, sortCrestCheckItems } from "@/lib/care/crest-check-list";
 import { listWeightsForAnimals } from "@/lib/db/animal-io";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "クレスチェック" };
 
 export default async function ChecksPage() {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const checkRecords = await listOwnedCheckAnimals(user.id);
   const weightRows = await listWeightsForAnimals(checkRecords.map((row) => row.id));
   const byWeights = new Map<string, typeof weightRows>();

@@ -1,6 +1,6 @@
 import { crestLinkView, type CrestLinkView } from "@/lib/crest-link/core";
 import type { Genotype } from "@/lib/genetics";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadDb } from "./store";
 import { loadPublicAnimals } from "./supabase-io";
@@ -81,7 +81,7 @@ function emptyGeneDb(records: AnimalRecord[], genes: DatabaseFile["genes"]): Dat
 }
 
 export async function listAnimals(): Promise<Animal[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const records = await listOwnedAnimalsAll(user.id);
   const genes = await listGenesForAnimals(records.map((row) => row.id));
   const db = emptyGeneDb(records, genes);
@@ -91,7 +91,7 @@ export async function listAnimals(): Promise<Animal[]> {
 }
 
 export async function getAnimal(id: string): Promise<Animal | undefined> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const record = await getOwnedAnimal(user.id, id);
   if (!record) return undefined;
   const genes = await listGenesForAnimals([record.id]);
@@ -99,7 +99,7 @@ export async function getAnimal(id: string): Promise<Animal | undefined> {
 }
 
 export async function getAnimalsByIds(ids: string[]): Promise<Animal[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const records = await getOwnedAnimalsByIds(user.id, ids);
   const genes = await listGenesForAnimals(records.map((row) => row.id));
   const db = emptyGeneDb(records, genes);
@@ -191,7 +191,7 @@ export async function filterAnimals(params: {
   page: number;
   pageSize: number;
 }> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const listed = await listOwnedAnimalsPage(user.id, params);
   const genes = await listGenesForAnimals(listed.records.map((row) => row.id));
   const db = emptyGeneDb(listed.records, genes);
@@ -214,7 +214,7 @@ export async function weightsByAnimal(
   const map = new Map<string, WeightLogRecord[]>();
   const ids =
     animalIds ??
-    (await listOwnedAnimalsAll((await requireSessionUser()).id)).map((row) => row.id);
+    (await listOwnedAnimalsAll((await requireAppUser()).id)).map((row) => row.id);
   const logs = await listWeightsForAnimals(ids);
   for (const row of logs) {
     const list = map.get(row.animalId) ?? [];
@@ -228,22 +228,22 @@ export async function weightsByAnimal(
 }
 
 export async function listBreedings(): Promise<Breeding[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return listOwnedBreedings(user.id);
 }
 
 export async function getBreeding(id: string): Promise<Breeding | undefined> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return getOwnedBreeding(user.id, id);
 }
 
 export async function listProjects(): Promise<ProjectRecord[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return listOwnedProjects(user.id);
 }
 
 export async function getProject(id: string): Promise<ProjectRecord | undefined> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return getOwnedProject(user.id, id);
 }
 
@@ -251,7 +251,7 @@ export async function projectMembers(projectId: string): Promise<{
   animal: Animal;
   role: import("./types").ProjectRole;
 }[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const members = await listOwnedProjectMembers(user.id, projectId);
   const records = await getOwnedAnimalsByIds(
     user.id,
@@ -267,28 +267,28 @@ export async function projectMembers(projectId: string): Promise<{
 }
 
 export async function listPredictions(): Promise<PredictionRecord[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return listOwnedPredictions(user.id);
 }
 
 export async function getPrediction(id: string): Promise<PredictionRecord | undefined> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return getOwnedPrediction(user.id, id);
 }
 
 export async function predictionForBreeding(breedingId: string): Promise<PredictionRecord | undefined> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return getOwnedPredictionForBreeding(user.id, breedingId);
 }
 
 export async function listAnimalsForParents(): Promise<Animal[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const records = await listOwnedParentOptions(user.id);
   return records.map((record) => ({ ...record, genotype: {} }));
 }
 
 export async function getSettings(): Promise<SettingsRecord> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   return getOwnedSettings(user.id);
 }
 
@@ -298,7 +298,7 @@ export async function listFeedbackForOperator(): Promise<FeedbackRecord[]> {
 }
 
 export async function dashboardStats() {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const animalCount = await countOwnedAnimals(user.id, { excludeDeceased: true });
   const rest = await dashboardCounts(user.id);
   return {
@@ -319,7 +319,7 @@ export async function getAnimalByCrestLinkId(crestLinkId: string) {
 }
 
 export async function childrenOf(animalId: string): Promise<Animal[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const records = await listOwnedChildren(user.id, animalId);
   const genes = await listGenesForAnimals(records.map((row) => row.id));
   const db = emptyGeneDb(records, genes);
@@ -327,7 +327,7 @@ export async function childrenOf(animalId: string): Promise<Animal[]> {
 }
 
 export async function breedingsForAnimal(animalId: string): Promise<Breeding[]> {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const rows = await listOwnedBreedingsForAnimal(user.id, animalId);
   return rows.sort((a, b) => b.startedOn.localeCompare(a.startedOn));
 }
@@ -339,7 +339,7 @@ export function addDays(isoDate: string, days: number): string {
 }
 
 export async function pedigreeOf(animalId: string) {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const record = await getOwnedAnimal(user.id, animalId);
   if (!record) return undefined;
   const relativeIds = [

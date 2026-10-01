@@ -2,7 +2,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { retryOnJwtIssuedAtFuture } from "@/lib/supabase/clock-skew-fetch";
 import { GALLERY_PAGE_SIZE, sanitizeAnimalSearch } from "@/lib/db/animal-search";
 import { chunkIds } from "@/lib/db/supabase-page";
-import { mergeAlbumPhotos, publicNickname, type AlbumPhoto } from "@/lib/community/album-comments";
+import {
+  livePublicNickname,
+  mergeAlbumPhotos,
+  publicNickname,
+  type AlbumPhoto,
+} from "@/lib/community/album-comments";
 import { SEXES, type Sex } from "@/lib/db/types";
 
 export { GALLERY_PAGE_SIZE };
@@ -83,7 +88,7 @@ async function nicknamesByUserId(userIds: string[]): Promise<Map<string, string>
     return result.data ?? [];
   });
   for (const row of rows) {
-    map.set(String(row.id), publicNickname(String(row.display_name ?? "")));
+    map.set(String(row.id), livePublicNickname(String(row.display_name ?? "")));
   }
   return map;
 }
@@ -196,6 +201,31 @@ export async function listAlbumPhotosForAnimal(
 export async function publicNicknameForUser(userId: string): Promise<string> {
   const nicks = await nicknamesByUserId([userId]);
   return nicks.get(userId) ?? publicNickname("");
+}
+
+export async function listPublicShareSlugsForUser(userId: string): Promise<string[]> {
+  const client = createAdminClient();
+  const { data, error } = await retryOnJwtIssuedAtFuture(() =>
+    client
+      .from("animals")
+      .select("share_slug")
+      .eq("user_id", userId)
+      .eq("is_public", true)
+      .neq("share_slug", ""),
+  );
+  if (error) throw new Error(`個体を読めません: ${error.message}`);
+  return [...new Set((data ?? []).map((row) => String(row.share_slug ?? "").trim()).filter(Boolean))];
+}
+
+export function settingsRevalidatePaths(slugs: string[]): string[] {
+  return [
+    "/settings",
+    "/gallery",
+    "/(app)/gallery",
+    "/p/[slug]",
+    "/(public)/p/[slug]",
+    ...slugs.map((slug) => `/p/${slug}`),
+  ];
 }
 
 export async function getPublicAnimalOwnerId(animalId: string): Promise<string | null> {

@@ -8,6 +8,7 @@ import { LegalNav } from "@/app/components/legal-nav";
 import { IncludedFeatures } from "@/app/components/included-features";
 import { PushSettingsCard } from "@/app/(app)/settings/push-settings-card";
 import { getSettings } from "@/lib/db/queries";
+import { NICKNAME_MAX_LEN } from "@/lib/community/album-comments";
 import { PREFECTURES } from "@/lib/db/labels";
 
 export const dynamic = "force-dynamic";
@@ -40,8 +41,14 @@ export default async function SettingsPage({
       <Card tone="mist">
       <MutationForm action={saveSettings} className="flex max-w-xl flex-col gap-4">
         <label className="grid gap-1 text-sm">
-          <span>ニックネーム</span>
-          <input name="displayName" defaultValue={settings.displayName} className="nc-input" />
+              <span>ニックネーム</span>
+              <input
+                name="displayName"
+                required
+                maxLength={NICKNAME_MAX_LEN}
+                defaultValue={settings.displayName}
+                className="nc-input"
+              />
         </label>
         <label className="grid gap-1 text-sm">
           <span>コレクション名</span>

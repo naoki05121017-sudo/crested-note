@@ -8,7 +8,7 @@ import {
   issueNextAnimalCode,
 } from "@/lib/db/animal-io";
 import { issueOwnedCrestLink } from "@/lib/db/crest-link-io";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { calculatePairing, genotypeFromCopies, type AlleleCopies } from "@/lib/genetics";
 import {
   nowIso,
@@ -57,7 +57,7 @@ export async function createBreeding(formData: FormData) {
     visualB: female.traits,
   });
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const stamp = nowIso();
     await insertOwnedPrediction(user.id, {
       id: predictionId,
@@ -92,7 +92,7 @@ export async function createBreeding(formData: FormData) {
 
 export async function closeBreeding(id: string) {
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await closeOwnedBreeding(user.id, id);
   } catch (error) {
     return actionError(error, "終了できませんでした。");
@@ -117,7 +117,7 @@ export async function addClutch(breedingId: string, formData: FormData) {
 
   const clutchId = newId();
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await insertOwnedClutchWithEggs(
       user.id,
       breedingId,
@@ -142,7 +142,7 @@ export async function updateEgg(eggId: string, formData: FormData) {
   let breedingId = "";
 
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     breedingId = await updateOwnedEgg(user.id, eggId, {
       result,
       expectedHatchOn,
@@ -176,7 +176,7 @@ export async function hatchEgg(eggId: string, formData: FormData) {
   let breedingId = "";
 
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const { breeding } = await getEggContext(user.id, eggId);
     breedingId = breeding.id;
     animalId = newId();

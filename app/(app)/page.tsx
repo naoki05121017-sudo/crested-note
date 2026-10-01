@@ -3,7 +3,7 @@ import { cadenceIdFromDays, checkReminder } from "@/lib/care/check-cadence";
 import { crestCheckItemFromReminder, sortCrestCheckItems } from "@/lib/care/crest-check-list";
 import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
 import { HOME_ANIMAL_PREVIEW, HOME_CHECK_PREVIEW, HOME_PHOTO_PREVIEW } from "@/lib/db/animal-search";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import {
   countOwnedAnimals,
   getOwnedAnimalsByIds,
@@ -60,7 +60,7 @@ function asAnimals(records: AnimalRecord[], genes: DatabaseFile["genes"]): Anima
 }
 
 export default async function Home() {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const [
     settings,
     preview,

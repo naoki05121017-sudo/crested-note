@@ -276,6 +276,7 @@ function hideChrome(pathname: string) {
     pathname.startsWith("/p/") ||
     pathname === "/login" ||
     pathname === "/signup" ||
+    pathname === "/nickname" ||
     pathname.startsWith("/legal/")
   );
 }
@@ -293,6 +294,25 @@ export function AppShell({
   const publicView = pathname.startsWith("/p/");
   const chromeHidden = hideChrome(pathname);
   const homeQuiet = pathname === "/";
+
+  if (pathname === "/nickname") {
+    return (
+      <div className="min-h-full min-w-0 bg-background">
+        <header className="bg-[#17141c] text-white">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <BrandMark size={32} />
+              <div className="min-w-0">
+                <p className="font-semibold tracking-tight">クレスノート</p>
+                <p className="text-[10px] tracking-[0.18em] text-white/40">by N.crest</p>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto w-full min-w-0 max-w-4xl px-4 py-8">{children}</main>
+      </div>
+    );
+  }
 
   if (publicView) {
     return (

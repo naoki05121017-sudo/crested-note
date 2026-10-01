@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { storedDisplayName } from "@/lib/community/album-comments";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -21,6 +22,26 @@ export async function requireSessionUser(): Promise<SessionUser> {
   return user;
 }
 
+export const getOwnStoredDisplayName = cache(async function getOwnStoredDisplayName(
+  userId: string,
+): Promise<string> {
+  const client = createAdminClient();
+  const { data, error } = await client
+    .from("profiles")
+    .select("display_name")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw new Error(`プロフィールを読めません: ${error.message}`);
+  return storedDisplayName(String(data?.display_name ?? ""));
+});
+
+export async function requireAppUser(): Promise<SessionUser> {
+  const user = await requireSessionUser();
+  const nickname = await getOwnStoredDisplayName(user.id);
+  if (!nickname) redirect("/nickname");
+  return user;
+}
+
 export async function ensureProfile(user: SessionUser, displayName = "") {
   const client = createAdminClient();
   const { data: existing } = await client
@@ -32,7 +53,7 @@ export async function ensureProfile(user: SessionUser, displayName = "") {
   const { error } = await client.from("profiles").upsert(
     {
       id: user.id,
-      display_name: displayName,
+      display_name: storedDisplayName(displayName),
       collection_name: "クレスノート",
       prefecture: "",
       public_by_default: false,

@@ -1,7 +1,8 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/app/components/app-shell";
 import { PageSkeleton } from "@/app/components/page-skeleton";
-import { getSessionUser } from "@/lib/auth/session";
+import { getOwnStoredDisplayName, getSessionUser } from "@/lib/auth/session";
 import { hasSupabaseAuthCookie } from "@/lib/auth/supabase-auth-cookie";
 import { cookies } from "next/headers";
 
@@ -19,6 +20,9 @@ async function AppWithSession({ children }: { children: React.ReactNode }) {
     );
   }
   const user = await getSessionUser();
+  if (user && !(await getOwnStoredDisplayName(user.id))) {
+    redirect("/nickname");
+  }
   return (
     <AppShell email={user?.email ?? null}>
       <Suspense fallback={<BootMain />}>{children}</Suspense>

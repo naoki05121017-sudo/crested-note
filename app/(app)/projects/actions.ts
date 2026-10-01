@@ -7,7 +7,7 @@ import {
   parseProjectStatus,
   textField,
 } from "@/lib/db/form";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { getOwnedProject, updateOwnedProject, upsertOwnedProjectMember, deleteOwnedProject, deleteOwnedProjectMember, insertOwnedProject } from "@/lib/db/owned-tables";
 import { newId } from "@/lib/db/store";
 
@@ -16,7 +16,7 @@ export async function createProject(formData: FormData) {
   if (!name) return actionError("プロジェクト名は必須です。");
   const id = newId();
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await insertOwnedProject(user.id, {
       id,
       name,
@@ -34,7 +34,7 @@ export async function createProject(formData: FormData) {
 
 export async function updateProject(id: string, formData: FormData) {
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     const existing = await getOwnedProject(user.id, id);
     if (!existing) throw new Error("プロジェクトが見つかりません。");
     const name = textField(formData, "name") || existing.name;
@@ -56,7 +56,7 @@ export async function addProjectMember(projectId: string, formData: FormData) {
   if (!animalId) return actionError("個体を選んでください。");
   const role = parseProjectRole(textField(formData, "role"));
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await upsertOwnedProjectMember(user.id, projectId, animalId, role);
   } catch (error) {
     return actionError(error, "追加できませんでした。");
@@ -67,7 +67,7 @@ export async function addProjectMember(projectId: string, formData: FormData) {
 
 export async function removeProjectMember(projectId: string, animalId: string) {
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await deleteOwnedProjectMember(user.id, projectId, animalId);
   } catch (error) {
     return actionError(error, "外せませんでした。");
@@ -78,7 +78,7 @@ export async function removeProjectMember(projectId: string, animalId: string) {
 
 export async function deleteProject(id: string) {
   try {
-    const user = await requireSessionUser();
+    const user = await requireAppUser();
     await deleteOwnedProject(user.id, id);
   } catch (error) {
     return actionError(error, "削除できませんでした。");

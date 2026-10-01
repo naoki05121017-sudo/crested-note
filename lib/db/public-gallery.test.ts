@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LIVING_STATUSES, parseGalleryFilters, toGalleryCard } from "./public-gallery";
+import { LIVING_STATUSES, parseGalleryFilters, settingsRevalidatePaths, toGalleryCard } from "./public-gallery";
 
 describe("gallery filters", () => {
   it("keeps search, sex, and page for later UI without requiring them", () => {
@@ -71,6 +71,30 @@ describe("gallery card DTO", () => {
     expect(card.photoUrl).toBeNull();
     expect(card.href).toBeNull();
     expect(JSON.stringify(card)).not.toContain("example.com");
+  });
+});
+
+describe("settings nickname revalidation", () => {
+  it("revalidates gallery and public animal pages after nickname save", () => {
+    const src = readFileSync("app/(app)/settings/actions.ts", "utf8");
+    expect(src).toContain("settingsRevalidatePaths");
+    expect(src).toContain("listPublicShareSlugsForUser");
+    expect(src).toContain("revalidateApp(...publicPaths)");
+    expect(settingsRevalidatePaths(["open-slug"])).toEqual([
+      "/settings",
+      "/gallery",
+      "/(app)/gallery",
+      "/p/[slug]",
+      "/(public)/p/[slug]",
+      "/p/open-slug",
+    ]);
+  });
+
+  it("reads live nicknames from display_name only", () => {
+    const src = readFileSync("lib/db/public-gallery.ts", "utf8");
+    expect(src).toContain("livePublicNickname");
+    expect(src).not.toContain("collection_name");
+    expect(src).not.toContain("email");
   });
 });
 

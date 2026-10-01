@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PhotoAlbumGrid } from "@/app/components/photo-album-grid";
 import { PageHeader } from "@/app/components/ui";
-import { requireSessionUser } from "@/lib/auth/session";
+import { requireAppUser } from "@/lib/auth/session";
 import { listWeightsForAnimals } from "@/lib/db/animal-io";
 import { PHOTO_ALBUM_PAGE_SIZE } from "@/lib/db/animal-search";
 import { listOwnedPhotoAnimalsPage } from "@/lib/db/owned-tables";
@@ -16,7 +16,7 @@ export default async function AlbumPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireSessionUser();
+  const user = await requireAppUser();
   const params = await searchParams;
   const page = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10);
   const listed = await listOwnedPhotoAnimalsPage(user.id, {

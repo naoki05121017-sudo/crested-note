@@ -5,6 +5,7 @@ import {
   parseCommentBody,
   parseCommentReportReason,
   publicNickname,
+  storedDisplayName,
 } from "@/lib/community/album-comments";
 import { newId } from "@/lib/db/store";
 
@@ -83,6 +84,8 @@ export async function insertPublicComment(options: {
       throw new Error("このコメントには返信できません。");
     }
   }
+  const nickname = storedDisplayName(options.displayName);
+  if (!nickname) throw new Error("ニックネームを設定してください。");
   const { error } = await retryOnJwtIssuedAtFuture(() =>
     client.from("animal_comments").insert({
       id: newId(),
@@ -90,7 +93,7 @@ export async function insertPublicComment(options: {
       user_id: options.userId,
       parent_id: parentId,
       body,
-      author_nickname: publicNickname(options.displayName),
+      author_nickname: nickname,
     }),
   );
   if (error) {
