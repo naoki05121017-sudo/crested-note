@@ -1,4 +1,10 @@
-import { HomeDashboard } from "@/app/components/home-dashboard";
+import { Suspense } from "react";
+import {
+  HomeBreedingBlock,
+  HomeDashboard,
+  HomeJapanBlock,
+  HomeJapanFallback,
+} from "@/app/components/home-dashboard";
 import { cadenceIdFromDays, checkReminder } from "@/lib/care/check-cadence";
 import { crestCheckItemFromReminder, sortCrestCheckItems } from "@/lib/care/crest-check-list";
 import { fetchCompareCohort, fetchJapanCrestStats } from "@/lib/db/stats-rpc";
@@ -25,7 +31,7 @@ import {
   visualMorphKey,
 } from "@/lib/stats/compare";
 import { todayIso } from "@/lib/stats/math";
-import type { Animal, AnimalRecord, DatabaseFile } from "@/lib/db/types";
+import type { Animal, AnimalRecord, DatabaseFile, WeightLogRecord } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
 
@@ -59,29 +65,29 @@ function asAnimals(records: AnimalRecord[], genes: DatabaseFile["genes"]): Anima
   return records.map((record) => hydrateAnimal(db, record));
 }
 
-export default async function Home() {
-  const user = await requireAppUser();
+type HomeCompareSource = {
+  animal: Animal;
+  logs: WeightLogRecord[];
+} | null;
+
+async function loadHomePrimary(userId: string) {
   const [
     settings,
     preview,
     checkRecords,
     photoRecords,
     recentLogs,
-    japan,
     animalCount,
-    rest,
   ] = await Promise.all([
     getSettings(),
-    listOwnedAnimalsPage(user.id, {
+    listOwnedAnimalsPage(userId, {
       page: 1,
       pageSize: HOME_ANIMAL_PREVIEW,
     }),
-    listOwnedCheckAnimals(user.id),
-    listOwnedPhotoAnimals(user.id, HOME_PHOTO_PREVIEW),
-    listRecentOwnedWeights(user.id, 6),
-    fetchJapanCrestStats(),
-    countOwnedAnimals(user.id, { excludeDeceased: true }),
-    dashboardCounts(user.id),
+    listOwnedCheckAnimals(userId),
+    listOwnedPhotoAnimals(userId, HOME_PHOTO_PREVIEW),
+    listRecentOwnedWeights(userId, 6),
+    countOwnedAnimals(userId, { excludeDeceased: true }),
   ]);
   const homeRecords = [
     ...preview.records,
@@ -92,7 +98,7 @@ export default async function Home() {
   const recentAnimalIds = recentLogs.map((row) => row.animalId);
   const neededIds = [...new Set([...uniqueHome.map((row) => row.id), ...recentAnimalIds])];
   const [extraRecords, genes, weightRows] = await Promise.all([
-    getOwnedAnimalsByIds(user.id, recentAnimalIds),
+    getOwnedAnimalsByIds(userId, recentAnimalIds),
     listGenesForAnimals(neededIds),
     listWeightsForAnimals(neededIds),
   ]);
@@ -151,63 +157,78 @@ export default async function Home() {
         }
       : null;
 
-  const compareSource = animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0) ?? allHydrated.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
-  const compareLogs = compareSource ? (byWeights.get(compareSource.id) ?? []) : [];
-  const cohort = compareSource
-    ? await fetchCompareCohort({
-        excludeAnimalId: compareSource.id,
-        sex: compareSource.sex,
-        morphKey: visualMorphKey(compareSource),
-        ageMonths: compareAgeFilterMonths(compareSource, compareLogs),
-      })
+  const compareAnimal =
+    animals.find((animal) => (byWeights.get(animal.id) ?? []).length > 0) ??
+    allHydrated.find((animal) => (byWeights.get(animal.id) ?? []).length > 0);
+  const compareSource: HomeCompareSource = compareAnimal
+    ? { animal: compareAnimal, logs: byWeights.get(compareAnimal.id) ?? [] }
     : null;
+
+  return {
+    settings,
+    animalCount,
+    animals,
+    recentWeights,
+    photoAnimals,
+    checks,
+    checkTotal: allChecks.length,
+    unsetCadenceGuide,
+    latestWeights: Object.fromEntries(
+      [...new Map([...animals, ...photoAnimals].map((animal) => [animal.id, animal])).values()].map(
+        (animal) => {
+          const last = latestWeight(byWeights.get(animal.id) ?? []);
+          return [
+            animal.id,
+            last
+              ? { weightG: last.weightG, weighedOn: last.weighedOn }
+              : null,
+          ];
+        },
+      ),
+    ),
+    compareSource,
+  };
+}
+
+async function HomeJapanSection({
+  japanPromise,
+  compareSource,
+}: {
+  japanPromise: ReturnType<typeof fetchJapanCrestStats>;
+  compareSource: HomeCompareSource;
+}) {
+  const [japan, cohort] = await Promise.all([
+    japanPromise,
+    compareSource
+      ? fetchCompareCohort({
+          excludeAnimalId: compareSource.animal.id,
+          sex: compareSource.animal.sex,
+          morphKey: visualMorphKey(compareSource.animal),
+          ageMonths: compareAgeFilterMonths(compareSource.animal, compareSource.logs),
+        })
+      : Promise.resolve(null),
+  ]);
   const comparison =
     compareSource && cohort
       ? presentComparison({
-          animal: compareSource,
-          logs: compareLogs,
+          animal: compareSource.animal,
+          logs: compareSource.logs,
           sampleSize: cohort.sampleSize,
           average: cohort.average,
           averageCurve: cohort.curve,
         })
       : null;
-
   return (
-    <HomeDashboard
-      collectionName={settings.collectionName || "クレスノート"}
-      animalCount={animalCount}
-      activeBreedings={rest.activeBreedings}
-      incubatingEggs={rest.incubatingEggs}
-      projectCount={rest.projectCount}
-      upcomingHatches={rest.upcomingHatches}
-      animals={animals}
-      recentWeights={recentWeights}
-      photoAnimals={photoAnimals}
+    <HomeJapanBlock
       japanRegistered={japan.registered}
       japanLiving={japan.living}
       japanMeanWeight={japan.meanLatestWeight}
       japanWeightSample={japan.weightSample}
-      checks={checks}
-      checkTotal={allChecks.length}
-      unsetCadenceGuide={unsetCadenceGuide}
-      latestWeights={Object.fromEntries(
-        [...new Map([...animals, ...photoAnimals].map((animal) => [animal.id, animal])).values()].map(
-          (animal) => {
-            const last = latestWeight(byWeights.get(animal.id) ?? []);
-            return [
-              animal.id,
-              last
-                ? { weightG: last.weightG, weighedOn: last.weighedOn }
-                : null,
-            ];
-          },
-        ),
-      )}
       compare={
         compareSource && comparison
           ? {
-              name: compareSource.name,
-              href: `/compare?animalId=${compareSource.id}`,
+              name: compareSource.animal.name,
+              href: `/compare?animalId=${compareSource.animal.id}`,
               mineWeight: comparison.mineWeight,
               average: comparison.average,
               sampleSize: comparison.sampleSize,
@@ -216,6 +237,53 @@ export default async function Home() {
               tone: comparison.tone,
             }
           : null
+      }
+    />
+  );
+}
+
+async function HomeBreedingSection({
+  countsPromise,
+}: {
+  countsPromise: ReturnType<typeof dashboardCounts>;
+}) {
+  const rest = await countsPromise;
+  return (
+    <HomeBreedingBlock
+      activeBreedings={rest.activeBreedings}
+      incubatingEggs={rest.incubatingEggs}
+      projectCount={rest.projectCount}
+      upcomingHatches={rest.upcomingHatches}
+    />
+  );
+}
+
+export default async function Home() {
+  const user = await requireAppUser();
+  const japanPromise = fetchJapanCrestStats();
+  const countsPromise = dashboardCounts(user.id);
+  const primary = await loadHomePrimary(user.id);
+
+  return (
+    <HomeDashboard
+      collectionName={primary.settings.collectionName || "クレスノート"}
+      animalCount={primary.animalCount}
+      animals={primary.animals}
+      recentWeights={primary.recentWeights}
+      photoAnimals={primary.photoAnimals}
+      checks={primary.checks}
+      checkTotal={primary.checkTotal}
+      unsetCadenceGuide={primary.unsetCadenceGuide}
+      latestWeights={primary.latestWeights}
+      japanSection={
+        <Suspense fallback={<HomeJapanFallback />}>
+          <HomeJapanSection japanPromise={japanPromise} compareSource={primary.compareSource} />
+        </Suspense>
+      }
+      breedingSection={
+        <Suspense fallback={null}>
+          <HomeBreedingSection countsPromise={countsPromise} />
+        </Suspense>
       }
     />
   );

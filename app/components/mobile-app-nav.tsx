@@ -128,6 +128,7 @@ export function MobileAppNav() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    prefetch={false}
                     className={`flex min-h-12 items-center gap-3 rounded-[0.9rem] px-3 text-sm ${
                       isActivePath(pathname, item.href) ? "bg-[#f4d5e2]" : "hover:bg-white/70"
                     }`}
@@ -144,6 +145,7 @@ export function MobileAppNav() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    prefetch={false}
                     className={`flex min-h-12 items-center gap-3 rounded-[0.9rem] px-3 text-sm ${
                       isActivePath(pathname, item.href) ? "bg-[#ece6fb]" : "hover:bg-white/70"
                     }`}
@@ -169,6 +171,7 @@ export function MobileAppNav() {
               <li key={tab.href} className="min-w-0">
                 <Link
                   href={tab.href}
+                  prefetch
                   className={`flex min-h-[52px] flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] tracking-wide transition-colors duration-150 ${
                     active ? "text-[#f4d5e2]" : "text-white/40"
                   }`}

@@ -17,60 +17,162 @@ const crestTitle = Dela_Gothic_One({
   adjustFontFallback: false,
 });
 
-export function HomeDashboard({
-  collectionName: _collectionName,
-  animalCount: _animalCount,
-  activeBreedings,
-  incubatingEggs,
-  projectCount,
-  upcomingHatches,
-  animals,
-  recentWeights,
-  photoAnimals,
+export type HomeCompareCard = {
+  name: string;
+  href: string;
+  mineWeight: number | null;
+  average: number | null;
+  sampleSize: number;
+  comparable: boolean;
+  vsAverage: string | null;
+  tone: string;
+} | null;
+
+export function HomeJapanFallback() {
+  return (
+    <section className="mt-8 min-w-0" aria-hidden>
+      <HomeSectionTitle kicker="JAPAN" title="自分と全国" tone="blush" href="/compare" action="比較" />
+      <div className="nc-skel h-24 w-full rounded-[1rem]" />
+    </section>
+  );
+}
+
+export function HomeJapanBlock({
+  compare,
   japanRegistered,
   japanLiving,
   japanMeanWeight,
   japanWeightSample,
-  checks,
-  checkTotal,
-  unsetCadenceGuide,
-  latestWeights,
-  compare,
 }: {
-  collectionName: string;
-  animalCount: number;
-  activeBreedings: number;
-  incubatingEggs: number;
-  projectCount: number;
-  upcomingHatches: { egg: { id: string; expectedHatchOn: string }; breedingId: string }[];
-  animals: Animal[];
-  recentWeights: { animal: Animal; log: WeightLogRecord }[];
-  photoAnimals: Animal[];
+  compare: HomeCompareCard;
   japanRegistered: number;
   japanLiving: number;
   japanMeanWeight: number | null;
   japanWeightSample: number;
-  checks: CrestCheckItem[];
-  checkTotal: number;
-  unsetCadenceGuide: { id: string; name: string; more: number } | null;
-  latestWeights: Record<string, { weightG: number; weighedOn: string } | null>;
-  compare: {
-    name: string;
-    href: string;
-    mineWeight: number | null;
-    average: number | null;
-    sampleSize: number;
-    comparable: boolean;
-    vsAverage: string | null;
-    tone: string;
-  } | null;
 }) {
   const japanMeanCopy = averageCollectionCopy(japanWeightSample);
+  return (
+    <section className="mt-8 min-w-0">
+      <HomeSectionTitle kicker="JAPAN" title="自分と全国" tone="blush" href="/compare" action="比較" />
+      {compare ? (
+        <div className="min-w-0">
+          <p className="truncate text-[11px] text-white/32">{compare.name}</p>
+          <div className="mt-2.5 grid grid-cols-2 gap-3">
+            <div className="min-w-0 border-r border-white/10 pr-3">
+              <p className="text-[1.7rem] font-semibold tabular-nums leading-none nc-tone-mint">
+                {compare.mineWeight === null ? "—" : `${compare.mineWeight.toFixed(1)}g`}
+              </p>
+              <p className="mt-2 text-[11px] leading-4 text-white/40">この子</p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[1.7rem] font-semibold tabular-nums leading-none text-white/75">
+                {compare.comparable && compare.average !== null
+                  ? `${compare.average.toFixed(1)}g`
+                  : "—"}
+              </p>
+              <p className="mt-2 text-[11px] leading-4 text-white/40">近い条件の平均</p>
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-white/35">{compare.tone}</p>
+        </div>
+      ) : (
+        <p className="text-sm leading-6 text-white/40">
+          体重を記録した個体があると、近い条件の平均と比べられます。
+        </p>
+      )}
+      <p className="mt-5 text-[11px] text-white/28">
+        登録 {japanRegistered} ・飼育中 {japanLiving}
+        {japanMeanCopy
+          ? ` ・${japanMeanCopy.title}`
+          : japanMeanWeight != null
+            ? ` ・平均 ${japanMeanWeight.toFixed(1)}g`
+            : ""}
+      </p>
+      <Link href="/stats" className="mt-2 inline-block text-sm text-white/32 underline-offset-2 hover:underline">
+        日本のクレス統計
+      </Link>
+    </section>
+  );
+}
+
+export function HomeBreedingBlock({
+  activeBreedings,
+  incubatingEggs,
+  projectCount,
+  upcomingHatches,
+}: {
+  activeBreedings: number;
+  incubatingEggs: number;
+  projectCount: number;
+  upcomingHatches: { egg: { id: string; expectedHatchOn: string }; breedingId: string }[];
+}) {
   const showBreeding =
     activeBreedings > 0 ||
     incubatingEggs > 0 ||
     projectCount > 0 ||
     upcomingHatches.length > 0;
+  if (!showBreeding) return null;
+  return (
+    <section className="mt-9 min-w-0">
+      <HomeSectionTitle kicker="BREED" title="進行中のブリード" tone="lilac" href="/breedings" />
+      <div className="grid grid-cols-3 gap-3 text-sm">
+        <Link href="/breedings" className="min-w-0">
+          <p className="text-[11px] text-white/32">ペア</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{activeBreedings}</p>
+        </Link>
+        <Link href="/breedings" className="min-w-0">
+          <p className="text-[11px] text-white/32">孵化待ち</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{incubatingEggs}</p>
+        </Link>
+        <Link href="/projects" className="min-w-0">
+          <p className="text-[11px] text-white/32">プロジェクト</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{projectCount}</p>
+        </Link>
+      </div>
+      {upcomingHatches.length > 0 ? (
+        <ul className="mt-2">
+          {upcomingHatches.map(({ egg, breedingId }) => (
+            <li
+              key={egg.id}
+              className="flex min-h-11 min-w-0 items-center justify-between gap-2 border-b border-white/8 py-2 last:border-0"
+            >
+              <span className="tabular-nums text-white/75">{egg.expectedHatchOn}</span>
+              <Link href={`/breedings/${breedingId}`} className="text-sm text-white/35">
+                ペアを見る
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+export function HomeDashboard({
+  collectionName: _collectionName,
+  animalCount: _animalCount,
+  animals,
+  recentWeights,
+  photoAnimals,
+  checks,
+  checkTotal,
+  unsetCadenceGuide,
+  latestWeights,
+  japanSection,
+  breedingSection,
+}: {
+  collectionName: string;
+  animalCount: number;
+  animals: Animal[];
+  recentWeights: { animal: Animal; log: WeightLogRecord }[];
+  photoAnimals: Animal[];
+  checks: CrestCheckItem[];
+  checkTotal: number;
+  unsetCadenceGuide: { id: string; name: string; more: number } | null;
+  latestWeights: Record<string, { weightG: number; weighedOn: string } | null>;
+  japanSection: React.ReactNode;
+  breedingSection: React.ReactNode;
+}) {
   const emptyCollection = animals.length === 0;
   const careItems = checks.slice(0, 3);
   const latestLogs = recentWeights.slice(0, 2);
@@ -197,81 +299,8 @@ export function HomeDashboard({
         )}
       </section>
 
-      <section className="mt-8 min-w-0">
-        <HomeSectionTitle kicker="JAPAN" title="自分と全国" tone="blush" href="/compare" action="比較" />
-        {compare ? (
-          <div className="min-w-0">
-            <p className="truncate text-[11px] text-white/32">{compare.name}</p>
-            <div className="mt-2.5 grid grid-cols-2 gap-3">
-              <div className="min-w-0 border-r border-white/10 pr-3">
-                <p className="text-[1.7rem] font-semibold tabular-nums leading-none nc-tone-mint">
-                  {compare.mineWeight === null ? "—" : `${compare.mineWeight.toFixed(1)}g`}
-                </p>
-                <p className="mt-2 text-[11px] leading-4 text-white/40">この子</p>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[1.7rem] font-semibold tabular-nums leading-none text-white/75">
-                  {compare.comparable && compare.average !== null
-                    ? `${compare.average.toFixed(1)}g`
-                    : "—"}
-                </p>
-                <p className="mt-2 text-[11px] leading-4 text-white/40">近い条件の平均</p>
-              </div>
-            </div>
-            <p className="mt-3 text-sm text-white/35">{compare.tone}</p>
-          </div>
-        ) : (
-          <p className="text-sm leading-6 text-white/40">
-            体重を記録した個体があると、近い条件の平均と比べられます。
-          </p>
-        )}
-        <p className="mt-5 text-[11px] text-white/28">
-          登録 {japanRegistered} ・飼育中 {japanLiving}
-          {japanMeanCopy
-            ? ` ・${japanMeanCopy.title}`
-            : japanMeanWeight != null
-              ? ` ・平均 ${japanMeanWeight.toFixed(1)}g`
-              : ""}
-        </p>
-        <Link href="/stats" className="mt-2 inline-block text-sm text-white/32 underline-offset-2 hover:underline">
-          日本のクレス統計
-        </Link>
-      </section>
-
-      {showBreeding ? (
-        <section className="mt-9 min-w-0">
-          <HomeSectionTitle kicker="BREED" title="進行中のブリード" tone="lilac" href="/breedings" />
-          <div className="grid grid-cols-3 gap-3 text-sm">
-            <Link href="/breedings" className="min-w-0">
-              <p className="text-[11px] text-white/32">ペア</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{activeBreedings}</p>
-            </Link>
-            <Link href="/breedings" className="min-w-0">
-              <p className="text-[11px] text-white/32">孵化待ち</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{incubatingEggs}</p>
-            </Link>
-            <Link href="/projects" className="min-w-0">
-              <p className="text-[11px] text-white/32">プロジェクト</p>
-              <p className="mt-1 text-lg font-semibold tabular-nums text-white/75">{projectCount}</p>
-            </Link>
-          </div>
-          {upcomingHatches.length > 0 ? (
-            <ul className="mt-2">
-              {upcomingHatches.map(({ egg, breedingId }) => (
-                <li
-                  key={egg.id}
-                  className="flex min-h-11 min-w-0 items-center justify-between gap-2 border-b border-white/8 py-2 last:border-0"
-                >
-                  <span className="tabular-nums text-white/75">{egg.expectedHatchOn}</span>
-                  <Link href={`/breedings/${breedingId}`} className="text-sm text-white/35">
-                    ペアを見る
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
-      ) : null}
+      {japanSection}
+      {breedingSection}
     </div>
   );
 }

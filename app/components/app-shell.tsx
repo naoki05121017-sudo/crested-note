@@ -72,6 +72,7 @@ function NavLinks() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch
               className={`flex min-h-11 items-center gap-2 rounded-[0.9rem] px-3 text-sm ${
                 active ? "bg-white/12 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
               }`}
@@ -90,6 +91,7 @@ function NavLinks() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className={`flex min-h-11 items-center gap-2 rounded-[0.9rem] px-3 text-sm ${
                   active ? "bg-white/12 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
@@ -109,6 +111,7 @@ function NavLinks() {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className={`flex min-h-11 items-center gap-2 rounded-[0.9rem] px-3 text-sm ${
                   active ? "bg-white/12 text-white" : "text-white/55 hover:bg-white/10 hover:text-white"
                 }`}

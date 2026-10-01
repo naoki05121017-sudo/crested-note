@@ -26,11 +26,14 @@ describe("anonymous stats payloads", () => {
 
   it("keeps the home animal preview separate from nationwide Japan stats", () => {
     const home = readFileSync("app/(app)/page.tsx", "utf8");
+    const dashboard = readFileSync("app/components/home-dashboard.tsx", "utf8");
     expect(home).toContain("pageSize: HOME_ANIMAL_PREVIEW");
     expect(home).toContain("fetchJapanCrestStats()");
     expect(home).toContain("countOwnedAnimals");
     expect(home).toContain("japanRegistered={japan.registered}");
-    expect(home).toContain("animalCount={animalCount}");
+    expect(home).toContain("animalCount={primary.animalCount}");
+    expect(home).toContain("<Suspense");
+    expect(dashboard).toContain("HomeJapanBlock");
   });
 
   it("loads Japan stats with the service-role client instead of the signed-in user", () => {
