@@ -61,6 +61,29 @@ export function toGalleryCard(input: {
   };
 }
 
+export type LoginGalleryPreviewCard = {
+  name: string;
+  morphLabel: string;
+  photoUrl: string;
+};
+
+export function loginGalleryPreviewCards(
+  cards: GalleryCard[],
+  limit = 3,
+): LoginGalleryPreviewCard[] {
+  const preview: LoginGalleryPreviewCard[] = [];
+  for (const card of cards) {
+    if (!card.photoUrl || !card.href) continue;
+    preview.push({
+      name: card.name,
+      morphLabel: card.morphLabel,
+      photoUrl: card.photoUrl,
+    });
+    if (preview.length >= limit) break;
+  }
+  return preview;
+}
+
 export function parseGalleryFilters(params: Record<string, string | string[] | undefined>): GalleryFilters {
   const qRaw = params.q;
   const sexRaw = params.sex;

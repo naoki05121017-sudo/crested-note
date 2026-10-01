@@ -1,10 +1,15 @@
 import { Suspense } from "react";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { LegalNav } from "@/app/components/legal-nav";
+import { LoginGalleryPreview } from "@/app/components/login-gallery-preview";
 import { LoginCheckNotice, LoginNextField } from "@/app/components/login-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { signIn } from "@/app/auth/actions";
+import {
+  listPublicGalleryPage,
+  loginGalleryPreviewCards,
+} from "@/lib/db/public-gallery";
 import { Dela_Gothic_One } from "next/font/google";
 import Link from "next/link";
 
@@ -16,8 +21,17 @@ const crestTitle = Dela_Gothic_One({
 });
 
 export const metadata = { title: "ログイン" };
+export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  let preview: ReturnType<typeof loginGalleryPreviewCards> = [];
+  try {
+    const listed = await listPublicGalleryPage({ page: 1 });
+    preview = loginGalleryPreviewCards(listed.cards);
+  } catch {
+    preview = [];
+  }
+
   return (
     <div className="nc-hero nc-crest-stage nc-login-stage nc-login-enter flex flex-col">
       <CrestPhoto />
@@ -41,7 +55,8 @@ export default function LoginPage() {
             みんなのクレスを見る
           </Link>
         </p>
-        <div className="mt-12 max-w-md">
+        <LoginGalleryPreview cards={preview} />
+        <div className="mt-8 max-w-md">
           <Suspense>
             <LoginCheckNotice />
           </Suspense>

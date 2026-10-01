@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LIVING_STATUSES, parseGalleryFilters, settingsRevalidatePaths, toGalleryCard } from "./public-gallery";
+import { LIVING_STATUSES, loginGalleryPreviewCards, parseGalleryFilters, settingsRevalidatePaths, toGalleryCard } from "./public-gallery";
 
 describe("gallery filters", () => {
   it("keeps search, sex, and page for later UI without requiring them", () => {
@@ -71,6 +71,83 @@ describe("gallery card DTO", () => {
     expect(card.photoUrl).toBeNull();
     expect(card.href).toBeNull();
     expect(JSON.stringify(card)).not.toContain("example.com");
+  });
+});
+
+describe("login gallery preview", () => {
+  it("keeps only public animals that have a photo and drops private fields", () => {
+    const preview = loginGalleryPreviewCards([
+      toGalleryCard({
+        isPublic: false,
+        name: "非公開レオ",
+        sex: "male",
+        morphLabel: "ダルト",
+        photoUrl: "https://example.com/secret.jpg",
+        shareSlug: "secret-slug",
+        nickname: "なお",
+        weightG: 12,
+      }),
+      toGalleryCard({
+        isPublic: true,
+        name: "公開リリー",
+        sex: "female",
+        morphLabel: "リリーホワイト",
+        photoUrl: "https://example.com/lily.jpg",
+        shareSlug: "open-lily",
+        nickname: "飼い主A",
+        weightG: 38,
+      }),
+      toGalleryCard({
+        isPublic: true,
+        name: "写真なし",
+        sex: "unknown",
+        morphLabel: "ノーマル",
+        photoUrl: "",
+        shareSlug: "open-blank",
+        nickname: "飼い主B",
+        weightG: null,
+      }),
+      toGalleryCard({
+        isPublic: true,
+        name: "公開ソラ",
+        sex: "male",
+        morphLabel: "ファントム",
+        photoUrl: "https://example.com/sora.jpg",
+        shareSlug: "open-sora",
+        nickname: "飼い主C",
+        weightG: 41,
+      }),
+      toGalleryCard({
+        isPublic: true,
+        name: "公開モカ",
+        sex: "female",
+        morphLabel: "ハーレ",
+        photoUrl: "https://example.com/moca.jpg",
+        shareSlug: "open-moca",
+        nickname: "飼い主D",
+        weightG: 33,
+      }),
+      toGalleryCard({
+        isPublic: true,
+        name: "公開4匹目",
+        sex: "male",
+        morphLabel: "ダル",
+        photoUrl: "https://example.com/four.jpg",
+        shareSlug: "open-four",
+        nickname: "飼い主E",
+        weightG: 29,
+      }),
+    ]);
+    expect(preview).toEqual([
+      { name: "公開リリー", morphLabel: "リリーホワイト", photoUrl: "https://example.com/lily.jpg" },
+      { name: "公開ソラ", morphLabel: "ファントム", photoUrl: "https://example.com/sora.jpg" },
+      { name: "公開モカ", morphLabel: "ハーレ", photoUrl: "https://example.com/moca.jpg" },
+    ]);
+    expect(JSON.stringify(preview)).not.toContain("nickname");
+    expect(JSON.stringify(preview)).not.toContain("飼い主");
+    expect(JSON.stringify(preview)).not.toContain("user_id");
+    expect(JSON.stringify(preview)).not.toContain("secret");
+    expect(JSON.stringify(preview)).not.toContain("weight");
   });
 });
 
