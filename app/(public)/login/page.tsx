@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
-import { Card, PageHeader } from "@/app/components/ui";
+import { GuestPitch } from "@/app/components/guest-pitch";
+import { Card } from "@/app/components/ui";
 import { LegalNav } from "@/app/components/legal-nav";
 import { LoginCheckNotice, LoginNextField } from "@/app/components/login-form";
 import { MutationForm } from "@/app/components/mutation-form";
@@ -28,22 +29,22 @@ export default function LoginPage() {
           <p className={`nc-home-title-word ${crestTitle.className}`}>クレスノート</p>
           <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
         </div>
-        <PageHeader
-          kicker="ACCOUNT"
-          title="ログイン"
-          description="自分の個体だけが見えます。他の人の個体は表示されません。"
-        />
+        <div className="mt-6">
+          <GuestPitch />
+        </div>
         <Card tone="glass" className="mt-8 max-w-md">
+          <h1 className="text-lg font-semibold tracking-tight text-white">ログイン</h1>
+          <p className="mt-1 text-sm text-white/45">すでにアカウントがある場合</p>
           <Suspense>
             <LoginCheckNotice />
           </Suspense>
-          <MutationForm action={signIn} className="flex flex-col gap-4">
+          <MutationForm action={signIn} className="mt-4 flex flex-col gap-4">
             <Suspense fallback={<input type="hidden" name="next" value="/" />}>
               <LoginNextField />
             </Suspense>
             <label className="grid gap-1 text-sm text-white/80">
               <span>メールアドレス</span>
-              <input name="email" type="email" required autoComplete="email" className="nc-input" />
+              <input name="email" type="email" required autoComplete="email" className="nc-input min-h-12" />
             </label>
             <label className="grid gap-1 text-sm text-white/80">
               <span>パスワード</span>
@@ -52,17 +53,17 @@ export default function LoginPage() {
                 type="password"
                 required
                 autoComplete="current-password"
-                className="nc-input"
+                className="nc-input min-h-12"
               />
             </label>
-            <PendingSubmitButton pendingLabel="ログインしています…" className="nc-btn">
+            <PendingSubmitButton pendingLabel="ログインしています…" className="nc-btn min-h-12">
               ログイン
             </PendingSubmitButton>
           </MutationForm>
           <p className="mt-4 text-sm text-white/55">
             アカウントがない場合は{" "}
             <Link href="/signup" className="underline">
-              新規登録
+              無料ではじめる
             </Link>
           </p>
         </Card>

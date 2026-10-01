@@ -38,12 +38,12 @@ export default async function ChecksPage() {
 
       {checks.length === 0 ? (
         <section className="nc-lift rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] px-5 py-12 text-center text-ink sm:p-12">
-          <p className="text-lg font-semibold">チェック対象はまだありません</p>
+          <p className="text-lg font-semibold">まず間隔を決めましょう</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-            個体の記録の間隔を決めると、ここに並びます。
+            個体の記録間隔を決めると、ここに並びます。
           </p>
-          <Link href="/animals" className="nc-btn mt-6">
-            マイ個体を見る
+          <Link href="/animals" className="nc-btn mt-6 min-h-12">
+            個体を見る
           </Link>
         </section>
       ) : (

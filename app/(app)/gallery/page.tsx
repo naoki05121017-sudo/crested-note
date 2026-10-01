@@ -1,6 +1,7 @@
 import { PageHeader } from "@/app/components/ui";
 import { PublicGalleryList } from "@/app/components/public-gallery-list";
 import { listPublicGalleryPage, parseGalleryFilters } from "@/lib/db/public-gallery";
+import { getSessionUser } from "@/lib/auth/session";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export default async function GalleryPage({
   const params = await searchParams;
   const filters = parseGalleryFilters(params);
   const listed = await listPublicGalleryPage(filters);
+  const viewer = await getSessionUser();
   const pageCount = Math.max(1, Math.ceil(listed.total / listed.pageSize));
 
   return (
@@ -21,8 +23,13 @@ export default async function GalleryPage({
       <PageHeader
         kicker="GALLERY"
         title="みんなのクレス"
-        description="いま飼われているクレスを、アルバムのように眺められます。"
+        description="公開されているクレスです。記録・成長の実例を見られます。"
       />
+      {viewer ? null : (
+        <Link href="/signup" className="nc-btn inline-flex min-h-12 w-full sm:w-auto">
+          無料ではじめる
+        </Link>
+      )}
       <PublicGalleryList cards={listed.cards} />
       {pageCount > 1 ? (
         <nav className="flex items-center justify-between text-sm text-white/45" aria-label="ページ">

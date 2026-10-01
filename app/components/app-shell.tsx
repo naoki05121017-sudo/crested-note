@@ -151,7 +151,10 @@ function AuthFooter({
   if (!email) {
     return (
       <div className="mt-8 px-3 text-sm">
-        <Link href="/login" className="nc-btn-ghost w-full border-white/15 bg-white/8 text-white hover:bg-white/14">
+        <Link href="/signup" className="nc-btn w-full min-h-12">
+          無料ではじめる
+        </Link>
+        <Link href="/login" className="mt-3 block text-center text-xs text-white/45 underline-offset-2 hover:underline">
           ログイン
         </Link>
       </div>

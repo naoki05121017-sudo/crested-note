@@ -27,7 +27,7 @@ export default async function BreedingsPage() {
       />
       {breedings.length === 0 ? (
         <EmptyState
-          title="まだペアがありません"
+          title="まずペアを作りましょう"
           body="個体を選んで最初のペアを作ります。"
           action={
             <Link href="/breedings/new" className="nc-btn">

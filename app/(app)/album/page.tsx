@@ -51,12 +51,12 @@ export default async function AlbumPage({
 
       {listed.records.length === 0 ? (
         <section className="nc-lift rounded-[2rem] bg-gradient-to-br from-[#fff8fb] to-[#eef6fb] px-5 py-12 text-center text-ink sm:p-12">
-          <p className="text-lg font-semibold">まだ写真がありません</p>
+          <p className="text-lg font-semibold">まず写真を登録しましょう</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-            個体に写真を登録すると、ここに並びます。
+            個体に写真を付けると、ここに並びます。
           </p>
-          <Link href="/animals/new" className="nc-btn mt-6">
-            個体を登録
+          <Link href="/animals" className="nc-btn mt-6 min-h-12">
+            個体を見る
           </Link>
         </section>
       ) : (

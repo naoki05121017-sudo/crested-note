@@ -130,6 +130,16 @@ export default async function PublicAnimalPage({
         comments={comments}
         signedIn={Boolean(viewer)}
       />
+      {viewer ? null : (
+        <section className="min-w-0">
+          <p className="text-sm leading-6 text-white/45">
+            クレスの飼育・成長・繁殖をまとめて管理
+          </p>
+          <Link href="/signup" className="nc-btn mt-4 inline-flex min-h-12 w-full sm:w-auto">
+            無料ではじめる
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

@@ -97,11 +97,11 @@ export default async function AnimalsPage({
 
       {animals.length === 0 ? (
         <section className="nc-panel px-5 py-10 text-center text-ink sm:p-12">
-          <p className="text-lg font-semibold">まだ個体がありません</p>
+          <p className="text-lg font-semibold">まずクレスを登録しましょう</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-            最初の1匹を登録すると、遺伝計算や繁殖につなげられます。
+            写真・体重・成長を残せます。
           </p>
-          <Link href="/animals/new" className="nc-btn mt-6">
+          <Link href="/animals/new" className="nc-btn mt-6 min-h-12">
             個体を登録
           </Link>
         </section>

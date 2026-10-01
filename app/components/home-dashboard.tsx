@@ -256,10 +256,10 @@ export function HomeDashboard({
               <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
             </div>
             <p className="nc-hero-copy mt-4 max-w-[16.5rem] text-[15px] leading-7 sm:max-w-sm">
-              自分のクレスの体重と成長を、かんたんに残そう。
+              クレスの飼育・成長・繁殖をまとめて管理
             </p>
-            <Link href="/animals/new" className="nc-btn mt-5 w-full sm:w-auto">
-              個体を登録
+            <Link href="/animals/new" className="nc-btn mt-5 w-full min-h-12 sm:w-auto">
+              まずクレスを登録
             </Link>
           </div>
         </section>
@@ -272,15 +272,19 @@ export function HomeDashboard({
         <HomeSectionTitle kicker="WEIGHT" title="最新の体重" tone="mint" />
         {latestLogs.length === 0 ? (
           <p className="text-sm leading-6 text-white/40">
-            体重を記録すると、ここに並びます。
             {emptyCollection ? (
+              "登録したあと、ここに体重が並びます。"
+            ) : (
               <>
-                {" "}
-                <Link href="/animals/new" className="underline-offset-2 hover:underline">
-                  個体を登録
+                最初の体重を記録しましょう。{" "}
+                <Link
+                  href={`/animals/${animals[0].id}#weight`}
+                  className="underline underline-offset-2 hover:underline"
+                >
+                  記録する
                 </Link>
               </>
-            ) : null}
+            )}
           </p>
         ) : (
           <ul>
@@ -315,7 +319,7 @@ export function HomeDashboard({
             <p className="shrink-0 text-sm text-white/38">グラフを見る →</p>
           </Link>
         ) : (
-          <p className="text-sm leading-6 text-white/40">記録を続けると、成長が見えます。</p>
+          <p className="text-sm leading-6 text-white/40">登録したあと、成長グラフが見えます。</p>
         )}
       </section>
       </div>

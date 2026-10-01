@@ -59,10 +59,11 @@ export function HomeAnimalPreview({
   if (!star) {
     return (
       <section className="nc-panel p-5 text-ink sm:p-6">
-        <p className="text-base leading-7 text-muted">
-          まだ個体がありません。登録すると、写真・体重・成長を残せます。
+        <p className="text-base font-medium leading-7 text-ink">
+          まずクレスを登録しましょう
         </p>
-        <Link href="/animals/new" className="nc-btn mt-4 w-full sm:w-auto">
+        <p className="mt-2 text-sm leading-6 text-muted">写真・体重・成長を残せます。</p>
+        <Link href="/animals/new" className="nc-btn mt-4 w-full min-h-12 sm:w-auto">
           個体を登録
         </Link>
       </section>
