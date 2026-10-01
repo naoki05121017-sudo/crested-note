@@ -82,7 +82,7 @@ export default async function StatsPage() {
       </Card>
 
       <Card tone="lilac">
-        <SectionTitle>モルフの内訳</SectionTitle>
+        <SectionTitle>主なモルフ</SectionTitle>
         {stats.morphs.length === 0 ? (
           <p className="text-sm text-muted">
             匿名集計できる件数がまだありません。少数のモルフ名は出しません。
