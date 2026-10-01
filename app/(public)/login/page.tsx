@@ -1,7 +1,5 @@
 import { Suspense } from "react";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
-import { GuestPitch } from "@/app/components/guest-pitch";
-import { Card } from "@/app/components/ui";
 import { LegalNav } from "@/app/components/legal-nav";
 import { LoginCheckNotice, LoginNextField } from "@/app/components/login-form";
 import { MutationForm } from "@/app/components/mutation-form";
@@ -21,53 +19,71 @@ export const metadata = { title: "ログイン" };
 
 export default function LoginPage() {
   return (
-    <div className="nc-hero nc-crest-stage nc-login-stage flex flex-col gap-8">
+    <div className="nc-hero nc-crest-stage nc-login-stage flex flex-col">
       <CrestPhoto />
       <div className="nc-crest-stage-copy">
         <div className="nc-home-title-brand">
           <TitleCrown />
-          <p className={`nc-home-title-word ${crestTitle.className}`}>クレスノート</p>
+          <h1 className={`nc-home-title-word ${crestTitle.className}`}>クレスノート</h1>
           <p className="nc-hero-kicker nc-home-title-by">by N.crest</p>
         </div>
-        <div className="mt-6">
-          <GuestPitch />
-        </div>
-        <Card tone="glass" className="mt-8 max-w-md">
-          <h1 className="text-lg font-semibold tracking-tight text-white">ログイン</h1>
-          <p className="mt-1 text-sm text-white/45">すでにアカウントがある場合</p>
+        <p className="nc-hero-copy mt-8 max-w-[12.5rem] text-[15px] leading-7">
+          クレスの飼育・成長・繁殖をひとつに。
+        </p>
+        <p className="mt-3 text-sm tracking-wide text-white/40">
+          記録 → 成長 → 比較 → 繁殖
+        </p>
+        <Link href="/signup" className="nc-btn mt-6 w-full max-w-md min-h-12">
+          無料ではじめる
+        </Link>
+        <p className="mt-4 text-sm text-white/45">
+          <Link href="/gallery" className="underline underline-offset-2">
+            実際のクレスを見てみる
+          </Link>
+        </p>
+        <div className="mt-14 max-w-md">
           <Suspense>
             <LoginCheckNotice />
           </Suspense>
-          <MutationForm action={signIn} className="mt-4 flex flex-col gap-4">
-            <Suspense fallback={<input type="hidden" name="next" value="/" />}>
-              <LoginNextField />
-            </Suspense>
-            <label className="grid gap-1 text-sm text-white/80">
-              <span>メールアドレス</span>
-              <input name="email" type="email" required autoComplete="email" className="nc-input min-h-12" />
-            </label>
-            <label className="grid gap-1 text-sm text-white/80">
-              <span>パスワード</span>
-              <input
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                className="nc-input min-h-12"
-              />
-            </label>
-            <PendingSubmitButton pendingLabel="ログインしています…" className="nc-btn min-h-12">
+          <p className="text-sm text-white/40">すでにアカウントをお持ちですか？</p>
+          <details className="nc-login-details mt-2">
+            <summary className="cursor-pointer text-sm text-white/70 underline underline-offset-4">
               ログイン
-            </PendingSubmitButton>
-          </MutationForm>
-          <p className="mt-4 text-sm text-white/55">
-            アカウントがない場合は{" "}
-            <Link href="/signup" className="underline">
-              無料ではじめる
-            </Link>
-          </p>
-        </Card>
-        <LegalNav className="mt-8 max-w-md justify-start text-white/45" />
+            </summary>
+            <MutationForm action={signIn} className="mt-5 flex flex-col gap-4">
+              <Suspense fallback={<input type="hidden" name="next" value="/" />}>
+                <LoginNextField />
+              </Suspense>
+              <label className="grid gap-1 text-sm text-white/80">
+                <span>メールアドレス</span>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  className="nc-input min-h-12"
+                />
+              </label>
+              <label className="grid gap-1 text-sm text-white/80">
+                <span>パスワード</span>
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  className="nc-input min-h-12"
+                />
+              </label>
+              <PendingSubmitButton
+                pendingLabel="ログインしています…"
+                className="nc-btn-ghost min-h-12"
+              >
+                ログイン
+              </PendingSubmitButton>
+            </MutationForm>
+          </details>
+        </div>
+        <LegalNav className="mt-10 max-w-md justify-start text-white/45" />
       </div>
     </div>
   );

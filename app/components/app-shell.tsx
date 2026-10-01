@@ -333,6 +333,14 @@ export function AppShell({
         <main className="mx-auto w-full min-w-0 max-w-4xl px-4 py-8">{children}</main>
       </div>
     );
+  } else if (pathname === "/login") {
+    tree = (
+      <div className="min-h-full min-w-0 bg-background">
+        <main className="mx-auto w-full min-w-0 max-w-4xl px-4 py-8 sm:px-8">
+          {children}
+        </main>
+      </div>
+    );
   } else if (publicView) {
     tree = (
       <div className="min-h-full min-w-0 bg-background">
