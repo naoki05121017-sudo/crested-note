@@ -19,17 +19,17 @@ const tabs = [
 ] as const;
 
 const morePrimary = [
-  { href: "/gallery", label: "みんなのクレス", icon: IconGecko },
-  { href: "/compare", label: "全国個体比較", icon: IconChart },
-  { href: "/stats", label: "日本のクレス統計", icon: IconChart },
-  { href: "/album", label: "成長アルバム", icon: IconGecko },
-  { href: "/settings", label: "設定", icon: IconGear },
+  { href: "/gallery", label: "みんなのクレス", hint: "公開されている写真", icon: IconGecko },
+  { href: "/compare", label: "全国個体比較", hint: "近い条件の平均体重", icon: IconChart },
+  { href: "/stats", label: "日本のクレス統計", hint: "登録数と体重の集計", icon: IconChart },
+  { href: "/album", label: "成長アルバム", hint: "自分の写真", icon: IconGecko },
+  { href: "/settings", label: "設定", hint: "ニックネーム・通知", icon: IconGear },
 ] as const;
 
 const moreBreed = [
-  { href: "/calculator", label: "遺伝計算", icon: IconDna },
-  { href: "/simulate", label: "シミュレーション", icon: IconDna },
-  { href: "/breedings", label: "ブリード", icon: IconEgg },
+  { href: "/calculator", label: "遺伝計算", hint: "ペアの予測", icon: IconDna },
+  { href: "/simulate", label: "シミュレーション", hint: "何世代も先", icon: IconDna },
+  { href: "/breedings", label: "ブリード", hint: "ペアと卵", icon: IconEgg },
 ] as const;
 
 function IconBellTab() {
@@ -128,19 +128,25 @@ export function MobileAppNav() {
             <p id={titleId} className="text-lg font-semibold tracking-tight">
               もっと
             </p>
-            <p className="mt-1 text-sm text-muted">比較・統計・設定。ブリードは下にあります。</p>
+            <p className="mt-1 text-sm text-muted">比較・統計・設定</p>
             <ul className="mt-4 grid gap-1">
               {morePrimary.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     prefetch={false}
-                    className={`flex min-h-12 items-center gap-3 rounded-[0.9rem] px-3 text-sm ${
+                    className={`flex min-h-14 items-center gap-3 rounded-[0.9rem] px-3 py-2 text-sm ${
                       isActivePath(pathname, item.href) ? "bg-[#f4d5e2]" : "hover:bg-white/70"
                     }`}
                   >
                     <item.icon />
-                    {item.label}
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium">{item.label}</span>
+                      <span className="mt-0.5 block text-xs text-muted">{item.hint}</span>
+                    </span>
+                    <span className="shrink-0 text-lg leading-none text-ink/25" aria-hidden>
+                      ›
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -152,12 +158,18 @@ export function MobileAppNav() {
                   <Link
                     href={item.href}
                     prefetch={false}
-                    className={`flex min-h-12 items-center gap-3 rounded-[0.9rem] px-3 text-sm ${
+                    className={`flex min-h-14 items-center gap-3 rounded-[0.9rem] px-3 py-2 text-sm ${
                       isActivePath(pathname, item.href) ? "bg-[#ece6fb]" : "hover:bg-white/70"
                     }`}
                   >
                     <item.icon />
-                    {item.label}
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-medium">{item.label}</span>
+                      <span className="mt-0.5 block text-xs text-muted">{item.hint}</span>
+                    </span>
+                    <span className="shrink-0 text-lg leading-none text-ink/25" aria-hidden>
+                      ›
+                    </span>
                   </Link>
                 </li>
               ))}

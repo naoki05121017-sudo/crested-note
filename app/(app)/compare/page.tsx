@@ -51,7 +51,7 @@ export default async function ComparePage({
       <PageHeader
         kicker="COMPARE"
         title="全国個体比較"
-        description="日本国内の、条件が近い個体の平均体重と比べます。公開・非公開を問わず匿名の集計です。海外データは含めません。順位・パーセンタイル・上位○%は出しません。全国の飼育者データがまだ少ないときは、クレスノートに登録された個体だけの参考値です。"
+        description="近い条件の平均体重と比べます。順位は出しません。"
       />
 
       {animals.length === 0 ? (
@@ -71,7 +71,7 @@ export default async function ComparePage({
         >
           <label className="grid min-w-0 flex-1 gap-1 text-sm">
             <span>比較する個体</span>
-            <select name="animalId" defaultValue={selectedId} className="nc-input">
+            <select name="animalId" defaultValue={selectedId} className="nc-input min-h-12">
               {animals.map((row) => (
                 <option key={row.id} value={row.id}>
                   {animalTitle(row)}
@@ -79,11 +79,17 @@ export default async function ComparePage({
               ))}
             </select>
           </label>
-          <PendingSubmitButton pendingLabel="表示しています…" className="nc-btn w-full sm:w-auto">
+          <PendingSubmitButton pendingLabel="表示しています…" className="nc-btn min-h-12 w-full sm:w-auto">
             見る
           </PendingSubmitButton>
         </SoftNavForm>
       )}
+
+      {animals.length > 0 ? (
+        <p className="text-sm leading-6 text-white/40">
+          公開・非公開を問わない匿名集計です。海外データは含めません。件数が少ないときは平均を出しません。
+        </p>
+      ) : null}
 
       {animal && comparison ? (
         <>

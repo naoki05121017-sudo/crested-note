@@ -1,21 +1,13 @@
-import {
-  CREST_NOTE_INCLUDED,
-  CREST_NOTE_MONTHLY_PRICE_LABEL,
-} from "@/lib/care/included";
+import { CREST_NOTE_INCLUDED } from "@/lib/care/included";
 
-export function IncludedFeatures({
-  compact = false,
-}: {
-  compact?: boolean;
-}) {
+export function IncludedFeatures() {
   return (
     <div>
       <h2 className="text-lg font-semibold tracking-tight">
         クレスノートでできること
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted">
-        飼っているあいだ、記録・振り返り・比較がひとつの場所にまとまっています。
-        {compact ? null : ` ${CREST_NOTE_MONTHLY_PRICE_LABEL}のサブスクリプションを想定しています。`}
+        記録・比較・振り返りをひとつの場所にまとめています。
       </p>
       <ul className="mt-4 flex flex-wrap gap-2">
         {CREST_NOTE_INCLUDED.map((label) => (

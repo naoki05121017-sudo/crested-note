@@ -11,5 +11,3 @@ export const CREST_NOTE_INCLUDED = [
   "永久ID",
   "お迎え記念",
 ] as const;
-
-export const CREST_NOTE_MONTHLY_PRICE_LABEL = "月額980円";

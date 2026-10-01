@@ -33,7 +33,7 @@ export default async function ChecksPage() {
       <PageHeader
         kicker="CHECK"
         title="クレスチェック"
-        description="期限超過と今日チェックを先に、残りは次の記録が近い順です。"
+        description="今日チェックが先、近い順に並びます。"
       />
 
       {checks.length === 0 ? (

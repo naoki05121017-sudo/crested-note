@@ -8,7 +8,7 @@ export function FeedbackForm() {
   return (
     <MutationForm action={submitFeedback} className="flex max-w-xl flex-col gap-4">
       <p className="text-sm leading-6 text-muted">
-        わかりにくいところ、追加してほしいモルフ、計算の気になる点、不具合など、運営へのご意見をお送りください。他の人には表示されません。
+        運営へのご意見です。他の人には見えません。
       </p>
       <label className="grid gap-1 text-sm">
         <span>内容の種類</span>

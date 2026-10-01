@@ -46,7 +46,7 @@ export default async function AlbumPage({
       <PageHeader
         kicker="ALBUM"
         title="成長アルバム"
-        description="写真がある個体をコンパクトに一覧します。タップすると個体の詳細へ進みます。"
+        description="写真がある個体。タップで詳細へ。"
       />
 
       {listed.records.length === 0 ? (

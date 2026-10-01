@@ -14,8 +14,9 @@ export default async function StatsPage() {
       <PageHeader
         kicker="JAPAN"
         title="日本のクレス統計"
-        description={JAPAN_STATS_SAMPLE_NOTE}
+        description="登録数・性別・体重の匿名集計です。"
       />
+      <p className="text-sm leading-6 text-white/40">{JAPAN_STATS_SAMPLE_NOTE}</p>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Stat label="登録個体" value={stats.registered} tone="blush" />

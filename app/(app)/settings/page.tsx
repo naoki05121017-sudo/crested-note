@@ -14,6 +14,10 @@ import { PREFECTURES } from "@/lib/db/labels";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "設定" };
 
+function SectionLabel({ children }: { children: string }) {
+  return <p className="mb-2 px-0.5 text-sm text-white/45">{children}</p>;
+}
+
 export default async function SettingsPage({
   searchParams,
 }: {
@@ -25,89 +29,117 @@ export default async function SettingsPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader
-        kicker="SETTINGS"
-        title="設定"
-        description="ニックネームと、新規個体の公開初期値など。"
-      />
-      <Card>
-        <h2 className="mb-4 text-lg font-semibold">アカウント</h2>
-        <form action={signOut}>
-          <PendingSubmitButton pendingLabel="ログアウトしています…" className="nc-btn-ghost">
-            ログアウト
-          </PendingSubmitButton>
-        </form>
-      </Card>
-      <Card tone="mist">
-      <MutationForm action={saveSettings} className="flex max-w-xl flex-col gap-4">
-        <label className="grid gap-1 text-sm">
-              <span>ニックネーム</span>
-              <input
-                name="displayName"
-                required
-                maxLength={NICKNAME_MAX_LEN}
-                defaultValue={settings.displayName}
-                className="nc-input"
-              />
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span>コレクション名</span>
-          <input
-            name="collectionName"
-            defaultValue={settings.collectionName}
-            className="nc-input"
-          />
-        </label>
-        <label className="grid gap-1 text-sm">
-          <span>都道府県</span>
-          <select name="prefecture" defaultValue={settings.prefecture} className="nc-input">
-            <option value="">未設定</option>
-            {PREFECTURES.map((pref) => (
-              <option key={pref} value={pref}>
-                {pref}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex min-h-11 items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="publicByDefault"
-            defaultChecked={settings.publicByDefault}
-            className="nc-check"
-          />
-          新規個体を最初から公開する
-        </label>
-        <PendingSubmitButton pendingLabel="保存しています…" className="nc-btn w-full sm:w-fit">
+      <PageHeader kicker="SETTINGS" title="設定" description="ニックネーム、公開、通知。" />
+
+      <section>
+        <SectionLabel>アカウント</SectionLabel>
+        <Card>
+          <form action={signOut}>
+            <PendingSubmitButton pendingLabel="ログアウトしています…" className="nc-btn-ghost min-h-12 w-full sm:w-auto">
+              ログアウト
+            </PendingSubmitButton>
+          </form>
+        </Card>
+      </section>
+
+      <MutationForm action={saveSettings} className="flex flex-col gap-5">
+        <section>
+          <SectionLabel>プロフィール</SectionLabel>
+          <Card>
+            <div className="flex flex-col gap-5">
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium">ニックネーム</span>
+                <input
+                  name="displayName"
+                  required
+                  maxLength={NICKNAME_MAX_LEN}
+                  defaultValue={settings.displayName}
+                  className="nc-input min-h-12"
+                />
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium">コレクション名</span>
+                <input
+                  name="collectionName"
+                  defaultValue={settings.collectionName}
+                  className="nc-input min-h-12"
+                />
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="font-medium">都道府県</span>
+                <select name="prefecture" defaultValue={settings.prefecture} className="nc-input min-h-12">
+                  <option value="">未設定</option>
+                  {PREFECTURES.map((pref) => (
+                    <option key={pref} value={pref}>
+                      {pref}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </Card>
+        </section>
+
+        <section>
+          <SectionLabel>公開</SectionLabel>
+          <Card>
+            <label className="flex min-h-14 items-center justify-between gap-4">
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">新規個体を公開</span>
+                <span className="mt-1 block text-sm leading-6 text-muted">
+                  登録時の初期値。あとから個体ごとに変えられます。
+                </span>
+              </span>
+              <span className="flex shrink-0 items-center gap-3">
+                <span className="text-sm font-medium tabular-nums">
+                  {settings.publicByDefault ? "オン" : "オフ"}
+                </span>
+                <input
+                  type="checkbox"
+                  name="publicByDefault"
+                  defaultChecked={settings.publicByDefault}
+                  className="nc-check h-5 w-5"
+                />
+              </span>
+            </label>
+          </Card>
+        </section>
+
+        <PendingSubmitButton pendingLabel="保存しています…" className="nc-btn min-h-12 w-full sm:w-fit">
           保存する
         </PendingSubmitButton>
       </MutationForm>
-      </Card>
 
-      <Card>
-        <PushSettingsCard />
-      </Card>
+      <section>
+        <SectionLabel>通知</SectionLabel>
+        <Card>
+          <PushSettingsCard />
+        </Card>
+      </section>
 
-      <Card tone="blush">
-        <h2 className="mb-4 text-lg font-semibold">ご意見・不具合を送る</h2>
-        {sent ? (
-          <Notice>
-            運営へのご意見として受け付けました。他の人には表示されません。
-          </Notice>
-        ) : null}
-        <div className={sent ? "mt-4" : ""}>
-          <FeedbackForm />
+      <section>
+        <SectionLabel>アプリ</SectionLabel>
+        <div className="flex flex-col gap-5">
+          <Card>
+            <h2 className="mb-1 text-base font-semibold">ご意見</h2>
+            {sent ? (
+              <Notice>
+                運営へのご意見として受け付けました。他の人には表示されません。
+              </Notice>
+            ) : null}
+            <div className={sent ? "mt-4" : ""}>
+              <FeedbackForm />
+            </div>
+          </Card>
+          <Card>
+            <IncludedFeatures />
+          </Card>
+          <Card>
+            <h2 className="mb-3 text-base font-semibold">規約・表記</h2>
+            <LegalNav className="justify-start text-sm text-ink" />
+          </Card>
         </div>
-      </Card>
-
-      <Card>
-        <IncludedFeatures />
-      </Card>
-
-      <Card>
-        <h2 className="mb-4 text-lg font-semibold">規約・表記</h2>
-        <LegalNav className="justify-start text-sm text-ink" />
-      </Card>
+      </section>
     </div>
   );
 }

@@ -32,6 +32,7 @@ export function PushSettingsCard() {
     "unknown",
   );
   const [iosHint, setIosHint] = useState(false);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     const ok =
@@ -42,6 +43,12 @@ export function PushSettingsCard() {
     setSupported(ok);
     if (ok) setPermission(Notification.permission);
     setIosHint(isIos() && !isStandalone());
+    if (ok) {
+      void navigator.serviceWorker.getRegistration("/").then(async (registration) => {
+        const subscription = await registration?.pushManager.getSubscription();
+        setEnabled(Boolean(subscription));
+      });
+    }
     if (window.location.hash === "#crest-push") {
       document.getElementById("crest-push")?.scrollIntoView({
         behavior: "smooth",
@@ -88,6 +95,7 @@ export function PushSettingsCard() {
         setMessage("通知の登録を保存できませんでした。");
         return;
       }
+      setEnabled(true);
       setMessage("通知をオンにしました。期限が来た個体だけ、1日1回お知らせします。");
     } catch {
       setMessage("このブラウザでは通知を開始できませんでした。");
@@ -110,6 +118,7 @@ export function PushSettingsCard() {
         });
         await subscription.unsubscribe();
       }
+      setEnabled(false);
       setMessage("通知をオフにしました。");
       setPermission(Notification.permission);
     } catch {
@@ -121,11 +130,17 @@ export function PushSettingsCard() {
 
   return (
     <div id="crest-push" className="scroll-mt-24">
-      <h2 className="mb-2 text-lg font-semibold">クレスチェックの通知</h2>
-      <p className="text-sm leading-6 text-muted">
-        個体ごとに設定した間隔が来たら、「○のクレスチェックの時間です🦎」をスマホに送ります。
-        アプリを開いていなくても届きます。
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold">クレスチェックの通知</h2>
+          <p className="mt-1 text-sm leading-6 text-muted">
+            間隔が来た個体だけ、1日1回お知らせします。
+          </p>
+        </div>
+        <p className="shrink-0 pt-0.5 text-sm font-medium">
+          {enabled ? "オン" : "オフ"}
+        </p>
+      </div>
       {iosHint ? (
         <p className="mt-3 text-sm leading-6 text-ink/80">
           iPhoneのSafariのタブでは通知できません。共有ボタン →「ホーム画面に追加」→
@@ -137,12 +152,12 @@ export function PushSettingsCard() {
       ) : null}
       {supported ? (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <button type="button" className="nc-btn w-full sm:w-auto" disabled={busy} onClick={enable}>
+          <button type="button" className="nc-btn min-h-12 w-full sm:w-auto" disabled={busy} onClick={enable}>
             通知をオンにする
           </button>
           <button
             type="button"
-            className="nc-btn-ghost w-full sm:w-auto"
+            className="nc-btn-ghost min-h-12 w-full sm:w-auto"
             disabled={busy}
             onClick={disable}
           >

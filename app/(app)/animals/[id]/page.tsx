@@ -181,7 +181,7 @@ export default async function AnimalDetailPage({
         )}
       </section>
 
-      <AnimalMore>
+      <AnimalMore value={cadenceLabel(animal.checkEveryDays) ?? "間隔未設定"}>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Link href={`/animals/${animal.id}/edit`} className="nc-btn w-full sm:w-auto">
               編集
