@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { AnimalPhoto } from "@/app/components/animal-photo";
-import type { LoginGalleryPreviewCard } from "@/lib/db/public-gallery";
+import {
+  listPublicGalleryPage,
+  loginGalleryPreviewCards,
+  type LoginGalleryPreviewCard,
+} from "@/lib/db/public-gallery";
 
 export function LoginGalleryPreview({ cards }: { cards: LoginGalleryPreviewCard[] }) {
   if (cards.length === 0) return null;
@@ -34,4 +38,13 @@ export function LoginGalleryPreview({ cards }: { cards: LoginGalleryPreviewCard[
       </ul>
     </section>
   );
+}
+
+export async function LoginGalleryPreviewSlot() {
+  try {
+    const listed = await listPublicGalleryPage({ page: 1 });
+    return <LoginGalleryPreview cards={loginGalleryPreviewCards(listed.cards)} />;
+  } catch {
+    return null;
+  }
 }

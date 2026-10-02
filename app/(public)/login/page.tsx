@@ -1,15 +1,11 @@
 import { Suspense } from "react";
 import { CrestPhoto, TitleCrown } from "@/app/components/crest-photo";
 import { LegalNav } from "@/app/components/legal-nav";
-import { LoginGalleryPreview } from "@/app/components/login-gallery-preview";
+import { LoginGalleryPreviewSlot } from "@/app/components/login-gallery-preview";
 import { LoginCheckNotice, LoginNextField } from "@/app/components/login-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { signIn } from "@/app/auth/actions";
-import {
-  listPublicGalleryPage,
-  loginGalleryPreviewCards,
-} from "@/lib/db/public-gallery";
 import { Dela_Gothic_One } from "next/font/google";
 import Link from "next/link";
 
@@ -21,17 +17,8 @@ const crestTitle = Dela_Gothic_One({
 });
 
 export const metadata = { title: "ログイン" };
-export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
-  let preview: ReturnType<typeof loginGalleryPreviewCards> = [];
-  try {
-    const listed = await listPublicGalleryPage({ page: 1 });
-    preview = loginGalleryPreviewCards(listed.cards);
-  } catch {
-    preview = [];
-  }
-
+export default function LoginPage() {
   return (
     <div className="nc-hero nc-crest-stage nc-login-stage nc-login-enter flex flex-col">
       <CrestPhoto />
@@ -50,13 +37,7 @@ export default async function LoginPage() {
         <Link href="/signup" className="nc-btn mt-6 w-full max-w-md min-h-12">
           無料ではじめる
         </Link>
-        <p className="mt-4 text-sm text-white/45">
-          <Link href="/gallery" className="underline underline-offset-2">
-            みんなのクレスを見る
-          </Link>
-        </p>
-        <LoginGalleryPreview cards={preview} />
-        <div className="mt-8 max-w-md">
+        <div className="mt-5 max-w-md">
           <Suspense>
             <LoginCheckNotice />
           </Suspense>
@@ -64,7 +45,7 @@ export default async function LoginPage() {
             すでにアカウントをお持ちですか？
           </p>
           <details className="nc-login-details mt-2">
-            <summary className="cursor-pointer text-sm text-white/70 underline underline-offset-4">
+            <summary className="nc-btn-ghost mt-2 flex min-h-11 w-full cursor-pointer items-center justify-center text-sm">
               ログイン
             </summary>
             <MutationForm action={signIn} className="mt-5 flex flex-col gap-4">
@@ -100,6 +81,9 @@ export default async function LoginPage() {
             </MutationForm>
           </details>
         </div>
+        <Suspense fallback={null}>
+          <LoginGalleryPreviewSlot />
+        </Suspense>
         <LegalNav className="mt-5 max-w-md justify-start text-white/45" />
       </div>
     </div>

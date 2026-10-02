@@ -10,22 +10,31 @@ describe("first-look guest pitch", () => {
     expect(login).toContain("クレスの飼育・成長・繁殖をひとつに。");
     expect(login).toContain("記録 → 成長 → 比較 → 繁殖");
     expect(login).toContain("無料ではじめる");
-    expect(login).toContain("みんなのクレスを見る");
-    expect(login).toContain("LoginGalleryPreview");
-    expect(login).toContain("listPublicGalleryPage");
-    expect(login).toContain("loginGalleryPreviewCards");
+    expect(login).toContain("LoginGalleryPreviewSlot");
+    expect(login).toContain("<Suspense");
+    expect(login).toContain("export default function LoginPage");
+    expect(login).not.toContain("export default async function LoginPage");
+    expect(login).not.toContain("listPublicGalleryPage");
+    expect(login).not.toContain("loginGalleryPreviewCards");
     expect(login).not.toContain("user_id");
     expect(login).toContain("nc-login-enter");
     expect(login.match(/href="\/signup"/g)?.length).toBe(1);
     expect(login).toContain("すでにアカウントをお持ちですか？");
     expect(login).toContain("<details");
+    expect(login).toContain("nc-btn-ghost");
+    expect(login.indexOf("無料ではじめる")).toBeLessThan(login.indexOf("すでにアカウントをお持ちですか？"));
+    expect(login.indexOf("すでにアカウントをお持ちですか？")).toBeLessThan(
+      login.indexOf("<LoginGalleryPreviewSlot"),
+    );
     expect(login).toContain('href="/signup"');
     expect(login).toContain("signIn");
     expect(login.match(/無料ではじめる/g)?.length).toBe(1);
     expect(login).not.toContain("GuestPitch");
     expect(login).not.toContain("980");
     const preview = readFileSync("app/components/login-gallery-preview.tsx", "utf8");
-    expect(preview).toContain("みんなのクレス");
+    expect(preview).toContain("listPublicGalleryPage");
+    expect(preview).toContain("loginGalleryPreviewCards");
+    expect(preview).toContain("LoginGalleryPreviewSlot");
     expect(preview).toContain("クレスノートに登録されている個体を、少しだけ見てみる。");
     expect(preview).toContain('href="/gallery"');
     expect(preview.match(/href="\/gallery"/g)?.length).toBeGreaterThanOrEqual(2);

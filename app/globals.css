@@ -417,6 +417,12 @@ body {
   display: none;
 }
 
+.nc-login-details summary.nc-btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .nc-login-stage .nc-input {
   background: rgba(12, 10, 16, 0.62);
   border-color: rgba(255, 255, 255, 0.16);
