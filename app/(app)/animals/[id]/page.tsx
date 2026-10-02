@@ -15,6 +15,7 @@ import { DeleteAnimalForm } from "@/app/(app)/animals/delete-animal-form";
 import { MutationForm } from "@/app/components/mutation-form";
 import { PendingSubmitButton } from "@/app/components/pending-submit-button";
 import { AnimalCodeBlock } from "@/app/components/animal-code-block";
+import { AnimalQrBlock } from "@/app/components/animal-qr-block";
 import { HomeSectionTitle } from "@/app/components/home-section-title";
 import { AnimalPhoto } from "@/app/components/animal-photo";
 import { calendarDaysBetween, cadenceLabel, checkReminder } from "@/lib/care/check-cadence";
@@ -34,6 +35,8 @@ import {
 } from "@/lib/db/labels";
 import { formatGenotypeLabel, geneStatusLabelJa, listLoci, visualTraitName } from "@/lib/genetics";
 import { ageInMonths, todayIso } from "@/lib/stats/math";
+import { appOriginFromRequest } from "@/lib/auth/request-origin";
+import { buildPublicShareCard } from "@/lib/qr/share-card";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "個体詳細" };
@@ -47,13 +50,23 @@ export default async function AnimalDetailPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const [animal, latestRows] = await Promise.all([
+  const [animal, latestRows, origin] = await Promise.all([
     getAnimal(id),
     listLatestWeightsForAnimals([id]),
+    appOriginFromRequest(),
   ]);
   if (!animal) notFound();
 
   const latest = latestRows[0];
+  const morph = animal.morphLabel || formatGenotypeLabel(animal.genotype);
+  const shareCard = buildPublicShareCard(origin, {
+    isPublic: animal.isPublic,
+    shareSlug: animal.shareSlug,
+    name: animal.name,
+    morphLabel: morph,
+    code: animal.code,
+    photoUrl: animal.photoUrl,
+  });
   const weightsPromise = listWeights(animal.id);
   const traitLabels = animal.traits.map((tid) =>
     visualTraitName(tid, animal.traitLevels?.[tid]),
@@ -77,7 +90,6 @@ export default async function AnimalDetailPage({
   const checkStatus = reminder
     ? crestCheckStatusLabel(crestCheckItemFromReminder(animal, reminder))
     : "間隔未設定";
-  const morph = animal.morphLabel || formatGenotypeLabel(animal.genotype);
 
   return (
     <div className="flex min-w-0 max-w-full flex-col gap-10">
@@ -199,6 +211,7 @@ export default async function AnimalDetailPage({
             className="rounded-2xl bg-[#f6f3f8] px-4 py-4"
             codeClassName="mt-2 font-mono text-xl font-semibold tracking-wide text-ink"
           />
+          <AnimalQrBlock card={shareCard} />
 
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
