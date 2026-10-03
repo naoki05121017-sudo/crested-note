@@ -23,7 +23,7 @@ export default async function GalleryPage({
       <PageHeader
         kicker="GALLERY"
         title="みんなのクレス"
-        description="公開されているクレスです。記録・成長の実例を見られます。"
+        description="登録されている生存個体です。公開個体は詳細ページを見られます。"
       />
       {viewer ? null : (
         <Link href="/signup" className="nc-btn inline-flex min-h-12 w-full sm:w-auto">

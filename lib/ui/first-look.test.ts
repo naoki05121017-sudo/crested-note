@@ -9,6 +9,10 @@ describe("first-look guest pitch", () => {
     const shell = readFileSync("app/components/app-shell.tsx", "utf8");
     expect(login).toContain("クレスの飼育・成長・繁殖をひとつに。");
     expect(login).toContain("記録 → 成長 → 比較 → 繁殖");
+    expect(login).not.toContain("ThemeToggle");
+    expect(login).not.toContain("ThemeSettings");
+    expect(login).not.toContain("☀️");
+    expect(login).not.toContain("🌙");
     expect(login).toContain("無料ではじめる");
     expect(login).toContain("LoginGalleryPreviewSlot");
     expect(login).toContain("<Suspense");

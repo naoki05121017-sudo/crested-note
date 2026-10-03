@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { ANIMAL_PHOTO_BUCKET } from "@/lib/db/animal-photo";
+import { ANIMAL_PHOTO_BUCKET, animalPhotoObjectKey } from "@/lib/db/animal-photo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   canReadAnimalPhoto,
@@ -22,22 +22,34 @@ export async function GET(
   const admin = createAdminClient();
   const { data: animal, error } = await admin
     .from("animals")
-    .select("is_public, user_id")
+    .select("is_public, user_id, status, photo_url")
     .eq("id", animalId)
     .maybeSingle();
   if (error || !animal) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const viewer = await getSessionUser();
-  if (
-    !canReadAnimalPhoto({
-      isPublic: Boolean(animal.is_public),
-      ownerUserId: String(animal.user_id),
-      viewerUserId: viewer?.id ?? null,
-    })
-  ) {
-    return new NextResponse("Not found", { status: 404 });
+  const isPublic = Boolean(animal.is_public);
+  const isLiving = animal.status === "active" || animal.status === "breeding";
+  const isGalleryCover = animalPhotoObjectKey(String(animal.photo_url ?? "")) === key;
+  const guestOk = canReadAnimalPhoto({
+    isPublic,
+    ownerUserId: String(animal.user_id),
+    viewerUserId: null,
+    isLiving,
+    isGalleryCover,
+  });
+  if (!guestOk) {
+    const viewer = await getSessionUser();
+    if (
+      !canReadAnimalPhoto({
+        isPublic: false,
+        ownerUserId: String(animal.user_id),
+        viewerUserId: viewer?.id ?? null,
+      })
+    ) {
+      return new NextResponse("Not found", { status: 404 });
+    }
   }
 
   const downloaded = await admin.storage.from(ANIMAL_PHOTO_BUCKET).download(key);
@@ -51,7 +63,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": animal.is_public
+      "Cache-Control": guestOk
         ? "public, max-age=3600"
         : "private, no-store",
     },

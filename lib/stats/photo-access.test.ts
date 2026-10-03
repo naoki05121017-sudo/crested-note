@@ -11,9 +11,33 @@ describe("animal photo access", () => {
     ).toBe(true);
   });
 
-  it("lets only the owner read a private animal photo", () => {
+  it("lets guests read a living private cover photo for the gallery only", () => {
     expect(
-      canReadAnimalPhoto({ isPublic: false, ownerUserId: owner, viewerUserId: null }),
+      canReadAnimalPhoto({
+        isPublic: false,
+        ownerUserId: owner,
+        viewerUserId: null,
+        isLiving: true,
+        isGalleryCover: true,
+      }),
+    ).toBe(true);
+    expect(
+      canReadAnimalPhoto({
+        isPublic: false,
+        ownerUserId: owner,
+        viewerUserId: null,
+        isLiving: true,
+        isGalleryCover: false,
+      }),
+    ).toBe(false);
+    expect(
+      canReadAnimalPhoto({
+        isPublic: false,
+        ownerUserId: owner,
+        viewerUserId: null,
+        isLiving: false,
+        isGalleryCover: true,
+      }),
     ).toBe(false);
     expect(
       canReadAnimalPhoto({ isPublic: false, ownerUserId: owner, viewerUserId: other }),

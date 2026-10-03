@@ -54,6 +54,7 @@ describe("proxy and session still verify with getUser", () => {
     expect(proxy).toContain("supabase.auth.getUser()");
     expect(proxy).toContain("markVerifiedUserHeaders");
     expect(proxy).toContain("stripVerifiedUserHeaders");
+    expect(proxy).toContain('pathname.startsWith("/api/animal-photos/")');
     expect(session).toContain("readVerifiedSessionUser");
     expect(session).toContain("supabase.auth.getUser()");
     expect(layout).toContain("getSessionUser");

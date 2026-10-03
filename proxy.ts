@@ -44,6 +44,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
+  if (pathname.startsWith("/api/animal-photos/")) {
+    return continueWithHeaders(request, response, undefined);
+  }
+
   const supabase = createServerClient(url, publishable, {
     cookies: {
       getAll() {

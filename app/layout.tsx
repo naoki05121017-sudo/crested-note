@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
+import { THEME_BOOT_SCRIPT } from "@/lib/ui/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,10 +42,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} h-full antialiased`}
-      style={{ backgroundColor: "#17141c" }}
+      className={`${geistSans.variable} theme-light h-full antialiased`}
+      data-theme="light"
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-[#17141c]">{children}</body>
+      <body className="flex min-h-full flex-col bg-background">
+        <Script id="nc-theme-boot" strategy="beforeInteractive">
+          {THEME_BOOT_SCRIPT}
+        </Script>
+        {children}
+      </body>
     </html>
   );
 }

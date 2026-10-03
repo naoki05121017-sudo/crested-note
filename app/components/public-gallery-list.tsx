@@ -29,7 +29,9 @@ function GalleryCardBody({ card }: { card: GalleryCard }) {
             {card.weightG}g
           </p>
         ) : null}
-        <p className="mt-3 truncate text-[11px] text-white/38">ニックネーム：{card.nickname}</p>
+        {card.nickname ? (
+          <p className="mt-3 truncate text-[11px] text-white/38">ニックネーム：{card.nickname}</p>
+        ) : null}
       </div>
     </>
   );

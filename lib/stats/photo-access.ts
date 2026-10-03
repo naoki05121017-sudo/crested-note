@@ -2,9 +2,12 @@ export function canReadAnimalPhoto(options: {
   isPublic: boolean;
   ownerUserId: string;
   viewerUserId: string | null;
+  isLiving?: boolean;
+  isGalleryCover?: boolean;
 }): boolean {
   if (options.isPublic) return true;
-  return Boolean(options.viewerUserId && options.viewerUserId === options.ownerUserId);
+  if (options.viewerUserId && options.viewerUserId === options.ownerUserId) return true;
+  return Boolean(options.isGalleryCover && options.isLiving);
 }
 
 const ANIMAL_ID_RE =

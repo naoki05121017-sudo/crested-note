@@ -7,6 +7,7 @@ import { Card, Notice, PageHeader } from "@/app/components/ui";
 import { LegalNav } from "@/app/components/legal-nav";
 import { IncludedFeatures } from "@/app/components/included-features";
 import { PushSettingsCard } from "@/app/(app)/settings/push-settings-card";
+import { ThemeSettings } from "@/app/components/theme-settings";
 import { getSettings } from "@/lib/db/queries";
 import { NICKNAME_MAX_LEN } from "@/lib/community/album-comments";
 import { PREFECTURES } from "@/lib/db/labels";
@@ -30,6 +31,13 @@ export default async function SettingsPage({
   return (
     <div className="flex flex-col gap-8">
       <PageHeader kicker="SETTINGS" title="設定" description="ニックネーム、公開、通知。" />
+
+      <section>
+        <SectionLabel>テーマ</SectionLabel>
+        <Card>
+          <ThemeSettings />
+        </Card>
+      </section>
 
       <section>
         <SectionLabel>アカウント</SectionLabel>

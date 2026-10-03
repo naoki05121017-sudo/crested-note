@@ -26,20 +26,22 @@ describe("gallery card DTO", () => {
     weightG: 12,
   };
 
-  it("omits photo, href, and private identifiers for unpublished animals", () => {
+  it("omits href, nickname, and private identifiers for unpublished animals but keeps the cover photo", () => {
     const card = toGalleryCard(privateRow);
     expect(card).toEqual({
       name: "非公開レオ",
       sex: "male",
       morphLabel: "ダルト",
-      nickname: "なお",
+      nickname: "",
       weightG: 12,
-      photoUrl: null,
+      photoUrl: "https://example.com/secret.jpg",
       href: null,
     });
-    expect(JSON.stringify(card)).not.toContain("secret");
+    expect(card.href).toBeNull();
+    expect(JSON.stringify(card)).not.toContain("secret-slug");
     expect(JSON.stringify(card)).not.toContain("user_id");
     expect(JSON.stringify(card)).not.toContain("shareSlug");
+    expect(JSON.stringify(card)).not.toContain("なお");
   });
 
   it("exposes photo and public page link only when the animal is public", () => {
@@ -61,16 +63,15 @@ describe("gallery card DTO", () => {
     });
   });
 
-  it("does not link or show a photo when a public animal has no slug", () => {
+  it("does not link when a public animal has no slug, but still shows the cover photo", () => {
     const card = toGalleryCard({
       ...privateRow,
       isPublic: true,
       shareSlug: "  ",
       photoUrl: "https://example.com/cover.jpg",
     });
-    expect(card.photoUrl).toBeNull();
+    expect(card.photoUrl).toBe("https://example.com/cover.jpg");
     expect(card.href).toBeNull();
-    expect(JSON.stringify(card)).not.toContain("example.com");
   });
 });
 
@@ -176,15 +177,18 @@ describe("settings nickname revalidation", () => {
 });
 
 describe("gallery living listing", () => {
-  it("lists active and breeding animals and does not filter the gallery query by is_public", () => {
+  it("lists living animals regardless of public flag, and only public cards get a detail href", () => {
     const src = readFileSync("lib/db/public-gallery.ts", "utf8");
-    const listFn = src.slice(src.indexOf("export async function listPublicGalleryPage"));
+    const listFn = src.slice(
+      src.indexOf("export async function listPublicGalleryPage"),
+      src.indexOf("export async function listAlbumPhotosForAnimal"),
+    );
     expect(LIVING_STATUSES).toEqual(["active", "breeding"]);
     expect(listFn).toContain('.in("status", [...LIVING_STATUSES])');
+    expect(listFn).not.toContain('.eq("is_public", true)');
+    expect(listFn).not.toContain('.neq("share_slug", "")');
     expect(listFn).not.toContain("sold");
     expect(listFn).not.toContain("deceased");
-    expect(listFn.slice(0, listFn.indexOf("export async function listAlbumPhotosForAnimal"))).not.toContain(
-      '.eq("is_public"',
-    );
+    expect(src).toContain("listedPublic ? `/p/${input.shareSlug}` : null");
   });
 });

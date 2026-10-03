@@ -54,9 +54,9 @@ export function toGalleryCard(input: {
     name: input.name,
     sex: input.sex,
     morphLabel: input.morphLabel,
-    nickname: input.nickname,
+    nickname: listedPublic ? input.nickname : "",
     weightG: input.weightG,
-    photoUrl: listedPublic && input.photoUrl.trim() ? input.photoUrl : null,
+    photoUrl: input.photoUrl.trim() ? input.photoUrl : null,
     href: listedPublic ? `/p/${input.shareSlug}` : null,
   };
 }
