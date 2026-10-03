@@ -73,7 +73,7 @@ export function calculatorTraitOptions(): CalculatorTraitOption[] {
     label: "アザンティック",
     kind: "axanthic",
     category: "mendelian",
-    hint: "劣性です。系統は別の遺伝子として計算します。",
+    hint: "劣性です。両親から1つずつ受け取ると見た目に出ます。",
     searchText: "アザンティック Axanthic axanthic",
   });
   for (const trait of VISUAL_TRAITS) {

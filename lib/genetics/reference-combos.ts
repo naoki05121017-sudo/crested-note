@@ -15,7 +15,7 @@ export const VISUAL_TOKEN_JA: Record<string, string> = {
   cappHighway: "カプチーノ/ハイウェイ",
   sableHighway: "セーブル/ハイウェイ",
   axanthic: "アザンティック",
-  axanthicTug: "アザンティック (TUG)",
+  axanthicTug: "アザンティック",
   axanthicMelanistic: "アザンティック (Melanistic)",
   axanthicArv: "アザンティック (ARV)",
   axanthicLava: "アザンティック (Lava)",
@@ -32,7 +32,7 @@ export const VISUAL_TOKEN_JA: Record<string, string> = {
 
 export const HET_TOKEN_JA: Record<string, string> = {
   axanthic: "ヘテロ アザンティック",
-  axanthicTug: "ヘテロ アザンティック (TUG)",
+  axanthicTug: "ヘテロ アザンティック",
   axanthicMelanistic: "ヘテロ アザンティック (Melanistic)",
   axanthicArv: "ヘテロ アザンティック (ARV)",
   axanthicLava: "ヘテロ アザンティック (Lava)",

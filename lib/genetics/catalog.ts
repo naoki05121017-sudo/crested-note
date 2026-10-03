@@ -52,14 +52,14 @@ export const LOCI: readonly LocusDefinition[] = [
   },
   {
     id: "axanthicTug",
-    nameJa: "アザンティック (TUG)",
-    nameEn: "Axanthic (TUG)",
+    nameJa: "アザンティック",
+    nameEn: "Axanthic",
     inheritance: "recessive",
-    visualNameJa: "アザンティック (TUG)",
-    notesJa: "アザンティックは系統ごとに別locusとして扱います。",
+    visualNameJa: "アザンティック",
+    notesJa: "表示・集計ではアザンティックとして扱います。",
     confidence: "ESTABLISHED",
     beginnerDescription:
-      "劣性です。TUG・Melanistic・ARV・Lavaは別の遺伝子として計算します。",
+      "劣性です。両親から1つずつ受け取ると見た目に出ます。",
   },
   {
     id: "axanthicMelanistic",

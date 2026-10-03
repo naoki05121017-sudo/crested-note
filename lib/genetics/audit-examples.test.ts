@@ -85,7 +85,7 @@ describe("major morph pairing examples", () => {
     expect(p(cross, "ヘテロ アザンティック")).toBeCloseTo(0.25);
     expect(p(cross, "ヘテロ アザンティック (Lava)")).toBeCloseTo(0.25);
     expect(
-      p(cross, "ヘテロ アザンティック (TUG) / ヘテロ アザンティック (Lava)"),
+      p(cross, "ヘテロ アザンティック / ヘテロ アザンティック (Lava)"),
     ).toBeCloseTo(0.25);
     expect(p(cross, "ノーマル")).toBeCloseTo(0.25);
   });
@@ -95,7 +95,7 @@ describe("major morph pairing examples", () => {
       { axanthicTug: "visual" },
       { axanthicLava: "visual" },
     );
-    expect(p(result, "ヘテロ アザンティック (TUG) / ヘテロ アザンティック (Lava)")).toBeCloseTo(
+    expect(p(result, "ヘテロ アザンティック / ヘテロ アザンティック (Lava)")).toBeCloseTo(
       1,
     );
     expect(p(result, "アザンティック")).toBe(0);

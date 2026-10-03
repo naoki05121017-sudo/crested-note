@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareAnimal, isJapanDomesticAnimal, MIN_COHORT_FOR_AVERAGE } from "./compare";
+import { compareAnimal, isJapanDomesticAnimal, MIN_COHORT_FOR_AVERAGE, visualMorphKey } from "./compare";
 import type { Animal, WeightLogRecord } from "@/lib/db/types";
 
 describe("isJapanDomesticAnimal", () => {
@@ -11,6 +11,25 @@ describe("isJapanDomesticAnimal", () => {
   it("keeps Japanese prefectures and excludes overseas labels", () => {
     expect(isJapanDomesticAnimal({ prefecture: "沖縄県" })).toBe(true);
     expect(isJapanDomesticAnimal({ prefecture: "California" })).toBe(false);
+  });
+});
+
+describe("visualMorphKey", () => {
+  it("counts stored axanthicTug as アザンティック, not a TUG line", () => {
+    expect(
+      visualMorphKey({
+        morphLabel: "",
+        traits: [],
+        genotype: { axanthicTug: "visual" },
+      }),
+    ).toBe("アザンティック");
+    expect(
+      visualMorphKey({
+        morphLabel: "",
+        traits: [],
+        genotype: { axanthicTug: "visual" },
+      }),
+    ).not.toMatch(/tug/i);
   });
 });
 

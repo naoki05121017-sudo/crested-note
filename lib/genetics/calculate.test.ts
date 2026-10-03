@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calculatePairing } from "./calculate";
-import { LOCI, VISUAL_TRAITS } from "./catalog";
+import { LOCI, VISUAL_TRAITS, getLocus } from "./catalog";
 import { formatProbability, geneStatusLabelJa } from "./format";
 import { formatGenotypeLabel } from "./phenotype";
 import { offspringCopyDistribution } from "./punnett";
@@ -205,6 +205,14 @@ describe("formatGenotypeLabel", () => {
     expect(formatGenotypeLabel({ phantom: "possible_50" })).toBe(
       "50%ヘテロ ファントム",
     );
+  });
+
+  it("labels stored axanthicTug as generic アザンティック, not a TUG line", () => {
+    expect(formatGenotypeLabel({ axanthicTug: "visual" })).toBe("アザンティック");
+    expect(formatGenotypeLabel({ axanthicTug: "het" })).toBe("ヘテロ アザンティック");
+    expect(formatGenotypeLabel({ axanthicTug: "visual" })).not.toMatch(/TUG/);
+    expect(getLocus("axanthicTug")?.nameJa).toBe("アザンティック");
+    expect(getLocus("axanthicTug")?.nameJa).not.toMatch(/TUG/);
   });
 });
 

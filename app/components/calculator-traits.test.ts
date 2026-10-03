@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AXANTHIC_TRAIT_ID,
   axanthicFromGenotype,
+  calculatorTraitOptions,
   clearTraitFromGenotype,
   setAxanthicGenotype,
   visibleTraitsFromParent,
@@ -39,9 +40,15 @@ describe("calculator trait UI helpers", () => {
     ).toEqual(["sable"]);
   });
 
-  it("reads the first active axanthic line for the lineage selector", () => {
+  it("reads the first active axanthic line for stored data without exposing lineage choices", () => {
     expect(
       axanthicFromGenotype({ axanthicMelanistic: "visual" }),
     ).toEqual({ locusId: "axanthicMelanistic", status: "visual" });
+    const labels = calculatorTraitOptions().map((row) => row.label);
+    expect(labels).toContain("アザンティック");
+    expect(labels.some((label) => label.includes("TUG"))).toBe(false);
+    expect(labels.some((label) => label.includes("Melanistic"))).toBe(false);
+    expect(labels.some((label) => label.includes("ARV"))).toBe(false);
+    expect(labels.some((label) => label.includes("Lava"))).toBe(false);
   });
 });

@@ -1,7 +1,10 @@
 import { listLoci, type Genotype } from "@/lib/genetics";
 import type { LocusDefinition } from "@/lib/genetics/types";
 import { Hint } from "@/app/components/ui";
-import { AXANTHIC_LOCUS_IDS } from "@/app/components/calculator-traits";
+import {
+  AXANTHIC_LOCUS_IDS,
+  axanthicFromGenotype,
+} from "@/app/components/calculator-traits";
 import {
   coerceParentStatus,
   parentStatusOptions,
@@ -13,19 +16,23 @@ function LocusSelect({
   locus,
   genotype,
   namePrefix,
+  label,
+  hint,
 }: {
   locus: LocusDefinition;
   genotype: Genotype;
   namePrefix: string;
+  label?: string;
+  hint?: string;
 }) {
   const value = coerceParentStatus(genotype[locus.id], locus.id, locus, "wild");
+  const title = label ?? locus.nameJa;
+  const help = hint ?? locus.beginnerDescription;
   return (
     <label className="grid gap-1 text-sm">
       <span className="font-medium">
-        {locus.nameJa}
-        {locus.beginnerDescription ? (
-          <Hint text={locus.beginnerDescription} />
-        ) : null}
+        {title}
+        {help ? <Hint text={help} /> : null}
       </span>
       <select
         name={`${namePrefix}:${locus.id}`}
@@ -51,7 +58,15 @@ export function GenotypeFields({
 }) {
   const loci = listLoci();
   const main = loci.filter((locus) => !AXANTHIC_SET.has(locus.id));
-  const axanthic = loci.filter((locus) => AXANTHIC_SET.has(locus.id));
+  const axanthicLoci = loci.filter((locus) => AXANTHIC_SET.has(locus.id));
+  const activeId = axanthicFromGenotype(genotype).locusId;
+  const activeLocus =
+    axanthicLoci.find((locus) => locus.id === activeId) ?? axanthicLoci[0];
+  const preserved = axanthicLoci.filter((locus) => {
+    if (!activeLocus || locus.id === activeLocus.id) return false;
+    const status = genotype[locus.id];
+    return Boolean(status && status !== "wild");
+  });
 
   return (
     <div className="flex flex-col gap-5">
@@ -65,22 +80,25 @@ export function GenotypeFields({
           />
         ))}
       </div>
-      <div>
-        <p className="mb-3 text-sm font-medium">
-          アザンティック
-          <Hint text="系統ごとに別の遺伝子として計算します。画面では1項目にまとめて選べます。" />
-        </p>
+      {activeLocus ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          {axanthic.map((locus) => (
-            <LocusSelect
+          <LocusSelect
+            locus={activeLocus}
+            genotype={genotype}
+            namePrefix={namePrefix}
+            label="アザンティック"
+            hint="劣性です。両親から1つずつ受け取ると見た目に出ます。"
+          />
+          {preserved.map((locus) => (
+            <input
               key={locus.id}
-              locus={locus}
-              genotype={genotype}
-              namePrefix={namePrefix}
+              type="hidden"
+              name={`${namePrefix}:${locus.id}`}
+              value={genotype[locus.id]}
             />
           ))}
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

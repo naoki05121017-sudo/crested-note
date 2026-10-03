@@ -21,7 +21,6 @@ import type { CalculatorAnimal } from "@/app/(app)/calculator/types";
 import { Hint } from "@/app/components/ui";
 import { TraitCategoryPicker } from "@/app/components/trait-category-picker";
 import {
-  AXANTHIC_LOCI,
   axanthicFromGenotype,
   calculatorTraitOptions,
   setAxanthicGenotype,
@@ -242,7 +241,7 @@ function ParentEditor({
                   <div className="flex items-start justify-between gap-3">
                     <p className="pt-2 font-medium">
                       アザンティック
-                      <Hint text="劣性です。系統は別の遺伝子として計算します。" />
+                      <Hint text="劣性です。両親から1つずつ受け取ると見た目に出ます。" />
                     </p>
                     <button
                       type="button"
@@ -277,33 +276,6 @@ function ParentEditor({
                       ))}
                     </select>
                   </label>
-                  {axanthic.status !== "wild" ? (
-                    <label className="grid gap-1 text-sm">
-                      <span>系統</span>
-                      <select
-                        className="nc-input"
-                        value={axanthic.locusId}
-                        onChange={(event) => {
-                          const toLocusId = event.target.value;
-                          const currentAx = axanthicFromGenotype(genotype);
-                          patchGenotype(
-                            setAxanthicGenotype(
-                              genotype,
-                              currentAx.locusId,
-                              toLocusId,
-                              currentAx.status,
-                            ),
-                          );
-                        }}
-                      >
-                        {AXANTHIC_LOCI.map((row) => (
-                          <option key={row.id} value={row.id}>
-                            {row.lineJa}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : null}
                 </div>
               );
             }

@@ -14,6 +14,11 @@ const AXANTHIC_IDS = LOCI.filter((locus) => locus.id.startsWith("axanthic")).map
   (locus) => locus.id,
 );
 
+/** Stored as axanthicTug; shown and aggregated as generic アザンティック. */
+function publicAxanthicKey(id: string): string {
+  return id === "axanthicTug" ? "axanthic" : id;
+}
+
 const RECESSIVE_KEYS: Record<string, string> = {
   phantom: "phantom",
   patternless: "patternless",
@@ -50,16 +55,8 @@ export function phenotypeKeysFromState(
 
   const visualAx = AXANTHIC_IDS.filter((id) => (copies[id] ?? 0) === 2);
   const hetAx = AXANTHIC_IDS.filter((id) => (copies[id] ?? 0) === 1);
-  if (visualAx.length === 1) {
-    visualKeys.push(visualAx[0] === "axanthicTug" ? "axanthic" : visualAx[0]);
-  } else {
-    visualKeys.push(...visualAx);
-  }
-  if (hetAx.length === 1 && visualAx.length === 0) {
-    hetKeys.push(hetAx[0] === "axanthicTug" ? "axanthic" : hetAx[0]);
-  } else {
-    hetKeys.push(...hetAx);
-  }
+  visualKeys.push(...visualAx.map(publicAxanthicKey));
+  hetKeys.push(...hetAx.map(publicAxanthicKey));
 
   return { visualKeys, hetKeys };
 }

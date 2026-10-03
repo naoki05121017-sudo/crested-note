@@ -30,6 +30,12 @@ describe("trait picker grouping (UI only)", () => {
   it("keeps a single axanthic picker item, not four loci", () => {
     const ax = options.filter((row) => row.label.includes("アザンティック"));
     expect(ax.map((row) => row.id)).toEqual(["axanthic"]);
+    const labels = options.map((row) => row.label).join(" ");
+    expect(labels).toContain("アザンティック");
+    expect(labels).not.toMatch(/\bTUG\b/);
+    expect(labels).not.toContain("Melanistic");
+    expect(labels).not.toContain("ARV");
+    expect(labels).not.toContain("Lava");
   });
 
   it("matches Japanese and English search", () => {
